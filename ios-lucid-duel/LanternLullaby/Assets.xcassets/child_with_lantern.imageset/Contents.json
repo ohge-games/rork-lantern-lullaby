@@ -1,0 +1,12 @@
+{
+  "images": [
+    {
+      "filename": "child_with_lantern.png",
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

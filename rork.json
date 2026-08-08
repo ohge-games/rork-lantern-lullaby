@@ -1,0 +1,14 @@
+{
+  "$schema": "https://rork.com/schema/rork.json",
+  "apps": [
+    {
+      "name": "Lantern & Lullaby",
+      "path": "ios-lucid-duel",
+      "framework": "swift",
+      "settings": {
+        "previewOrientation": "landscape",
+        "displayName": "Lantern & Lullaby"
+      }
+    }
+  ]
+}
