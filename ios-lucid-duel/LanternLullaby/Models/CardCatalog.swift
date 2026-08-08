@@ -130,11 +130,17 @@ nonisolated enum CardCatalog {
         heroID: nil
     )
 
-    static let allCards: [Card] = [
+    /// Neutral cards usable by any deck (the original starter set).
+    static let neutralCards: [Card] = [
         strike, focusStrike, concentratedBlow,
         shieldWall, meditate, deepBreath,
         dreamWalk, mentalShift, focusedMind,
     ]
+
+    /// Every card definition in the game: neutrals plus each hero's pool.
+    /// Lookups (`card(withID:)`, `pool(for:)`) read from this master list.
+    static let allCards: [Card] =
+        neutralCards + lancelotCards + bedivereCards + escanorCards + merlinCards
 
     static func card(withID id: Card.ID) -> Card? {
         allCards.first { $0.id == id }
@@ -151,7 +157,7 @@ nonisolated enum CardCatalog {
             text: "At the start of your turn, Lucidity drifts 2 toward Balanced.",
             kind: .lucidityDrift(amount: 2)
         ),
-        cardIDs: allCards.map(\.id)
+        cardIDs: neutralCards.map(\.id)
     )
 
     static let nightmare = Hero(

@@ -40,4 +40,7 @@ nonisolated enum PassiveKind: Codable, Hashable, Sendable {
     case driftingBulwark(amount: Int)
     /// Heals the hero by `amount` whenever a Relax effect resolves.
     case restfulRecovery(amount: Int)
+    /// Damage effects gain `perTurn * (turnNumber - 1)` bonus, so the hero
+    /// hits harder the longer the battle runs (Escanor's "The One").
+    case growingMight(perTurn: Int)
 }
