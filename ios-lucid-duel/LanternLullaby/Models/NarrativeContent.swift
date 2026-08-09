@@ -181,7 +181,7 @@ enum PortraitRegistry {
         // Map known enemy IDs to portrait assets
         // Using enemy catalog IDs
         switch enemyID {
-        case EnemyCatalogBook1.sirEctor.id:
+        case EnemyCatalogBook1.sirEctorChallenge.id:
             return "portrait_ector"
         case EnemyCatalogBook1.queenMorgause.id:
             return "portrait_morgause"
