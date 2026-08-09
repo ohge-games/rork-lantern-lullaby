@@ -27,15 +27,15 @@ extension CardCatalog {
         UUID(uuidString: uuidString) ?? UUID()
     }
 
-    // MARK: - Lancelot — burst aggression (offensive, high lucidity risk)
+    // MARK: - Lancelot — burst aggression (offensive, Vivid zone)
 
     static let lionsCharge = Card(
         id: classID("A2000000-0000-4000-8000-000000000001"),
         name: "Lion's Charge",
-        text: "Deal 30 damage.",
-        lucidityCost: 18,
+        text: "Deal 18 damage.",
+        lucidityCost: 6,
         cardType: .offensive,
-        effects: [Effect(type: .damage, value: 30)],
+        effects: [Effect(type: .damage, value: 18)],
         heroID: HeroIDs.lancelot
     )
 
@@ -43,7 +43,7 @@ extension CardCatalog {
         id: classID("A2000000-0000-4000-8000-000000000002"),
         name: "Twin Slash",
         text: "Deal 12 damage. Draw 1 card.",
-        lucidityCost: 10,
+        lucidityCost: 5,
         cardType: .offensive,
         effects: [Effect(type: .damage, value: 12), Effect(type: .drawCards, value: 1)],
         heroID: HeroIDs.lancelot
@@ -52,10 +52,10 @@ extension CardCatalog {
     static let recklessAssault = Card(
         id: classID("A2000000-0000-4000-8000-000000000003"),
         name: "Reckless Assault",
-        text: "Deal 22 damage.",
-        lucidityCost: 14,
+        text: "Deal 14 damage.",
+        lucidityCost: 5,
         cardType: .offensive,
-        effects: [Effect(type: .damage, value: 22)],
+        effects: [Effect(type: .damage, value: 14)],
         heroID: HeroIDs.lancelot
     )
 
@@ -63,7 +63,7 @@ extension CardCatalog {
         id: classID("A2000000-0000-4000-8000-000000000004"),
         name: "Battle Trance",
         text: "Draw 2 cards.",
-        lucidityCost: 6,
+        lucidityCost: 4,
         cardType: .utility,
         effects: [Effect(type: .drawCards, value: 2)],
         heroID: HeroIDs.lancelot
@@ -72,20 +72,20 @@ extension CardCatalog {
     static let steelGuard = Card(
         id: classID("A2000000-0000-4000-8000-000000000005"),
         name: "Steel Guard",
-        text: "Gain 12 shield.",
-        lucidityCost: 6,
+        text: "Gain 10 shield.",
+        lucidityCost: 3,
         cardType: .defensive,
-        effects: [Effect(type: .shield, value: 12)],
+        effects: [Effect(type: .shield, value: 10)],
         heroID: HeroIDs.lancelot
     )
 
     static let finalGambit = Card(
         id: classID("A2000000-0000-4000-8000-000000000006"),
         name: "Final Gambit",
-        text: "Deal 40 damage.",
-        lucidityCost: 25,
+        text: "Deal 25 damage.",
+        lucidityCost: 7,
         cardType: .offensive,
-        effects: [Effect(type: .damage, value: 40)],
+        effects: [Effect(type: .damage, value: 25)],
         heroID: HeroIDs.lancelot
     )
 
@@ -93,65 +93,65 @@ extension CardCatalog {
         lionsCharge, twinSlash, recklessAssault, battleTrance, steelGuard, finalGambit,
     ]
 
-    // MARK: - Bedivere — shields and sustain (defensive)
+    // MARK: - Bedivere — shields and sustain (defensive, Balanced zone)
 
     static let loyalGuard = Card(
         id: classID("A3000000-0000-4000-8000-000000000001"),
         name: "Loyal Guard",
-        text: "Gain 18 shield. Draw 1 card.",
-        lucidityCost: 7,
+        text: "Gain 14 shield. Draw 1 card.",
+        lucidityCost: 4,
         cardType: .defensive,
-        effects: [Effect(type: .shield, value: 18), Effect(type: .drawCards, value: 1)],
+        effects: [Effect(type: .shield, value: 14), Effect(type: .drawCards, value: 1)],
         heroID: HeroIDs.bedivere
     )
 
     static let swornOath = Card(
         id: classID("A3000000-0000-4000-8000-000000000002"),
         name: "Sworn Oath",
-        text: "Gain 12 shield. Heal 6 health.",
-        lucidityCost: 8,
+        text: "Gain 10 shield. Heal 6 health.",
+        lucidityCost: 4,
         cardType: .defensive,
-        effects: [Effect(type: .shield, value: 12), Effect(type: .heal, value: 6)],
+        effects: [Effect(type: .shield, value: 10), Effect(type: .heal, value: 6)],
         heroID: HeroIDs.bedivere
     )
 
     static let counterstance = Card(
         id: classID("A3000000-0000-4000-8000-000000000003"),
         name: "Counterstance",
-        text: "Deal 10 damage. Gain 10 shield.",
-        lucidityCost: 10,
+        text: "Deal 10 damage. Gain 8 shield.",
+        lucidityCost: 5,
         cardType: .defensive,
-        effects: [Effect(type: .damage, value: 10), Effect(type: .shield, value: 10)],
+        effects: [Effect(type: .damage, value: 10), Effect(type: .shield, value: 8)],
         heroID: HeroIDs.bedivere
     )
 
     static let steadyBreath = Card(
         id: classID("A3000000-0000-4000-8000-000000000004"),
         name: "Steady Breath",
-        text: "Relax: reduce Lucidity by 10.",
-        lucidityCost: 0,
+        text: "Heal 8 HP. Gain 4 shield.",
+        lucidityCost: 3,
         cardType: .defensive,
-        effects: [Effect(type: .lucidityModify, value: -10)],
+        effects: [Effect(type: .heal, value: 8), Effect(type: .shield, value: 4)],
         heroID: HeroIDs.bedivere
     )
 
     static let aegisWall = Card(
         id: classID("A3000000-0000-4000-8000-000000000005"),
         name: "Aegis Wall",
-        text: "Gain 25 shield.",
-        lucidityCost: 12,
+        text: "Gain 18 shield.",
+        lucidityCost: 5,
         cardType: .defensive,
-        effects: [Effect(type: .shield, value: 25)],
+        effects: [Effect(type: .shield, value: 18)],
         heroID: HeroIDs.bedivere
     )
 
     static let vigilStrike = Card(
         id: classID("A3000000-0000-4000-8000-000000000006"),
         name: "Vigil Strike",
-        text: "Deal 14 damage.",
-        lucidityCost: 9,
+        text: "Deal 12 damage.",
+        lucidityCost: 4,
         cardType: .offensive,
-        effects: [Effect(type: .damage, value: 14)],
+        effects: [Effect(type: .damage, value: 12)],
         heroID: HeroIDs.bedivere
     )
 
@@ -159,45 +159,45 @@ extension CardCatalog {
         loyalGuard, swornOath, counterstance, steadyBreath, aegisWall, vigilStrike,
     ]
 
-    // MARK: - Escanor — scaling payoff (grows stronger each turn)
+    // MARK: - Escanor — scaling payoff (grows stronger each turn, Vivid zone)
 
     static let cruelSun = Card(
         id: classID("A4000000-0000-4000-8000-000000000001"),
         name: "Cruel Sun",
-        text: "Deal 20 damage.",
-        lucidityCost: 16,
+        text: "Deal 16 damage.",
+        lucidityCost: 5,
         cardType: .offensive,
-        effects: [Effect(type: .damage, value: 20)],
+        effects: [Effect(type: .damage, value: 16)],
         heroID: HeroIDs.escanor
     )
 
     static let risingPride = Card(
         id: classID("A4000000-0000-4000-8000-000000000002"),
         name: "Rising Pride",
-        text: "Deal 15 damage. Raises Lucidity.",
-        lucidityCost: 10,
+        text: "Deal 12 damage.",
+        lucidityCost: 4,
         cardType: .offensive,
-        effects: [Effect(type: .damage, value: 15)],
+        effects: [Effect(type: .damage, value: 12)],
         heroID: HeroIDs.escanor
     )
 
     static let noonBlaze = Card(
         id: classID("A4000000-0000-4000-8000-000000000003"),
         name: "Noon Blaze",
-        text: "Deal 28 damage.",
-        lucidityCost: 20,
+        text: "Deal 20 damage.",
+        lucidityCost: 6,
         cardType: .offensive,
-        effects: [Effect(type: .damage, value: 28)],
+        effects: [Effect(type: .damage, value: 20)],
         heroID: HeroIDs.escanor
     )
 
     static let sunshine = Card(
         id: classID("A4000000-0000-4000-8000-000000000004"),
         name: "Sunshine",
-        text: "Heal 12 health. Gain 12 shield.",
-        lucidityCost: 10,
+        text: "Heal 10 health. Gain 8 shield.",
+        lucidityCost: 4,
         cardType: .defensive,
-        effects: [Effect(type: .heal, value: 12), Effect(type: .shield, value: 12)],
+        effects: [Effect(type: .heal, value: 10), Effect(type: .shield, value: 8)],
         heroID: HeroIDs.escanor
     )
 
@@ -205,7 +205,7 @@ extension CardCatalog {
         id: classID("A4000000-0000-4000-8000-000000000005"),
         name: "Arrogance",
         text: "Draw 2 cards.",
-        lucidityCost: 6,
+        lucidityCost: 4,
         cardType: .utility,
         effects: [Effect(type: .drawCards, value: 2)],
         heroID: HeroIDs.escanor
@@ -214,10 +214,10 @@ extension CardCatalog {
     static let divineAxeRhitta = Card(
         id: classID("A4000000-0000-4000-8000-000000000006"),
         name: "Divine Axe Rhitta",
-        text: "Deal 45 damage.",
-        lucidityCost: 28,
+        text: "Deal 28 damage.",
+        lucidityCost: 8,
         cardType: .offensive,
-        effects: [Effect(type: .damage, value: 45)],
+        effects: [Effect(type: .damage, value: 28)],
         heroID: HeroIDs.escanor
     )
 
@@ -225,13 +225,13 @@ extension CardCatalog {
         cruelSun, risingPride, noonBlaze, sunshine, arrogance, divineAxeRhitta,
     ]
 
-    // MARK: - Merlin — utility and lucidity control (mage)
+    // MARK: - Merlin — utility and lucidity control (mage, Drifting zone)
 
     static let infinity = Card(
         id: classID("A5000000-0000-4000-8000-000000000001"),
         name: "Infinity",
         text: "Draw 3 cards.",
-        lucidityCost: 8,
+        lucidityCost: 5,
         cardType: .utility,
         effects: [Effect(type: .drawCards, value: 3)],
         heroID: HeroIDs.merlin
@@ -240,30 +240,30 @@ extension CardCatalog {
     static let aldansInsight = Card(
         id: classID("A5000000-0000-4000-8000-000000000002"),
         name: "Aldan's Insight",
-        text: "Move Lucidity 10 toward Balanced. Draw 1 card.",
-        lucidityCost: 4,
+        text: "Move Lucidity 8 toward Balanced. Draw 1 card.",
+        lucidityCost: 3,
         cardType: .utility,
-        effects: [Effect(type: .lucidityCenter, value: 10), Effect(type: .drawCards, value: 1)],
+        effects: [Effect(type: .lucidityCenter, value: 8), Effect(type: .drawCards, value: 1)],
         heroID: HeroIDs.merlin
     )
 
     static let arcaneBolt = Card(
         id: classID("A5000000-0000-4000-8000-000000000003"),
         name: "Arcane Bolt",
-        text: "Deal 18 damage.",
-        lucidityCost: 12,
+        text: "Deal 14 damage.",
+        lucidityCost: 5,
         cardType: .offensive,
-        effects: [Effect(type: .damage, value: 18)],
+        effects: [Effect(type: .damage, value: 14)],
         heroID: HeroIDs.merlin
     )
 
     static let absoluteCancel = Card(
         id: classID("A5000000-0000-4000-8000-000000000004"),
         name: "Absolute Cancel",
-        text: "Gain 15 shield. Relax: reduce Lucidity by 8.",
-        lucidityCost: 5,
+        text: "Gain 12 shield. Move Lucidity 5 toward Balanced.",
+        lucidityCost: 4,
         cardType: .defensive,
-        effects: [Effect(type: .shield, value: 15), Effect(type: .lucidityModify, value: -8)],
+        effects: [Effect(type: .shield, value: 12), Effect(type: .lucidityCenter, value: 5)],
         heroID: HeroIDs.merlin
     )
 
@@ -271,7 +271,7 @@ extension CardCatalog {
         id: classID("A5000000-0000-4000-8000-000000000005"),
         name: "Mana Well",
         text: "Heal 10 health. Draw 1 card.",
-        lucidityCost: 6,
+        lucidityCost: 4,
         cardType: .utility,
         effects: [Effect(type: .heal, value: 10), Effect(type: .drawCards, value: 1)],
         heroID: HeroIDs.merlin
@@ -281,7 +281,7 @@ extension CardCatalog {
         id: classID("A5000000-0000-4000-8000-000000000006"),
         name: "Reality Shift",
         text: "Choose: Unravel or Ward.",
-        lucidityCost: 0,
+        lucidityCost: 3,
         cardType: .utility,
         effects: [],
         heroID: HeroIDs.merlin,
@@ -289,21 +289,21 @@ extension CardCatalog {
             CardChoiceOption(
                 id: "unravel",
                 name: "Unravel",
-                text: "+10 Lucidity · Deal 22 damage",
+                text: "+5 Lucidity · Deal 16 damage",
                 iconName: "sparkles",
                 effects: [
-                    Effect(type: .lucidityModify, value: 10),
-                    Effect(type: .damage, value: 22),
+                    Effect(type: .lucidityModify, value: 5),
+                    Effect(type: .damage, value: 16),
                 ]
             ),
             CardChoiceOption(
                 id: "ward",
                 name: "Ward",
-                text: "−8 Lucidity · Gain 18 shield",
+                text: "−5 Lucidity · Gain 14 shield",
                 iconName: "shield.lefthalf.filled",
                 effects: [
-                    Effect(type: .lucidityModify, value: -8),
-                    Effect(type: .shield, value: 18),
+                    Effect(type: .lucidityModify, value: -5),
+                    Effect(type: .shield, value: 14),
                 ]
             ),
         ]

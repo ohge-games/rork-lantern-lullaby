@@ -14,31 +14,31 @@ nonisolated enum CardCatalog {
     static let strike = Card(
         id: stableID("A1000000-0000-4000-8000-000000000001"),
         name: "Strike",
-        text: "Deal 15 damage.",
-        lucidityCost: 8,
+        text: "Deal 12 damage.",
+        lucidityCost: 4,
         cardType: .offensive,
-        effects: [Effect(type: .damage, value: 15)],
+        effects: [Effect(type: .damage, value: 12)],
         heroID: nil
     )
 
     static let focusStrike = Card(
         id: stableID("A1000000-0000-4000-8000-000000000002"),
         name: "Focus Strike",
-        text: "Deal 25 damage.",
-        lucidityCost: 12,
+        text: "Deal 18 damage.",
+        lucidityCost: 6,
         cardType: .offensive,
-        effects: [Effect(type: .damage, value: 25)],
+        effects: [Effect(type: .damage, value: 18)],
         heroID: nil
     )
 
     static let concentratedBlow = Card(
         id: stableID("A1000000-0000-4000-8000-000000000003"),
         name: "Concentrated Blow",
-        text: "Deal 20 damage. Draw 1 card.",
-        lucidityCost: 15,
+        text: "Deal 15 damage. Draw 1 card.",
+        lucidityCost: 6,
         cardType: .offensive,
         effects: [
-            Effect(type: .damage, value: 20),
+            Effect(type: .damage, value: 15),
             Effect(type: .drawCards, value: 1),
         ],
         heroID: nil
@@ -50,7 +50,7 @@ nonisolated enum CardCatalog {
         id: stableID("A1000000-0000-4000-8000-000000000004"),
         name: "Shield",
         text: "Gain 10 shield.",
-        lucidityCost: 5,
+        lucidityCost: 3,
         cardType: .defensive,
         effects: [Effect(type: .shield, value: 10)],
         heroID: nil
@@ -59,20 +59,20 @@ nonisolated enum CardCatalog {
     static let meditate = Card(
         id: stableID("A1000000-0000-4000-8000-000000000005"),
         name: "Meditate",
-        text: "Heal 8 health.",
+        text: "Heal 10 health.",
         lucidityCost: 3,
         cardType: .defensive,
-        effects: [Effect(type: .heal, value: 8)],
+        effects: [Effect(type: .heal, value: 10)],
         heroID: nil
     )
 
     static let deepBreath = Card(
         id: stableID("A1000000-0000-4000-8000-000000000006"),
         name: "Deep Breath",
-        text: "Relax: reduce Lucidity by 10.",
+        text: "Relax: reduce Lucidity by 12.",
         lucidityCost: 0,
         cardType: .defensive,
-        effects: [Effect(type: .lucidityModify, value: -10)],
+        effects: [Effect(type: .lucidityModify, value: -12)],
         heroID: nil
     )
 
@@ -82,7 +82,7 @@ nonisolated enum CardCatalog {
         id: stableID("A1000000-0000-4000-8000-000000000007"),
         name: "Dream Walk",
         text: "Draw 2 cards.",
-        lucidityCost: 6,
+        lucidityCost: 4,
         cardType: .utility,
         effects: [Effect(type: .drawCards, value: 2)],
         heroID: nil
@@ -100,21 +100,21 @@ nonisolated enum CardCatalog {
             CardChoiceOption(
                 id: "concentrate",
                 name: "Concentrate",
-                text: "+10 Lucidity · Deal 20 damage",
+                text: "+12 Lucidity · Deal 16 damage",
                 iconName: "bolt.fill",
                 effects: [
-                    Effect(type: .lucidityModify, value: 10),
-                    Effect(type: .damage, value: 20),
+                    Effect(type: .lucidityModify, value: 12),
+                    Effect(type: .damage, value: 16),
                 ]
             ),
             CardChoiceOption(
                 id: "relax",
                 name: "Relax",
-                text: "−8 Lucidity · Heal 10",
+                text: "−10 Lucidity · Heal 12",
                 iconName: "leaf.fill",
                 effects: [
-                    Effect(type: .lucidityModify, value: -8),
-                    Effect(type: .heal, value: 10),
+                    Effect(type: .lucidityModify, value: -10),
+                    Effect(type: .heal, value: 12),
                 ]
             ),
         ]
@@ -123,10 +123,10 @@ nonisolated enum CardCatalog {
     static let mentalShift = Card(
         id: stableID("A1000000-0000-4000-8000-000000000008"),
         name: "Mental Shift",
-        text: "Move Lucidity 5 toward Balanced.",
-        lucidityCost: 4,
+        text: "Move Lucidity 8 toward Balanced.",
+        lucidityCost: 2,
         cardType: .utility,
-        effects: [Effect(type: .lucidityCenter, value: 5)],
+        effects: [Effect(type: .lucidityCenter, value: 8)],
         heroID: nil
     )
 
