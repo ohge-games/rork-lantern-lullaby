@@ -181,10 +181,42 @@ extension CardCatalog {
         heroID: HeroIDs.lancelot
     )
 
+    static let knightsChoice = Card(
+        id: classID("A2000000-0000-4000-8000-000000000016"),
+        name: "Knight's Choice",
+        text: "Choose: Honor or Passion.",
+        lucidityCost: 4,
+        cardType: .utility,
+        effects: [],
+        heroID: HeroIDs.lancelot,
+        choices: [
+            CardChoiceOption(
+                id: "honor",
+                name: "Honor",
+                text: "Gain 12 shield · Draw 1 card",
+                iconName: "shield.fill",
+                effects: [
+                    Effect(type: .shield, value: 12),
+                    Effect(type: .drawCards, value: 1),
+                ]
+            ),
+            CardChoiceOption(
+                id: "passion",
+                name: "Passion",
+                text: "+4 Lucidity · Deal 18 damage",
+                iconName: "flame.fill",
+                effects: [
+                    Effect(type: .lucidityModify, value: 4),
+                    Effect(type: .damage, value: 18),
+                ]
+            ),
+        ]
+    )
+
     static let lancelotCards: [Card] = [
         lionsCharge, twinSlash, recklessAssault, battleTrance, steelGuard, finalGambit,
         lakesFury, perfectParry, relentlessAssault, momentOfClarity, forbiddenLove,
-        oathBreaker, mirrorLake, firstKnight, memoryOfTheLake,
+        oathBreaker, mirrorLake, firstKnight, memoryOfTheLake, knightsChoice,
     ]
 
     // MARK: - Bedivere — shields and sustain (defensive, Balanced zone)
@@ -341,10 +373,41 @@ extension CardCatalog {
         heroID: HeroIDs.bedivere
     )
 
+    static let loyalOath = Card(
+        id: classID("A3000000-0000-4000-8000-000000000016"),
+        name: "Loyal Oath",
+        text: "Choose: Protect or Avenge.",
+        lucidityCost: 3,
+        cardType: .utility,
+        effects: [],
+        heroID: HeroIDs.bedivere,
+        choices: [
+            CardChoiceOption(
+                id: "protect",
+                name: "Protect",
+                text: "Gain 18 shield",
+                iconName: "shield.fill",
+                effects: [
+                    Effect(type: .shield, value: 18),
+                ]
+            ),
+            CardChoiceOption(
+                id: "avenge",
+                name: "Avenge",
+                text: "Deal 14 damage · Gain 6 shield",
+                iconName: "bolt.shield.fill",
+                effects: [
+                    Effect(type: .damage, value: 14),
+                    Effect(type: .shield, value: 6),
+                ]
+            ),
+        ]
+    )
+
     static let bedivereCards: [Card] = [
         loyalGuard, swornOath, counterstance, steadyBreath, aegisWall, vigilStrike,
         holdTheLine, kingsGuard, lastOfTheTable, loyalStrike, unshakeable,
-        oneArmedBlow, brothersInArms, finalDuty, returnToTheLake,
+        oneArmedBlow, brothersInArms, finalDuty, returnToTheLake, loyalOath,
     ]
 
     // MARK: - Escanor — scaling payoff (grows stronger each turn, Vivid zone)
@@ -501,10 +564,42 @@ extension CardCatalog {
         heroID: HeroIDs.escanor
     )
 
+    static let pridesDecision = Card(
+        id: classID("A4000000-0000-4000-8000-000000000016"),
+        name: "Pride's Decision",
+        text: "Choose: Blaze or Endure.",
+        lucidityCost: 5,
+        cardType: .utility,
+        effects: [],
+        heroID: HeroIDs.escanor,
+        choices: [
+            CardChoiceOption(
+                id: "blaze",
+                name: "Blaze",
+                text: "+6 Lucidity · Deal 22 damage",
+                iconName: "sun.max.fill",
+                effects: [
+                    Effect(type: .lucidityModify, value: 6),
+                    Effect(type: .damage, value: 22),
+                ]
+            ),
+            CardChoiceOption(
+                id: "endure",
+                name: "Endure",
+                text: "−4 Lucidity · Heal 14 HP",
+                iconName: "moon.fill",
+                effects: [
+                    Effect(type: .lucidityModify, value: -4),
+                    Effect(type: .heal, value: 14),
+                ]
+            ),
+        ]
+    )
+
     static let escanorCards: [Card] = [
         cruelSun, risingPride, noonBlaze, sunshine, arrogance, divineAxeRhitta,
         dawningPower, pridefulStrike, radiantAura, morningFlare, solarBlessing,
-        zenithStrike, absorbSunlight, solarShield, theOneUltimate,
+        zenithStrike, absorbSunlight, solarShield, theOneUltimate, pridesDecision,
     ]
 
     // MARK: - Merlin — utility and lucidity control (mage, Drifting zone)
@@ -843,10 +938,42 @@ extension CardCatalog {
         heroID: HeroIDs.kay
     )
 
+    static let practicalChoice = Card(
+        id: classID("A6000000-0000-4000-8000-000000000016"),
+        name: "Practical Choice",
+        text: "Choose: Efficiency or Force.",
+        lucidityCost: 3,
+        cardType: .utility,
+        effects: [],
+        heroID: HeroIDs.kay,
+        choices: [
+            CardChoiceOption(
+                id: "efficiency",
+                name: "Efficiency",
+                text: "Draw 2 cards · Gain 4 shield",
+                iconName: "rectangle.stack.fill",
+                effects: [
+                    Effect(type: .drawCards, value: 2),
+                    Effect(type: .shield, value: 4),
+                ]
+            ),
+            CardChoiceOption(
+                id: "force",
+                name: "Force",
+                text: "Deal 12 damage · Draw 1 card",
+                iconName: "hammer.fill",
+                effects: [
+                    Effect(type: .damage, value: 12),
+                    Effect(type: .drawCards, value: 1),
+                ]
+            ),
+        ]
+    )
+
     static let kayCards: [Card] = [
         bluntStrike, grudgingDefense, stewardsStores, practicalBlow, noNonsense, quartermaster,
         seneschalsOrder, efficientStrike, practicalDefense, disciplinedStrike, resourcefulness,
-        fosterBrothersWrath, stewardsMight, suppliesAtHand, kaysFinisher,
+        fosterBrothersWrath, stewardsMight, suppliesAtHand, kaysFinisher, practicalChoice,
     ]
 
     // MARK: - Morgana — debuffs and hybrid damage
@@ -1003,9 +1130,42 @@ extension CardCatalog {
         heroID: HeroIDs.morgana
     )
 
+    static let feyBargainChoice = Card(
+        id: classID("A7000000-0000-4000-8000-000000000016"),
+        name: "Fey Bargain",
+        text: "Choose: Drain or Deceive.",
+        lucidityCost: 4,
+        cardType: .utility,
+        effects: [],
+        heroID: HeroIDs.morgana,
+        choices: [
+            CardChoiceOption(
+                id: "drain",
+                name: "Drain",
+                text: "Deal 14 damage · Heal 7 HP",
+                iconName: "drop.fill",
+                effects: [
+                    Effect(type: .damage, value: 14),
+                    Effect(type: .heal, value: 7),
+                ]
+            ),
+            CardChoiceOption(
+                id: "deceive",
+                name: "Deceive",
+                text: "−5 Lucidity · Gain 14 shield · Draw 1",
+                iconName: "moon.stars.fill",
+                effects: [
+                    Effect(type: .lucidityModify, value: -5),
+                    Effect(type: .shield, value: 14),
+                    Effect(type: .drawCards, value: 1),
+                ]
+            ),
+        ]
+    )
+
     static let morganaCards: [Card] = [
         spiteBolt, darkMending, thornShield, soulSiphon, feyFire, darkPact,
-        queenOfAir, shadowMending, curseOfMorgana, darkWard, feyBargain,
+        queenOfAir, shadowMending, curseOfMorgana, darkWard, feyBargainChoice,
         lifeSteal, shadowCloak, queenOfDarkness, corruptedHealing,
     ]
 
@@ -1163,10 +1323,42 @@ extension CardCatalog {
         heroID: HeroIDs.galahad
     )
 
+    static let grailsPath = Card(
+        id: classID("A8000000-0000-4000-8000-000000000016"),
+        name: "Grail's Path",
+        text: "Choose: Mercy or Justice.",
+        lucidityCost: 4,
+        cardType: .utility,
+        effects: [],
+        heroID: HeroIDs.galahad,
+        choices: [
+            CardChoiceOption(
+                id: "mercy",
+                name: "Mercy",
+                text: "Heal 16 HP · Gain 6 shield",
+                iconName: "heart.fill",
+                effects: [
+                    Effect(type: .heal, value: 16),
+                    Effect(type: .shield, value: 6),
+                ]
+            ),
+            CardChoiceOption(
+                id: "justice",
+                name: "Justice",
+                text: "Deal 16 damage · Heal 6 HP",
+                iconName: "bolt.fill",
+                effects: [
+                    Effect(type: .damage, value: 16),
+                    Effect(type: .heal, value: 6),
+                ]
+            ),
+        ]
+    )
+
     static let galahadCards: [Card] = [
         holyStrike, grace, blessedShield, radiantTouch, lightEverlasting, grailKnight,
         divineLight, puritysEdge, holyShield, grailsBlessing, faithfulBlow,
-        purifyingLight, seekTheGrail, saintlyStrike, achieveTheGrail,
+        purifyingLight, seekTheGrail, saintlyStrike, achieveTheGrail, grailsPath,
     ]
 
     // MARK: - Heroes
