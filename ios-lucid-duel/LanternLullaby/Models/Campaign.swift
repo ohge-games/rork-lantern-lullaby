@@ -11,16 +11,64 @@ nonisolated struct Encounter: Codable, Identifiable, Hashable, Sendable {
     let supportEnemyIDs: [Enemy.ID]
 }
 
+/// A single wave within a multi-stage battle.
+/// Each wave has its own encounter and optional narrative beats.
+nonisolated struct BattleWave: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    let encounter: Encounter
+    
+    /// Narrative text shown before this wave begins.
+    /// Example: "More wolves emerge from the shadows..."
+    let introText: String?
+    
+    /// Narrative text shown after clearing this wave (before next wave or victory).
+    /// Example: "The pack leader howls — reinforcements are coming!"
+    let outroText: String?
+}
+
+/// A complete battle consisting of 1-3 waves with narrative flow.
+nonisolated struct MultistageBattle: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    let waves: [BattleWave]
+    
+    /// Text shown at the very start of the battle.
+    let openingNarrative: String?
+    
+    /// Text shown after all waves are cleared.
+    let victoryNarrative: String?
+    
+    /// Optional hero-specific dialogue triggered by party composition.
+    /// Key: heroID, Value: dialogue line when that hero is in party.
+    let heroDialogue: [UUID: String]?
+    
+    var waveCount: Int { waves.count }
+    var isBossBattle: Bool { waves.count >= 2 }
+}
+
 /// One battle node within a chapter.
 nonisolated struct Stage: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     /// Order within the parent chapter, starting at 0.
     let index: Int
     let name: String
-    let encounter: Encounter
+    
+    /// Legacy single-encounter for simple battles.
+    let encounter: Encounter?
+    
+    /// Multi-stage battle with narrative (preferred for story content).
+    let battle: MultistageBattle?
+    
     /// Convenience flag for UI/rewards; the boss is also derivable from the
     /// primary enemy's `tier`.
     let isBoss: Bool
+    
+    /// Returns the primary enemy ID for this stage (from either format).
+    var primaryEnemyID: Enemy.ID? {
+        if let battle = battle {
+            return battle.waves.first?.encounter.primaryEnemyID
+        }
+        return encounter?.primaryEnemyID
+    }
 }
 
 /// An ordered group of stages, typically ending in a boss.
