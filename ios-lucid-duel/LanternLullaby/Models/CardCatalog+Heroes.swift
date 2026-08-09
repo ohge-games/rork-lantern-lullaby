@@ -89,8 +89,102 @@ extension CardCatalog {
         heroID: HeroIDs.lancelot
     )
 
+    // Progression cards (7-15)
+    
+    static let lakesFury = Card(
+        id: classID("A2000000-0000-4000-8000-000000000007"),
+        name: "Lake's Fury",
+        text: "Deal 20 damage.",
+        lucidityCost: 6,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 20)],
+        heroID: HeroIDs.lancelot
+    )
+
+    static let perfectParry = Card(
+        id: classID("A2000000-0000-4000-8000-000000000008"),
+        name: "Perfect Parry",
+        text: "Gain 14 shield.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 14)],
+        heroID: HeroIDs.lancelot
+    )
+
+    static let relentlessAssault = Card(
+        id: classID("A2000000-0000-4000-8000-000000000009"),
+        name: "Relentless Assault",
+        text: "Deal 22 damage.",
+        lucidityCost: 8,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 22)],
+        heroID: HeroIDs.lancelot
+    )
+
+    static let momentOfClarity = Card(
+        id: classID("A2000000-0000-4000-8000-000000000010"),
+        name: "Moment of Clarity",
+        text: "Draw 2 cards. Gain 4 shield.",
+        lucidityCost: 4,
+        cardType: .utility,
+        effects: [Effect(type: .drawCards, value: 2), Effect(type: .shield, value: 4)],
+        heroID: HeroIDs.lancelot
+    )
+
+    static let forbiddenLove = Card(
+        id: classID("A2000000-0000-4000-8000-000000000011"),
+        name: "Forbidden Love",
+        text: "Heal 15 HP.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 15)],
+        heroID: HeroIDs.lancelot
+    )
+
+    static let oathBreaker = Card(
+        id: classID("A2000000-0000-4000-8000-000000000012"),
+        name: "Oath Breaker",
+        text: "Deal 18 damage.",
+        lucidityCost: 5,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 18)],
+        heroID: HeroIDs.lancelot
+    )
+
+    static let mirrorLake = Card(
+        id: classID("A2000000-0000-4000-8000-000000000013"),
+        name: "Mirror Lake",
+        text: "Gain 12 shield. Heal 6 HP.",
+        lucidityCost: 5,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 12), Effect(type: .heal, value: 6)],
+        heroID: HeroIDs.lancelot
+    )
+
+    static let firstKnight = Card(
+        id: classID("A2000000-0000-4000-8000-000000000014"),
+        name: "First Knight",
+        text: "Deal 16 damage. Draw 1 card.",
+        lucidityCost: 6,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 16), Effect(type: .drawCards, value: 1)],
+        heroID: HeroIDs.lancelot
+    )
+
+    static let memoryOfTheLake = Card(
+        id: classID("A2000000-0000-4000-8000-000000000015"),
+        name: "Memory of the Lake",
+        text: "Deal 20 damage. Heal 10 HP.",
+        lucidityCost: 7,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 20), Effect(type: .heal, value: 10)],
+        heroID: HeroIDs.lancelot
+    )
+
     static let lancelotCards: [Card] = [
         lionsCharge, twinSlash, recklessAssault, battleTrance, steelGuard, finalGambit,
+        lakesFury, perfectParry, relentlessAssault, momentOfClarity, forbiddenLove,
+        oathBreaker, mirrorLake, firstKnight, memoryOfTheLake,
     ]
 
     // MARK: - Bedivere — shields and sustain (defensive, Balanced zone)
@@ -155,8 +249,102 @@ extension CardCatalog {
         heroID: HeroIDs.bedivere
     )
 
+    // Progression cards (7-15)
+
+    static let holdTheLine = Card(
+        id: classID("A3000000-0000-4000-8000-000000000007"),
+        name: "Hold the Line",
+        text: "Gain 20 shield.",
+        lucidityCost: 6,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 20)],
+        heroID: HeroIDs.bedivere
+    )
+
+    static let kingsGuard = Card(
+        id: classID("A3000000-0000-4000-8000-000000000008"),
+        name: "King's Guard",
+        text: "Gain 15 shield. Heal 5 HP.",
+        lucidityCost: 5,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 15), Effect(type: .heal, value: 5)],
+        heroID: HeroIDs.bedivere
+    )
+
+    static let lastOfTheTable = Card(
+        id: classID("A3000000-0000-4000-8000-000000000009"),
+        name: "Last of the Table",
+        text: "Gain 18 shield.",
+        lucidityCost: 5,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 18)],
+        heroID: HeroIDs.bedivere
+    )
+
+    static let loyalStrike = Card(
+        id: classID("A3000000-0000-4000-8000-000000000010"),
+        name: "Loyal Strike",
+        text: "Deal 14 damage. Gain 6 shield.",
+        lucidityCost: 5,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 14), Effect(type: .shield, value: 6)],
+        heroID: HeroIDs.bedivere
+    )
+
+    static let unshakeable = Card(
+        id: classID("A3000000-0000-4000-8000-000000000011"),
+        name: "Unshakeable",
+        text: "Gain 10 shield. Heal 8 HP.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 10), Effect(type: .heal, value: 8)],
+        heroID: HeroIDs.bedivere
+    )
+
+    static let oneArmedBlow = Card(
+        id: classID("A3000000-0000-4000-8000-000000000012"),
+        name: "One-Armed Blow",
+        text: "Deal 16 damage.",
+        lucidityCost: 5,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 16)],
+        heroID: HeroIDs.bedivere
+    )
+
+    static let brothersInArms = Card(
+        id: classID("A3000000-0000-4000-8000-000000000013"),
+        name: "Brothers in Arms",
+        text: "Heal 12 HP.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 12)],
+        heroID: HeroIDs.bedivere
+    )
+
+    static let finalDuty = Card(
+        id: classID("A3000000-0000-4000-8000-000000000014"),
+        name: "Final Duty",
+        text: "Gain 25 shield.",
+        lucidityCost: 7,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 25)],
+        heroID: HeroIDs.bedivere
+    )
+
+    static let returnToTheLake = Card(
+        id: classID("A3000000-0000-4000-8000-000000000015"),
+        name: "Return to the Lake",
+        text: "Heal 18 HP. Gain 8 shield.",
+        lucidityCost: 6,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 18), Effect(type: .shield, value: 8)],
+        heroID: HeroIDs.bedivere
+    )
+
     static let bedivereCards: [Card] = [
         loyalGuard, swornOath, counterstance, steadyBreath, aegisWall, vigilStrike,
+        holdTheLine, kingsGuard, lastOfTheTable, loyalStrike, unshakeable,
+        oneArmedBlow, brothersInArms, finalDuty, returnToTheLake,
     ]
 
     // MARK: - Escanor — scaling payoff (grows stronger each turn, Vivid zone)
@@ -221,8 +409,102 @@ extension CardCatalog {
         heroID: HeroIDs.escanor
     )
 
+    // Progression cards (7-15)
+
+    static let dawningPower = Card(
+        id: classID("A4000000-0000-4000-8000-000000000007"),
+        name: "Dawning Power",
+        text: "Deal 10 damage. Draw 1 card.",
+        lucidityCost: 4,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 10), Effect(type: .drawCards, value: 1)],
+        heroID: HeroIDs.escanor
+    )
+
+    static let pridefulStrike = Card(
+        id: classID("A4000000-0000-4000-8000-000000000008"),
+        name: "Prideful Strike",
+        text: "Deal 18 damage.",
+        lucidityCost: 6,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 18)],
+        heroID: HeroIDs.escanor
+    )
+
+    static let radiantAura = Card(
+        id: classID("A4000000-0000-4000-8000-000000000009"),
+        name: "Radiant Aura",
+        text: "Gain 14 shield. Heal 6 HP.",
+        lucidityCost: 5,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 14), Effect(type: .heal, value: 6)],
+        heroID: HeroIDs.escanor
+    )
+
+    static let morningFlare = Card(
+        id: classID("A4000000-0000-4000-8000-000000000010"),
+        name: "Morning Flare",
+        text: "Deal 14 damage.",
+        lucidityCost: 5,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 14)],
+        heroID: HeroIDs.escanor
+    )
+
+    static let solarBlessing = Card(
+        id: classID("A4000000-0000-4000-8000-000000000011"),
+        name: "Solar Blessing",
+        text: "Heal 15 HP.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 15)],
+        heroID: HeroIDs.escanor
+    )
+
+    static let zenithStrike = Card(
+        id: classID("A4000000-0000-4000-8000-000000000012"),
+        name: "Zenith Strike",
+        text: "Deal 22 damage.",
+        lucidityCost: 7,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 22)],
+        heroID: HeroIDs.escanor
+    )
+
+    static let absorbSunlight = Card(
+        id: classID("A4000000-0000-4000-8000-000000000013"),
+        name: "Absorb Sunlight",
+        text: "Draw 3 cards.",
+        lucidityCost: 5,
+        cardType: .utility,
+        effects: [Effect(type: .drawCards, value: 3)],
+        heroID: HeroIDs.escanor
+    )
+
+    static let solarShield = Card(
+        id: classID("A4000000-0000-4000-8000-000000000014"),
+        name: "Solar Shield",
+        text: "Gain 18 shield.",
+        lucidityCost: 5,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 18)],
+        heroID: HeroIDs.escanor
+    )
+
+    static let theOneUltimate = Card(
+        id: classID("A4000000-0000-4000-8000-000000000015"),
+        name: "The One: Ultimate",
+        text: "Deal 30 damage.",
+        lucidityCost: 8,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 30)],
+        heroID: HeroIDs.escanor
+    )
+
     static let escanorCards: [Card] = [
         cruelSun, risingPride, noonBlaze, sunshine, arrogance, divineAxeRhitta,
+        dawningPower, pridefulStrike, radiantAura, morningFlare, solarBlessing,
+        zenithStrike, absorbSunlight, solarShield, theOneUltimate,
     ]
 
     // MARK: - Merlin — utility and lucidity control (mage, Drifting zone)
@@ -309,8 +591,102 @@ extension CardCatalog {
         ]
     )
 
+    // Progression cards (7-15)
+
+    static let timeSlip = Card(
+        id: classID("A5000000-0000-4000-8000-000000000007"),
+        name: "Time Slip",
+        text: "Draw 2 cards. Move Lucidity 5 toward Balanced.",
+        lucidityCost: 4,
+        cardType: .utility,
+        effects: [Effect(type: .drawCards, value: 2), Effect(type: .lucidityCenter, value: 5)],
+        heroID: HeroIDs.merlin
+    )
+
+    static let backwardsWisdom = Card(
+        id: classID("A5000000-0000-4000-8000-000000000008"),
+        name: "Backwards Wisdom",
+        text: "Heal 12 HP. Draw 1 card.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 12), Effect(type: .drawCards, value: 1)],
+        heroID: HeroIDs.merlin
+    )
+
+    static let wildMagic = Card(
+        id: classID("A5000000-0000-4000-8000-000000000009"),
+        name: "Wild Magic",
+        text: "Deal 16 damage.",
+        lucidityCost: 5,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 16)],
+        heroID: HeroIDs.merlin
+    )
+
+    static let arcaneBarrier = Card(
+        id: classID("A5000000-0000-4000-8000-000000000010"),
+        name: "Arcane Barrier",
+        text: "Gain 16 shield.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 16)],
+        heroID: HeroIDs.merlin
+    )
+
+    static let prophecy = Card(
+        id: classID("A5000000-0000-4000-8000-000000000011"),
+        name: "Prophecy",
+        text: "Draw 3 cards.",
+        lucidityCost: 5,
+        cardType: .utility,
+        effects: [Effect(type: .drawCards, value: 3)],
+        heroID: HeroIDs.merlin
+    )
+
+    static let livingBackwards = Card(
+        id: classID("A5000000-0000-4000-8000-000000000012"),
+        name: "Living Backwards",
+        text: "Reduce Lucidity by 12.",
+        lucidityCost: 0,
+        cardType: .utility,
+        effects: [Effect(type: .lucidityModify, value: -12)],
+        heroID: HeroIDs.merlin
+    )
+
+    static let arcaneStorm = Card(
+        id: classID("A5000000-0000-4000-8000-000000000013"),
+        name: "Arcane Storm",
+        text: "Deal 20 damage.",
+        lucidityCost: 6,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 20)],
+        heroID: HeroIDs.merlin
+    )
+
+    static let enchantment = Card(
+        id: classID("A5000000-0000-4000-8000-000000000014"),
+        name: "Enchantment",
+        text: "Gain 12 shield. Heal 8 HP.",
+        lucidityCost: 5,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 12), Effect(type: .heal, value: 8)],
+        heroID: HeroIDs.merlin
+    )
+
+    static let wisdomOfAges = Card(
+        id: classID("A5000000-0000-4000-8000-000000000015"),
+        name: "Wisdom of Ages",
+        text: "Draw 2 cards. Heal 10 HP.",
+        lucidityCost: 5,
+        cardType: .utility,
+        effects: [Effect(type: .drawCards, value: 2), Effect(type: .heal, value: 10)],
+        heroID: HeroIDs.merlin
+    )
+
     static let merlinCards: [Card] = [
         infinity, aldansInsight, arcaneBolt, absoluteCancel, manaWell, realityShift,
+        timeSlip, backwardsWisdom, wildMagic, arcaneBarrier, prophecy,
+        livingBackwards, arcaneStorm, enchantment, wisdomOfAges,
     ]
 
     // MARK: - Kay — resource management and tempo
@@ -375,8 +751,102 @@ extension CardCatalog {
         heroID: HeroIDs.kay
     )
 
+    // Progression cards (7-15)
+
+    static let seneschalsOrder = Card(
+        id: classID("A6000000-0000-4000-8000-000000000007"),
+        name: "Seneschal's Order",
+        text: "Draw 2 cards. Gain 6 shield.",
+        lucidityCost: 5,
+        cardType: .utility,
+        effects: [Effect(type: .drawCards, value: 2), Effect(type: .shield, value: 6)],
+        heroID: HeroIDs.kay
+    )
+
+    static let efficientStrike = Card(
+        id: classID("A6000000-0000-4000-8000-000000000008"),
+        name: "Efficient Strike",
+        text: "Deal 11 damage. Draw 1 card.",
+        lucidityCost: 4,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 11), Effect(type: .drawCards, value: 1)],
+        heroID: HeroIDs.kay
+    )
+
+    static let practicalDefense = Card(
+        id: classID("A6000000-0000-4000-8000-000000000009"),
+        name: "Practical Defense",
+        text: "Gain 14 shield.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 14)],
+        heroID: HeroIDs.kay
+    )
+
+    static let disciplinedStrike = Card(
+        id: classID("A6000000-0000-4000-8000-000000000010"),
+        name: "Disciplined Strike",
+        text: "Deal 16 damage.",
+        lucidityCost: 5,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 16)],
+        heroID: HeroIDs.kay
+    )
+
+    static let resourcefulness = Card(
+        id: classID("A6000000-0000-4000-8000-000000000011"),
+        name: "Resourcefulness",
+        text: "Draw 3 cards.",
+        lucidityCost: 5,
+        cardType: .utility,
+        effects: [Effect(type: .drawCards, value: 3)],
+        heroID: HeroIDs.kay
+    )
+
+    static let fosterBrothersWrath = Card(
+        id: classID("A6000000-0000-4000-8000-000000000012"),
+        name: "Foster Brother's Wrath",
+        text: "Deal 18 damage.",
+        lucidityCost: 6,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 18)],
+        heroID: HeroIDs.kay
+    )
+
+    static let stewardsMight = Card(
+        id: classID("A6000000-0000-4000-8000-000000000013"),
+        name: "Steward's Might",
+        text: "Gain 12 shield. Heal 6 HP.",
+        lucidityCost: 5,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 12), Effect(type: .heal, value: 6)],
+        heroID: HeroIDs.kay
+    )
+
+    static let suppliesAtHand = Card(
+        id: classID("A6000000-0000-4000-8000-000000000014"),
+        name: "Supplies at Hand",
+        text: "Heal 12 HP. Draw 1 card.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 12), Effect(type: .drawCards, value: 1)],
+        heroID: HeroIDs.kay
+    )
+
+    static let kaysFinisher = Card(
+        id: classID("A6000000-0000-4000-8000-000000000015"),
+        name: "Kay's Finisher",
+        text: "Deal 20 damage.",
+        lucidityCost: 6,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 20)],
+        heroID: HeroIDs.kay
+    )
+
     static let kayCards: [Card] = [
         bluntStrike, grudgingDefense, stewardsStores, practicalBlow, noNonsense, quartermaster,
+        seneschalsOrder, efficientStrike, practicalDefense, disciplinedStrike, resourcefulness,
+        fosterBrothersWrath, stewardsMight, suppliesAtHand, kaysFinisher,
     ]
 
     // MARK: - Morgana — debuffs and hybrid damage
@@ -441,8 +911,102 @@ extension CardCatalog {
         heroID: HeroIDs.morgana
     )
 
+    // Progression cards (7-15)
+
+    static let queenOfAir = Card(
+        id: classID("A7000000-0000-4000-8000-000000000007"),
+        name: "Queen of Air",
+        text: "Deal 18 damage.",
+        lucidityCost: 6,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 18)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let shadowMending = Card(
+        id: classID("A7000000-0000-4000-8000-000000000008"),
+        name: "Shadow Mending",
+        text: "Heal 14 HP. Gain 4 shield.",
+        lucidityCost: 5,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 14), Effect(type: .shield, value: 4)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let curseOfMorgana = Card(
+        id: classID("A7000000-0000-4000-8000-000000000009"),
+        name: "Curse of Morgana",
+        text: "Deal 14 damage. Heal 4 HP.",
+        lucidityCost: 5,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 14), Effect(type: .heal, value: 4)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let darkWard = Card(
+        id: classID("A7000000-0000-4000-8000-000000000010"),
+        name: "Dark Ward",
+        text: "Gain 16 shield.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 16)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let feyBargain = Card(
+        id: classID("A7000000-0000-4000-8000-000000000011"),
+        name: "Fey Bargain",
+        text: "Draw 3 cards.",
+        lucidityCost: 5,
+        cardType: .utility,
+        effects: [Effect(type: .drawCards, value: 3)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let lifeSteal = Card(
+        id: classID("A7000000-0000-4000-8000-000000000012"),
+        name: "Life Steal",
+        text: "Deal 16 damage. Heal 8 HP.",
+        lucidityCost: 6,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 16), Effect(type: .heal, value: 8)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let shadowCloak = Card(
+        id: classID("A7000000-0000-4000-8000-000000000013"),
+        name: "Shadow Cloak",
+        text: "Gain 14 shield. Draw 1 card.",
+        lucidityCost: 5,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 14), Effect(type: .drawCards, value: 1)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let queenOfDarkness = Card(
+        id: classID("A7000000-0000-4000-8000-000000000014"),
+        name: "Queen of Darkness",
+        text: "Deal 22 damage.",
+        lucidityCost: 7,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 22)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let corruptedHealing = Card(
+        id: classID("A7000000-0000-4000-8000-000000000015"),
+        name: "Corrupted Healing",
+        text: "Heal 20 HP.",
+        lucidityCost: 5,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 20)],
+        heroID: HeroIDs.morgana
+    )
+
     static let morganaCards: [Card] = [
         spiteBolt, darkMending, thornShield, soulSiphon, feyFire, darkPact,
+        queenOfAir, shadowMending, curseOfMorgana, darkWard, feyBargain,
+        lifeSteal, shadowCloak, queenOfDarkness, corruptedHealing,
     ]
 
     // MARK: - Galahad — healing and purification
@@ -507,8 +1071,102 @@ extension CardCatalog {
         heroID: HeroIDs.galahad
     )
 
+    // Progression cards (7-15)
+
+    static let divineLight = Card(
+        id: classID("A8000000-0000-4000-8000-000000000007"),
+        name: "Divine Light",
+        text: "Heal 16 HP.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 16)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let puritysEdge = Card(
+        id: classID("A8000000-0000-4000-8000-000000000008"),
+        name: "Purity's Edge",
+        text: "Deal 14 damage. Heal 4 HP.",
+        lucidityCost: 5,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 14), Effect(type: .heal, value: 4)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let holyShield = Card(
+        id: classID("A8000000-0000-4000-8000-000000000009"),
+        name: "Holy Shield",
+        text: "Gain 16 shield.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 16)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let grailsBlessing = Card(
+        id: classID("A8000000-0000-4000-8000-000000000010"),
+        name: "Grail's Blessing",
+        text: "Heal 14 HP. Gain 6 shield.",
+        lucidityCost: 5,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 14), Effect(type: .shield, value: 6)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let faithfulBlow = Card(
+        id: classID("A8000000-0000-4000-8000-000000000011"),
+        name: "Faithful Blow",
+        text: "Deal 16 damage.",
+        lucidityCost: 5,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 16)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let purifyingLight = Card(
+        id: classID("A8000000-0000-4000-8000-000000000012"),
+        name: "Purifying Light",
+        text: "Heal 10 HP. Draw 1 card.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 10), Effect(type: .drawCards, value: 1)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let seekTheGrail = Card(
+        id: classID("A8000000-0000-4000-8000-000000000013"),
+        name: "Seek the Grail",
+        text: "Draw 2 cards. Heal 6 HP.",
+        lucidityCost: 5,
+        cardType: .utility,
+        effects: [Effect(type: .drawCards, value: 2), Effect(type: .heal, value: 6)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let saintlyStrike = Card(
+        id: classID("A8000000-0000-4000-8000-000000000014"),
+        name: "Saintly Strike",
+        text: "Deal 20 damage.",
+        lucidityCost: 6,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 20)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let achieveTheGrail = Card(
+        id: classID("A8000000-0000-4000-8000-000000000015"),
+        name: "Achieve the Grail",
+        text: "Heal 25 HP.",
+        lucidityCost: 6,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 25)],
+        heroID: HeroIDs.galahad
+    )
+
     static let galahadCards: [Card] = [
         holyStrike, grace, blessedShield, radiantTouch, lightEverlasting, grailKnight,
+        divineLight, puritysEdge, holyShield, grailsBlessing, faithfulBlow,
+        purifyingLight, seekTheGrail, saintlyStrike, achieveTheGrail,
     ]
 
     // MARK: - Heroes
