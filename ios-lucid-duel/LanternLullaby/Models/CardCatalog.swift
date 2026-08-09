@@ -137,10 +137,13 @@ nonisolated enum CardCatalog {
         dreamWalk, mentalShift, focusedMind,
     ]
 
-    /// Every card definition in the game: neutrals plus each hero's pool.
+    /// Every card definition in the game: neutrals, starters, and each hero's pool.
     /// Lookups (`card(withID:)`, `pool(for:)`) read from this master list.
     static let allCards: [Card] =
-        neutralCards + lancelotCards + bedivereCards + escanorCards + merlinCards
+        neutralCards +
+        starterHeroCards +
+        lancelotCards + bedivereCards + escanorCards + merlinCards +
+        kayCards + morganaCards + galahadCards
 
     static func card(withID id: Card.ID) -> Card? {
         allCards.first { $0.id == id }

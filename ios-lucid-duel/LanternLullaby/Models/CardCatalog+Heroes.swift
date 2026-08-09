@@ -18,6 +18,9 @@ extension CardCatalog {
         static let bedivere = UUID(uuidString: "B3000000-0000-4000-8000-000000000001")!
         static let escanor  = UUID(uuidString: "B4000000-0000-4000-8000-000000000001")!
         static let merlin   = UUID(uuidString: "B5000000-0000-4000-8000-000000000001")!
+        static let kay      = UUID(uuidString: "B6000000-0000-4000-8000-000000000001")!
+        static let morgana  = UUID(uuidString: "B7000000-0000-4000-8000-000000000001")!
+        static let galahad  = UUID(uuidString: "B8000000-0000-4000-8000-000000000001")!
     }
 
     private static func classID(_ uuidString: String) -> UUID {
@@ -310,61 +313,309 @@ extension CardCatalog {
         infinity, aldansInsight, arcaneBolt, absoluteCancel, manaWell, realityShift,
     ]
 
+    // MARK: - Kay — resource management and tempo
+
+    static let bluntStrike = Card(
+        id: classID("A6000000-0000-4000-8000-000000000001"),
+        name: "Blunt Strike",
+        text: "Deal 11 damage.",
+        lucidityCost: 4,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 11)],
+        heroID: HeroIDs.kay
+    )
+
+    static let grudgingDefense = Card(
+        id: classID("A6000000-0000-4000-8000-000000000002"),
+        name: "Grudging Defense",
+        text: "Gain 10 shield.",
+        lucidityCost: 3,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 10)],
+        heroID: HeroIDs.kay
+    )
+
+    static let stewardsStores = Card(
+        id: classID("A6000000-0000-4000-8000-000000000003"),
+        name: "Steward's Stores",
+        text: "Draw 1 card. Gain 4 shield.",
+        lucidityCost: 3,
+        cardType: .utility,
+        effects: [Effect(type: .drawCards, value: 1), Effect(type: .shield, value: 4)],
+        heroID: HeroIDs.kay
+    )
+
+    static let practicalBlow = Card(
+        id: classID("A6000000-0000-4000-8000-000000000004"),
+        name: "Practical Blow",
+        text: "Deal 9 damage.",
+        lucidityCost: 3,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 9)],
+        heroID: HeroIDs.kay
+    )
+
+    static let noNonsense = Card(
+        id: classID("A6000000-0000-4000-8000-000000000005"),
+        name: "No Nonsense",
+        text: "Deal 14 damage.",
+        lucidityCost: 5,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 14)],
+        heroID: HeroIDs.kay
+    )
+
+    static let quartermaster = Card(
+        id: classID("A6000000-0000-4000-8000-000000000006"),
+        name: "Quartermaster",
+        text: "Draw 2 cards.",
+        lucidityCost: 4,
+        cardType: .utility,
+        effects: [Effect(type: .drawCards, value: 2)],
+        heroID: HeroIDs.kay
+    )
+
+    static let kayCards: [Card] = [
+        bluntStrike, grudgingDefense, stewardsStores, practicalBlow, noNonsense, quartermaster,
+    ]
+
+    // MARK: - Morgana — debuffs and hybrid damage
+
+    static let spiteBolt = Card(
+        id: classID("A7000000-0000-4000-8000-000000000001"),
+        name: "Spite Bolt",
+        text: "Deal 11 damage.",
+        lucidityCost: 4,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 11)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let darkMending = Card(
+        id: classID("A7000000-0000-4000-8000-000000000002"),
+        name: "Dark Mending",
+        text: "Heal 10 HP.",
+        lucidityCost: 3,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 10)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let thornShield = Card(
+        id: classID("A7000000-0000-4000-8000-000000000003"),
+        name: "Thorn Shield",
+        text: "Gain 8 shield.",
+        lucidityCost: 3,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 8)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let soulSiphon = Card(
+        id: classID("A7000000-0000-4000-8000-000000000004"),
+        name: "Soul Siphon",
+        text: "Deal 12 damage. Heal 6 HP.",
+        lucidityCost: 5,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 12), Effect(type: .heal, value: 6)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let feyFire = Card(
+        id: classID("A7000000-0000-4000-8000-000000000005"),
+        name: "Fey Fire",
+        text: "Deal 15 damage.",
+        lucidityCost: 6,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 15)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let darkPact = Card(
+        id: classID("A7000000-0000-4000-8000-000000000006"),
+        name: "Dark Pact",
+        text: "Draw 2 cards.",
+        lucidityCost: 4,
+        cardType: .utility,
+        effects: [Effect(type: .drawCards, value: 2)],
+        heroID: HeroIDs.morgana
+    )
+
+    static let morganaCards: [Card] = [
+        spiteBolt, darkMending, thornShield, soulSiphon, feyFire, darkPact,
+    ]
+
+    // MARK: - Galahad — healing and purification
+
+    static let holyStrike = Card(
+        id: classID("A8000000-0000-4000-8000-000000000001"),
+        name: "Holy Strike",
+        text: "Deal 12 damage.",
+        lucidityCost: 4,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 12)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let grace = Card(
+        id: classID("A8000000-0000-4000-8000-000000000002"),
+        name: "Grace",
+        text: "Heal 12 HP.",
+        lucidityCost: 3,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 12)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let blessedShield = Card(
+        id: classID("A8000000-0000-4000-8000-000000000003"),
+        name: "Blessed Shield",
+        text: "Gain 10 shield.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .shield, value: 10)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let radiantTouch = Card(
+        id: classID("A8000000-0000-4000-8000-000000000004"),
+        name: "Radiant Touch",
+        text: "Heal 8 HP. Gain 4 shield.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 8), Effect(type: .shield, value: 4)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let lightEverlasting = Card(
+        id: classID("A8000000-0000-4000-8000-000000000005"),
+        name: "Light Everlasting",
+        text: "Heal 6 HP. Gain 6 shield.",
+        lucidityCost: 4,
+        cardType: .defensive,
+        effects: [Effect(type: .heal, value: 6), Effect(type: .shield, value: 6)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let grailKnight = Card(
+        id: classID("A8000000-0000-4000-8000-000000000006"),
+        name: "Grail Knight",
+        text: "Deal 18 damage. Heal 8 HP.",
+        lucidityCost: 7,
+        cardType: .offensive,
+        effects: [Effect(type: .damage, value: 18), Effect(type: .heal, value: 8)],
+        heroID: HeroIDs.galahad
+    )
+
+    static let galahadCards: [Card] = [
+        holyStrike, grace, blessedShield, radiantTouch, lightEverlasting, grailKnight,
+    ]
+
     // MARK: - Heroes
 
     static let lancelot = Hero(
         id: HeroIDs.lancelot,
         name: "Lancelot",
+        title: "The Lion of Benwick",
         maxHealth: 70,
         passive: PassiveAbility(
-            name: "Vivid Fury",
-            text: "Offensive cards deal 2 extra damage while Vivid.",
-            kind: .vividFury(amount: 2)
+            name: "Peerless Blade",
+            text: "Offensive cards deal 3 extra damage while Vivid.",
+            kind: .vividFury(amount: 3)
         ),
+        storyText: "The greatest knight who ever lived, undone by his own heart. In dreams, his blade finds purpose once more.",
         cardIDs: lancelotCards.map(\.id)
     )
 
     static let bedivere = Hero(
         id: HeroIDs.bedivere,
         name: "Bedivere",
+        title: "The Loyal Arm",
         maxHealth: 85,
         passive: PassiveAbility(
-            name: "Drifting Bulwark",
-            text: "Shield effects grant 3 extra while Drifting.",
-            kind: .driftingBulwark(amount: 3)
+            name: "Steadfast",
+            text: "While Balanced, take 15% reduced damage.",
+            kind: .balancedResilience(percent: 15)
         ),
+        storyText: "The last of Arthur's knights, who cast Excalibur into the lake. His loyalty outlasted legend itself.",
         cardIDs: bedivereCards.map(\.id)
     )
 
     static let escanor = Hero(
         id: HeroIDs.escanor,
         name: "Escanor",
+        title: "Pride of the Noonday Sun",
         maxHealth: 65,
         passive: PassiveAbility(
-            name: "The One",
+            name: "Rising Sun",
             text: "Damage grows by 3 each turn the battle continues.",
             kind: .growingMight(perTurn: 3)
         ),
+        storyText: "A knight whose power waxes with the sun. At noon, none can stand before him. At dusk, he is gentle as a lamb.",
         cardIDs: escanorCards.map(\.id)
     )
 
     static let merlin = Hero(
         id: HeroIDs.merlin,
         name: "Merlin",
+        title: "The Wizard Who Lives Backwards",
         maxHealth: 60,
         passive: PassiveAbility(
-            name: "Infinite Wisdom",
-            text: "Lucidity increases from card costs are reduced by 2.",
+            name: "Backwards Living",
+            text: "While Drifting, card costs reduced by 2 Lucidity.",
             kind: .cheaperLucidityCosts(amount: 2)
         ),
+        storyText: "He remembers the future and forgets the past. Time flows strangely around him, even in dreams.",
         cardIDs: merlinCards.map(\.id)
     )
 
-    /// The four playable heroes, in roster order.
-    static let playableHeroes: [Hero] = [lancelot, bedivere, escanor, merlin]
+    static let kay = Hero(
+        id: HeroIDs.kay,
+        name: "Kay",
+        title: "The Seneschal",
+        maxHealth: 75,
+        passive: PassiveAbility(
+            name: "Seneschal's Efficiency",
+            text: "The first card played each turn costs 2 less Lucidity.",
+            kind: .firstCardDiscount(amount: 2)
+        ),
+        storyText: "Arthur's foster brother, ever practical, ever grumbling. His love hides behind sharp words and sharper efficiency.",
+        cardIDs: kayCards.map(\.id)
+    )
 
-    /// Every hero known to the game (roster + starter-set templates).
-    static let allHeroes: [Hero] = playableHeroes + [dreamer, nightmare]
+    static let morgana = Hero(
+        id: HeroIDs.morgana,
+        name: "Morgana",
+        title: "Queen of Air and Darkness",
+        maxHealth: 55,
+        passive: PassiveAbility(
+            name: "Fey Bargain",
+            text: "Whenever Morgana applies a debuff, heal 4 HP.",
+            kind: .debuffHealing(amount: 4)
+        ),
+        storyText: "Half-sister to Arthur, touched by the fey. Is she villain or victim? In dreams, even she doesn't know.",
+        cardIDs: morganaCards.map(\.id)
+    )
+
+    static let galahad = Hero(
+        id: HeroIDs.galahad,
+        name: "Galahad",
+        title: "The Grail Knight",
+        maxHealth: 60,
+        passive: PassiveAbility(
+            name: "Unblemished",
+            text: "While Galahad has no debuffs, heal 3 HP at turn start.",
+            kind: .purityHealing(amount: 3)
+        ),
+        storyText: "Pure of heart, worthy of the Grail. He alone achieved what others only sought. His light does not falter.",
+        cardIDs: galahadCards.map(\.id)
+    )
+
+    /// The seven Book 1 heroes, in unlock order.
+    static let book1Heroes: [Hero] = [lancelot, kay, bedivere, morgana, escanor, galahad, merlin]
+
+    /// Every hero known to the game (starters + Book 1 + template enemies).
+    static let allHeroes: [Hero] = starterHeroes + book1Heroes + [dreamer, nightmare]
 
     static func hero(withID id: Hero.ID) -> Hero? {
         allHeroes.first { $0.id == id }
@@ -381,11 +632,16 @@ extension CardCatalog {
     /// Class-card lookup usable while `allCards` is being assembled.
     private static func classCards(for id: Hero.ID) -> [Card] {
         switch id {
-        case HeroIDs.lancelot: return lancelotCards
-        case HeroIDs.bedivere: return bedivereCards
-        case HeroIDs.escanor:  return escanorCards
-        case HeroIDs.merlin:   return merlinCards
-        default:               return []
+        case HeroIDs.lancelot:  return lancelotCards
+        case HeroIDs.bedivere:  return bedivereCards
+        case HeroIDs.escanor:   return escanorCards
+        case HeroIDs.merlin:    return merlinCards
+        case HeroIDs.kay:       return kayCards
+        case HeroIDs.morgana:   return morganaCards
+        case HeroIDs.galahad:   return galahadCards
+        case StarterIDs.wart:       return wartCards
+        case StarterIDs.archimedes: return archimedesCards
+        default:                return []
         }
     }
 
