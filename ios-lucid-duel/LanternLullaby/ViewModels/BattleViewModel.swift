@@ -8,6 +8,15 @@ nonisolated enum EnemyIntent: Hashable, Sendable {
     case brace(Int)
 }
 
+/// Tracks narrative flow state during battle.
+enum NarrativePhase: Equatable {
+    case none                    // Normal gameplay
+    case showingPreScene         // Pre-battle cutscene
+    case showingDialogue         // In-battle dialogue overlay
+    case showingPostScene        // Post-battle cutscene
+    case waitingForDialogueDismiss  // Paused, waiting for tap
+}
+
 /// A resolved hit against a combatant, used for floating combat numbers.
 nonisolated struct HitEvent: Identifiable, Hashable, Sendable {
     let id: UUID
@@ -95,6 +104,26 @@ final class BattleViewModel {
     /// The sound that would play right now (placeholder); auto-clears.
     private(set) var soundCue: SoundCue?
 
+    // MARK: - Dialogue System
+    
+    /// Manages dialogue triggers and queue.
+    let dialogueManager = DialogueManager()
+    
+    /// Currently active dialogue to display (nil = no dialogue showing).
+    private(set) var activeDialogue: BattleDialogue?
+    
+    /// Pre-battle story scene to show before combat begins.
+    private(set) var preStageScene: StoryScene?
+    
+    /// Post-battle story scene to show after victory.
+    private(set) var postStageScene: StoryScene?
+    
+    /// Current phase of narrative flow.
+    private(set) var narrativePhase: NarrativePhase = .none
+    
+    /// Tracks the last enemy health percentage for threshold checks.
+    private var lastEnemyHealthPercent: Int = 100
+
     /// Placeholder teammates for the team layout (mockup; not yet playable).
     private(set) var supportAllies: [AllyMember]
 
@@ -118,9 +147,21 @@ final class BattleViewModel {
     /// Increments on every hero switch; drives the switch haptic.
     private(set) var heroSwitchTrigger: Int = 0
 
+    /// Tracks whether this is the first card played this turn (for Kay's passive).
+    private var isFirstCardThisTurn: Bool = true
+
+    /// Current turn number, cached for growing passives (Escanor).
+    private var currentTurnForPassives: Int { state.turnNumber }
+
     let playerHero: Hero
     let enemyHero: Hero
     private let cardsByID: [Card.ID: Card]
+
+    /// All heroes currently in the battle party (for future multi-hero passive stacking).
+    private var activeHeroes: [Hero] {
+        // For now, just the player hero. Will expand when roster selection is wired.
+        [playerHero]
+    }
 
     /// - Parameter initialState: test hook; when `nil` a fresh shuffled duel
     ///   is created and the opening hand is drawn.
@@ -146,6 +187,113 @@ final class BattleViewModel {
         }
     }
 
+    // MARK: - Narrative System
+    
+    /// Configure narrative content for this battle.
+    /// Call this after init to set up stage-specific story content.
+    func configureNarrative(_ narrative: StageNarrative, partyHeroIDs: [UUID] = []) {
+        // Store pre/post scenes
+        preStageScene = narrative.preStageScene
+        postStageScene = narrative.postStageScene
+        
+        // Register all battle dialogues
+        var allDialogues = narrative.battleDialogues
+        
+        // Add hero combination dialogues based on party
+        let comboDialogues = NarrativeCatalogBook1.comboDialogues(forParty: partyHeroIDs)
+        allDialogues.append(contentsOf: comboDialogues)
+        
+        dialogueManager.registerDialogues(allDialogues)
+        dialogueManager.loadShownKeys()
+        
+        // Set up callback for dialogue state changes
+        dialogueManager.onDialogueStateChanged = { [weak self] isShowing in
+            self?.handleDialogueStateChange(isShowing)
+        }
+        
+        // Check if we should show pre-scene
+        if preStageScene != nil {
+            narrativePhase = .showingPreScene
+        }
+    }
+    
+    /// Called when pre-stage scene completes.
+    func dismissPreScene() {
+        preStageScene = nil
+        narrativePhase = .none
+        
+        // Now trigger battle start dialogues
+        dialogueManager.checkTrigger(.battleStart)
+    }
+    
+    /// Called when post-stage scene completes.
+    func dismissPostScene() {
+        postStageScene = nil
+        narrativePhase = .none
+        dialogueManager.saveShownKeys()
+    }
+    
+    /// Called when user taps to dismiss current dialogue.
+    func dismissDialogue() {
+        dialogueManager.dismissCurrentDialogue()
+    }
+    
+    /// Handle dialogue manager state changes.
+    private func handleDialogueStateChange(_ isShowing: Bool) {
+        if isShowing, let dialogue = dialogueManager.activeDialogue {
+            activeDialogue = dialogue
+            if dialogue.pausesBattle {
+                narrativePhase = .showingDialogue
+            }
+        } else {
+            activeDialogue = nil
+            if narrativePhase == .showingDialogue {
+                narrativePhase = .none
+            }
+        }
+    }
+    
+    /// Check for enemy health threshold dialogues.
+    private func checkEnemyHealthDialogues() {
+        let maxHealth = enemyHero.maxHealth
+        let currentHealth = state.enemy.currentHealth
+        let currentPercent = (currentHealth * 100) / maxHealth
+        
+        // Check thresholds: 75%, 50%, 25%, 10%
+        let thresholds = [75, 50, 25, 10]
+        for threshold in thresholds {
+            if lastEnemyHealthPercent > threshold && currentPercent <= threshold {
+                dialogueManager.checkHealthThreshold(enemyHealthPercent: threshold)
+            }
+        }
+        
+        lastEnemyHealthPercent = currentPercent
+    }
+    
+    /// Trigger victory dialogue and post-scene.
+    private func triggerVictoryNarrative() {
+        dialogueManager.checkTrigger(.battleEnd)
+        
+        // After battle end dialogues, show post scene if present
+        if postStageScene != nil {
+            // Delay to let any battle end dialogues play first
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                if self?.activeDialogue == nil {
+                    self?.narrativePhase = .showingPostScene
+                }
+            }
+        }
+        
+        dialogueManager.saveShownKeys()
+    }
+    
+    /// Check if battle should be paused for dialogue.
+    var isBattlePausedForDialogue: Bool {
+        narrativePhase == .showingDialogue || 
+        narrativePhase == .showingPreScene || 
+        narrativePhase == .showingPostScene
+    }
+
     // MARK: - Lookups
 
     func card(for instance: CardInstance) -> Card? {
@@ -167,12 +315,32 @@ final class BattleViewModel {
             || (card.cardType == .defensive && zone == .drifting)
     }
 
-    /// Lucidity cost after the player hero's passive discounts.
+    /// Lucidity cost after hero passive discounts are applied.
+    ///
+    /// Passives that affect cost:
+    /// - `cheaperLucidityCosts`: reduces cost while in Drifting zone (Merlin)
+    /// - `firstCardDiscount`: reduces cost of first card each turn (Kay)
     func effectiveCost(of card: Card) -> Int {
-        if case .cheaperLucidityCosts(let amount) = playerHero.passive.kind {
-            return max(0, card.lucidityCost - amount)
+        var cost = card.lucidityCost
+        
+        for hero in activeHeroes {
+            switch hero.passive.kind {
+            case .cheaperLucidityCosts(let amount):
+                // Only applies while in Drifting zone
+                if state.player.zone == .drifting {
+                    cost -= amount
+                }
+            case .firstCardDiscount(let amount):
+                // Only applies to first card played this turn
+                if isFirstCardThisTurn {
+                    cost -= amount
+                }
+            default:
+                break
+            }
         }
-        return card.lucidityCost
+        
+        return max(0, cost)
     }
 
     /// Effect value as it would resolve *right now* (for previews/badges).
@@ -356,6 +524,9 @@ final class BattleViewModel {
     /// - Parameter choice: required when the card carries `choices`; playing
     ///   a dual-direction card without picking a branch is a no-op.
     func playSelectedCard(choice: CardChoiceOption? = nil) {
+        // Block card play while dialogue is showing
+        guard !isBattlePausedForDialogue else { return }
+        
         guard state.phase == .playerMain,
               state.outcome == .ongoing,
               let instance = selectedInstance,
@@ -374,6 +545,9 @@ final class BattleViewModel {
         selectedInstanceID = nil
 
         applyPlayerLucidityDelta(effectiveCost(of: card))
+        
+        // Mark that we've played a card this turn (for Kay's first card discount)
+        isFirstCardThisTurn = false
 
         for effect in card.effects + (choice?.effects ?? []) {
             resolve(effect, from: card, zoneAtPlay: zoneAtPlay)
@@ -385,6 +559,9 @@ final class BattleViewModel {
     }
 
     func endTurn() {
+        // Block ending turn while dialogue is showing
+        guard !isBattlePausedForDialogue else { return }
+        
         guard state.phase == .playerMain, state.outcome == .ongoing else { return }
         selectedInstanceID = nil
         state.phase = .enemyTurn
@@ -400,6 +577,7 @@ final class BattleViewModel {
         lucidityPulse = nil
         soundCue = nil
         isEnemyThinking = false
+        isFirstCardThisTurn = true
         supportAllies = Self.placeholderAllies()
         supportEnemies = Self.placeholderEnemies()
         targetedEnemyID = enemyHero.id
@@ -414,7 +592,11 @@ final class BattleViewModel {
     // MARK: - Effect resolution
 
     private func resolve(_ effect: Effect, from card: Card, zoneAtPlay: LucidityZone) {
-        let value = effect.resolvedValue(cardType: card.cardType, zone: zoneAtPlay)
+        var value = effect.resolvedValue(cardType: card.cardType, zone: zoneAtPlay)
+        
+        // Apply passive bonuses based on effect type
+        value = applyPassiveBonuses(to: value, effectType: effect.type, cardType: card.cardType, zone: zoneAtPlay)
+        
         switch effect.type {
         case .damage:
             dealDamageToEnemy(value)
@@ -429,6 +611,43 @@ final class BattleViewModel {
         case .drawCards:
             drawPlayerCards(value)
         }
+    }
+    
+    /// Applies hero passive bonuses to an effect value.
+    ///
+    /// Passives that modify effect values:
+    /// - `vividFury`: bonus damage while Vivid (Lancelot)
+    /// - `growingMight`: bonus damage per turn (Escanor)
+    /// - `driftingBulwark`: bonus shield while Drifting (unused currently, but wired)
+    private func applyPassiveBonuses(to value: Int, effectType: EffectType, cardType: CardType, zone: LucidityZone) -> Int {
+        var modified = value
+        
+        for hero in activeHeroes {
+            switch hero.passive.kind {
+            case .vividFury(let amount):
+                // Bonus damage while in Vivid zone, offensive cards only
+                if effectType == .damage && cardType == .offensive && zone == .vivid {
+                    modified += amount
+                }
+                
+            case .growingMight(let perTurn):
+                // Bonus damage that grows each turn (turn 1 = 0, turn 2 = perTurn, etc.)
+                if effectType == .damage {
+                    modified += perTurn * (currentTurnForPassives - 1)
+                }
+                
+            case .driftingBulwark(let amount):
+                // Bonus shield while in Drifting zone
+                if effectType == .shield && zone == .drifting {
+                    modified += amount
+                }
+                
+            default:
+                break
+            }
+        }
+        
+        return modified
     }
 
     private func applyPlayerLucidityDelta(_ delta: Int) {
@@ -518,17 +737,23 @@ final class BattleViewModel {
         enemyHit = hit
         enemyHitTargetID = enemyHero.id
         scheduleHitClear(id: hit.id, isEnemy: true)
+        
+        // Check for health threshold dialogue triggers
+        checkEnemyHealthDialogues()
     }
 
     /// Enemy damage lands on whoever leads the team. The shared shield
     /// absorbs first either way. If a teammate falls, the Dreamer retakes
     /// the lead; the duel is only lost when the Dreamer falls (engine rule).
     private func dealDamageToPlayer(_ amount: Int) {
-        let absorbed = min(state.player.shield, amount)
+        // Apply damage reduction passives (Bedivere's balancedResilience)
+        let reducedAmount = applyDamageReductionPassives(to: amount)
+        
+        let absorbed = min(state.player.shield, reducedAmount)
         state.player.shield -= absorbed
-        let remainder = amount - absorbed
+        let remainder = reducedAmount - absorbed
 
-        let hit = HitEvent(amount: amount, absorbed: absorbed)
+        let hit = HitEvent(amount: reducedAmount, absorbed: absorbed)
         playerHit = hit
         playerHitTargetID = activeAllyID
         scheduleHitClear(id: hit.id, isEnemy: false)
@@ -542,6 +767,25 @@ final class BattleViewModel {
         }
 
         state.player.currentHealth = max(0, state.player.currentHealth - remainder)
+    }
+    
+    /// Applies damage reduction passives to incoming damage.
+    ///
+    /// Passives handled:
+    /// - `balancedResilience`: reduce damage by percent while in Balanced zone (Bedivere)
+    private func applyDamageReductionPassives(to damage: Int) -> Int {
+        var reduced = damage
+        
+        for hero in activeHeroes {
+            if case .balancedResilience(let percent) = hero.passive.kind {
+                if state.player.zone == .balanced {
+                    let reduction = Double(damage) * Double(percent) / 100.0
+                    reduced = max(0, damage - Int(reduction.rounded()))
+                }
+            }
+        }
+        
+        return reduced
     }
 
     private func drawPlayerCards(_ count: Int) {
@@ -566,6 +810,7 @@ final class BattleViewModel {
             switch state.outcome {
             case .victory:
                 emitSound("victory chime")
+                triggerVictoryNarrative()
             case .lostToLucidity(let zone):
                 emitSound(zone == .awakening ? "alarm blare" : "fading hum")
             case .defeated:
@@ -609,13 +854,58 @@ final class BattleViewModel {
     private func beginPlayerTurn() {
         state.turnNumber += 1
         state.player.shield = 0
-        if case .lucidityDrift(let amount) = playerHero.passive.kind {
-            setPlayerLucidity(Self.shifted(state.player.lucidity, towardCenterBy: amount))
-        }
+        
+        // Reset first card tracking for Kay's passive
+        isFirstCardThisTurn = true
+        
+        // Apply turn-start passives
+        applyTurnStartPassives()
+        
+        // Check for turn-based dialogue triggers
+        dialogueManager.checkTurnNumber(state.turnNumber)
+        
         drawPlayerCards(GameRules.cardsDrawnPerTurn)
+        
+        // Apply bonus card draw passives (Archimedes)
+        applyBonusCardDrawPassives()
+        
         emitSound("card drawn")
         enemyIntent = Self.intent(forTurn: state.turnNumber)
         state.phase = .playerMain
+    }
+    
+    /// Applies passives that trigger at the start of the player's turn.
+    ///
+    /// Passives handled:
+    /// - `lucidityDrift`: drift toward center (generic)
+    /// - `purityHealing`: heal if no debuffs (Galahad)
+    private func applyTurnStartPassives() {
+        for hero in activeHeroes {
+            switch hero.passive.kind {
+            case .lucidityDrift(let amount):
+                setPlayerLucidity(Self.shifted(state.player.lucidity, towardCenterBy: amount))
+                
+            case .purityHealing(let amount):
+                // Heal at turn start if hero has no debuffs
+                // Note: debuff system not yet implemented, so always heals for now
+                let hasDebuffs = false // TODO: check actual debuff state when implemented
+                if !hasDebuffs {
+                    state.player.currentHealth = min(playerHero.maxHealth, state.player.currentHealth + amount)
+                }
+                
+            default:
+                break
+            }
+        }
+    }
+    
+    /// Applies bonus card draw passives (Archimedes).
+    private func applyBonusCardDrawPassives() {
+        for hero in activeHeroes {
+            if case .bonusCardDraw(let amount) = hero.passive.kind {
+                drawPlayerCards(amount)
+            }
+        }
     }
 
     // MARK: - Helpers

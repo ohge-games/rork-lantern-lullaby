@@ -34,6 +34,41 @@ struct BattleView: View {
                 )
                 .transition(.opacity)
             }
+            
+            // MARK: - Narrative Overlays
+            
+            // Pre-battle story scene
+            if let preScene = viewModel.preStageScene,
+               viewModel.narrativePhase == .showingPreScene {
+                StorySceneView(
+                    scene: preScene,
+                    onComplete: { viewModel.dismissPreScene() }
+                )
+                .transition(.opacity)
+                .zIndex(100)
+            }
+            
+            // In-battle dialogue overlay (appears in card zone area)
+            if let dialogue = viewModel.activeDialogue,
+               viewModel.narrativePhase == .showingDialogue {
+                DialogueOverlayView(
+                    dialogue: dialogue,
+                    onDismiss: { viewModel.dismissDialogue() }
+                )
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .zIndex(99)
+            }
+            
+            // Post-battle story scene
+            if let postScene = viewModel.postStageScene,
+               viewModel.narrativePhase == .showingPostScene {
+                StorySceneView(
+                    scene: postScene,
+                    onComplete: { viewModel.dismissPostScene() }
+                )
+                .transition(.opacity)
+                .zIndex(100)
+            }
         }
         .sensoryFeedback(.impact(weight: .medium), trigger: viewModel.playImpactTrigger)
         .sensoryFeedback(.impact(weight: .heavy), trigger: viewModel.enemyActionTrigger)

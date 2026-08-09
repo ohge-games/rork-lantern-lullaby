@@ -8,11 +8,34 @@ import Foundation
 nonisolated struct Hero: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let name: String
+    /// Epithet shown below the name (e.g., "The Lion of Benwick").
+    let title: String
     let maxHealth: Int
     let passive: PassiveAbility
+    /// One or two sentences of flavor text for the hero detail panel.
+    let storyText: String
 
     /// Class cards associated with this hero (used for deck building).
     let cardIDs: [Card.ID]
+    
+    /// Convenience initializer with default empty title/story for backwards compatibility.
+    init(
+        id: UUID,
+        name: String,
+        title: String = "",
+        maxHealth: Int,
+        passive: PassiveAbility,
+        storyText: String = "",
+        cardIDs: [Card.ID]
+    ) {
+        self.id = id
+        self.name = name
+        self.title = title
+        self.maxHealth = maxHealth
+        self.passive = passive
+        self.storyText = storyText
+        self.cardIDs = cardIDs
+    }
 }
 
 /// A hero's always-on rule-bending ability.
@@ -43,4 +66,16 @@ nonisolated enum PassiveKind: Codable, Hashable, Sendable {
     /// Damage effects gain `perTurn * (turnNumber - 1)` bonus, so the hero
     /// hits harder the longer the battle runs (Escanor's "The One").
     case growingMight(perTurn: Int)
+    /// The first card played each turn costs `amount` less Lucidity (Kay).
+    case firstCardDiscount(amount: Int)
+    /// Whenever this hero applies a debuff, heal `amount` HP (Morgana).
+    case debuffHealing(amount: Int)
+    /// While this hero has no debuffs, heal `amount` HP at turn start (Galahad).
+    case purityHealing(amount: Int)
+    /// While in Balanced zone, take `percent`% reduced damage (Bedivere alternate).
+    case balancedResilience(percent: Int)
+    /// Draw `amount` extra card(s) at turn start (Archimedes).
+    case bonusCardDraw(amount: Int)
+    /// No special effect — for tutorial heroes (Wart).
+    case none
 }
