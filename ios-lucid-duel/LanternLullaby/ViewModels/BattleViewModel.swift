@@ -8,6 +8,15 @@ nonisolated enum EnemyIntent: Hashable, Sendable {
     case brace(Int)
 }
 
+/// Tracks narrative flow state during battle.
+enum NarrativePhase: Equatable {
+    case none                    // Normal gameplay
+    case showingPreScene         // Pre-battle cutscene
+    case showingDialogue         // In-battle dialogue overlay
+    case showingPostScene        // Post-battle cutscene
+    case waitingForDialogueDismiss  // Paused, waiting for tap
+}
+
 /// A resolved hit against a combatant, used for floating combat numbers.
 nonisolated struct HitEvent: Identifiable, Hashable, Sendable {
     let id: UUID
@@ -95,6 +104,26 @@ final class BattleViewModel {
     /// The sound that would play right now (placeholder); auto-clears.
     private(set) var soundCue: SoundCue?
 
+    // MARK: - Dialogue System
+    
+    /// Manages dialogue triggers and queue.
+    let dialogueManager = DialogueManager()
+    
+    /// Currently active dialogue to display (nil = no dialogue showing).
+    private(set) var activeDialogue: BattleDialogue?
+    
+    /// Pre-battle story scene to show before combat begins.
+    private(set) var preStageScene: StoryScene?
+    
+    /// Post-battle story scene to show after victory.
+    private(set) var postStageScene: StoryScene?
+    
+    /// Current phase of narrative flow.
+    private(set) var narrativePhase: NarrativePhase = .none
+    
+    /// Tracks the last enemy health percentage for threshold checks.
+    private var lastEnemyHealthPercent: Int = 100
+
     /// Placeholder teammates for the team layout (mockup; not yet playable).
     private(set) var supportAllies: [AllyMember]
 
@@ -156,6 +185,113 @@ final class BattleViewModel {
             drawPlayerCards(GameRules.startingHandSize)
             state.phase = .playerMain
         }
+    }
+
+    // MARK: - Narrative System
+    
+    /// Configure narrative content for this battle.
+    /// Call this after init to set up stage-specific story content.
+    func configureNarrative(_ narrative: StageNarrative, partyHeroIDs: [UUID] = []) {
+        // Store pre/post scenes
+        preStageScene = narrative.preStageScene
+        postStageScene = narrative.postStageScene
+        
+        // Register all battle dialogues
+        var allDialogues = narrative.battleDialogues
+        
+        // Add hero combination dialogues based on party
+        let comboDialogues = NarrativeCatalogBook1.comboDialogues(forParty: partyHeroIDs)
+        allDialogues.append(contentsOf: comboDialogues)
+        
+        dialogueManager.registerDialogues(allDialogues)
+        dialogueManager.loadShownKeys()
+        
+        // Set up callback for dialogue state changes
+        dialogueManager.onDialogueStateChanged = { [weak self] isShowing in
+            self?.handleDialogueStateChange(isShowing)
+        }
+        
+        // Check if we should show pre-scene
+        if preStageScene != nil {
+            narrativePhase = .showingPreScene
+        }
+    }
+    
+    /// Called when pre-stage scene completes.
+    func dismissPreScene() {
+        preStageScene = nil
+        narrativePhase = .none
+        
+        // Now trigger battle start dialogues
+        dialogueManager.checkTrigger(.battleStart)
+    }
+    
+    /// Called when post-stage scene completes.
+    func dismissPostScene() {
+        postStageScene = nil
+        narrativePhase = .none
+        dialogueManager.saveShownKeys()
+    }
+    
+    /// Called when user taps to dismiss current dialogue.
+    func dismissDialogue() {
+        dialogueManager.dismissCurrentDialogue()
+    }
+    
+    /// Handle dialogue manager state changes.
+    private func handleDialogueStateChange(_ isShowing: Bool) {
+        if isShowing, let dialogue = dialogueManager.activeDialogue {
+            activeDialogue = dialogue
+            if dialogue.pausesBattle {
+                narrativePhase = .showingDialogue
+            }
+        } else {
+            activeDialogue = nil
+            if narrativePhase == .showingDialogue {
+                narrativePhase = .none
+            }
+        }
+    }
+    
+    /// Check for enemy health threshold dialogues.
+    private func checkEnemyHealthDialogues() {
+        let maxHealth = enemyHero.maxHealth
+        let currentHealth = state.enemy.currentHealth
+        let currentPercent = (currentHealth * 100) / maxHealth
+        
+        // Check thresholds: 75%, 50%, 25%, 10%
+        let thresholds = [75, 50, 25, 10]
+        for threshold in thresholds {
+            if lastEnemyHealthPercent > threshold && currentPercent <= threshold {
+                dialogueManager.checkHealthThreshold(enemyHealthPercent: threshold)
+            }
+        }
+        
+        lastEnemyHealthPercent = currentPercent
+    }
+    
+    /// Trigger victory dialogue and post-scene.
+    private func triggerVictoryNarrative() {
+        dialogueManager.checkTrigger(.battleEnd)
+        
+        // After battle end dialogues, show post scene if present
+        if postStageScene != nil {
+            // Delay to let any battle end dialogues play first
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                if self?.activeDialogue == nil {
+                    self?.narrativePhase = .showingPostScene
+                }
+            }
+        }
+        
+        dialogueManager.saveShownKeys()
+    }
+    
+    /// Check if battle should be paused for dialogue.
+    var isBattlePausedForDialogue: Bool {
+        narrativePhase == .showingDialogue || 
+        narrativePhase == .showingPreScene || 
+        narrativePhase == .showingPostScene
     }
 
     // MARK: - Lookups
@@ -388,6 +524,9 @@ final class BattleViewModel {
     /// - Parameter choice: required when the card carries `choices`; playing
     ///   a dual-direction card without picking a branch is a no-op.
     func playSelectedCard(choice: CardChoiceOption? = nil) {
+        // Block card play while dialogue is showing
+        guard !isBattlePausedForDialogue else { return }
+        
         guard state.phase == .playerMain,
               state.outcome == .ongoing,
               let instance = selectedInstance,
@@ -420,6 +559,9 @@ final class BattleViewModel {
     }
 
     func endTurn() {
+        // Block ending turn while dialogue is showing
+        guard !isBattlePausedForDialogue else { return }
+        
         guard state.phase == .playerMain, state.outcome == .ongoing else { return }
         selectedInstanceID = nil
         state.phase = .enemyTurn
@@ -595,6 +737,9 @@ final class BattleViewModel {
         enemyHit = hit
         enemyHitTargetID = enemyHero.id
         scheduleHitClear(id: hit.id, isEnemy: true)
+        
+        // Check for health threshold dialogue triggers
+        checkEnemyHealthDialogues()
     }
 
     /// Enemy damage lands on whoever leads the team. The shared shield
@@ -665,6 +810,7 @@ final class BattleViewModel {
             switch state.outcome {
             case .victory:
                 emitSound("victory chime")
+                triggerVictoryNarrative()
             case .lostToLucidity(let zone):
                 emitSound(zone == .awakening ? "alarm blare" : "fading hum")
             case .defeated:
@@ -714,6 +860,9 @@ final class BattleViewModel {
         
         // Apply turn-start passives
         applyTurnStartPassives()
+        
+        // Check for turn-based dialogue triggers
+        dialogueManager.checkTurnNumber(state.turnNumber)
         
         drawPlayerCards(GameRules.cardsDrawnPerTurn)
         
