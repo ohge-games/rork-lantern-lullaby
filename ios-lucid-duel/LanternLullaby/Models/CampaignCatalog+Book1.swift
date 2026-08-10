@@ -1300,24 +1300,31 @@ enum CampaignCatalogBook1 {
     // ─────────────────────────────────────────────────────────────────────────
     // MARK: - ID Generators
     // ─────────────────────────────────────────────────────────────────────────
+    // UUID format: 8-4-4-4-12 hex characters
+    // Schema: KKCCSSNN-WWWW-4000-8000-000000000001
+    //   KK = kind (D1=chapter, D2=stage, D3=battle, D4=wave, D5=encounter)
+    //   CC = chapter (01-99)
+    //   SS = stage (01-99)
+    //   NN = reserved
+    //   WWWW = wave index for waves/encounters
 
     private static func chapterID(_ chapter: Int) -> UUID {
-        UUID(uuidString: String(format: "D1%02d00000-0000-4000-8000-000000000001", chapter))!
+        UUID(uuidString: String(format: "D1%02d0000-0000-4000-8000-000000000001", chapter))!
     }
 
     private static func stageID(_ chapter: Int, _ stage: Int) -> UUID {
-        UUID(uuidString: String(format: "D1%02d%02d000-0000-4000-8000-000000000001", chapter, stage))!
+        UUID(uuidString: String(format: "D2%02d%02d00-0000-4000-8000-000000000001", chapter, stage))!
     }
 
     private static func battleID(_ chapter: Int, _ stage: Int) -> UUID {
-        UUID(uuidString: String(format: "D1%02d%02d100-0000-4000-8000-000000000001", chapter, stage))!
+        UUID(uuidString: String(format: "D3%02d%02d00-0000-4000-8000-000000000001", chapter, stage))!
     }
 
     private static func waveID(_ chapter: Int, _ stage: Int, _ wave: Int) -> UUID {
-        UUID(uuidString: String(format: "D1%02d%02d1%02d-0000-4000-8000-000000000001", chapter, stage, wave))!
+        UUID(uuidString: String(format: "D4%02d%02d00-%04d-4000-8000-000000000001", chapter, stage, wave))!
     }
 
     private static func encounterID(_ chapter: Int, _ stage: Int, _ wave: Int) -> UUID {
-        UUID(uuidString: String(format: "D1%02d%02d2%02d-0000-4000-8000-000000000001", chapter, stage, wave))!
+        UUID(uuidString: String(format: "D5%02d%02d00-%04d-4000-8000-000000000001", chapter, stage, wave))!
     }
 }
