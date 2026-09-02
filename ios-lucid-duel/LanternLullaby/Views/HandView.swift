@@ -6,9 +6,10 @@ import SwiftUI
 /// it lifts and enlarges in place so its text stays readable, while a
 /// glowing line follows the finger to a target on the field.
 /// - Attack cards: release on an enemy to strike it.
-/// - Support cards (shields, heals, Relax, Step Forward): release on one
-///   of your heroes.
+/// - Support cards (shields, heals, Step Forward): release on one of your
+///   heroes.
 /// - Dual-direction cards: release on either to open the branch picker.
+/// - Cards that need no target (Relax, draw): just pull up and release.
 /// Releasing anywhere else snaps the thread back.
 ///
 /// The whole hand always fans from the center; bigger hands simply pack
@@ -144,7 +145,14 @@ struct HandView: View {
             let enemyUnderFinger = viewModel.enemyID(at: value.location)
             let allyUnderFinger = viewModel.allyID(at: value.location)
 
-            if card.choices != nil {
+            if !card.needsTarget {
+                // No target needed: pulling clear of the hand plays it.
+                if viewModel.isLiftedForGlobalPlay {
+                    viewModel.playSelectedCard()
+                } else {
+                    viewModel.clearSelection()
+                }
+            } else if card.choices != nil {
                 // Dual-direction cards: the drop opens the branch picker and
                 // remembers where the card landed.
                 if let enemyUnderFinger {
@@ -200,6 +208,9 @@ struct HandView: View {
 
         if viewModel.hasDropTarget {
             return card.choices != nil ? "Release to choose a path" : "Release to play"
+        }
+        if !card.needsTarget {
+            return "Pull up to play"
         }
         if card.choices != nil {
             return "Draw the thread to an enemy or a hero"

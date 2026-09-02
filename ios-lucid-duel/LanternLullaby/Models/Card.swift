@@ -56,6 +56,25 @@ nonisolated struct Card: Codable, Identifiable, Hashable, Sendable {
         self.choices = choices
     }
 
+    /// Every effect this card can resolve, both branches included.
+    private var allEffects: [Effect] {
+        effects + (choices?.flatMap(\.effects) ?? [])
+    }
+
+    /// True when the card must be aimed at somebody: damage picks an enemy,
+    /// heal / shield / lead-change pick one of your heroes. Cards that only
+    /// move the meter or draw are global — pull them up to play.
+    var needsTarget: Bool {
+        allEffects.contains { effect in
+            switch effect.type {
+            case .damage, .heal, .shield, .swapLead:
+                return true
+            case .lucidityModify, .lucidityCenter, .drawCards:
+                return false
+            }
+        }
+    }
+
     /// Net lucidity movement for the caster, before passives.
     var netLucidityShift: Int {
         lucidityCost + effects

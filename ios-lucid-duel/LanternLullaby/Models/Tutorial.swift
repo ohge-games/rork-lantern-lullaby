@@ -68,7 +68,7 @@ nonisolated struct TutorialScript: Hashable, Codable, Sendable {
         TutorialStep(
             id: "play",
             title: "Play a card",
-            text: "Touch a card and drag the thread to a target. Attacks go to an enemy; shields, heals and Relax cards go to one of your heroes. Try it now.",
+            text: "Touch a card and drag the thread to a target. Attacks go to an enemy; shields and heals go to one of your heroes. Cards that need no target — Relax and draw — just pull up. Try it now.",
             anchor: .hand,
             advance: .cardPlayed
         ),

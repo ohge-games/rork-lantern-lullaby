@@ -631,8 +631,18 @@ final class BattleViewModel {
     /// True while the dragged card can be dropped on one of your heroes:
     /// support cards always, dual-direction cards too.
     var isAllyTargetingActive: Bool {
-        guard isDraggingCard, let card = selectedCard else { return false }
+        guard isDraggingCard, let card = selectedCard, card.needsTarget else { return false }
         return card.choices != nil || !cardDealsDamage(card)
+    }
+
+    /// How far a global card must be pulled above the hand to play.
+    private static let globalPlayLift: CGFloat = 70
+
+    /// True while a card that needs no target is held high enough to play.
+    var isLiftedForGlobalPlay: Bool {
+        guard let card = selectedCard, !card.needsTarget,
+              let anchor = dragAnchor, let point = dragPoint else { return false }
+        return point.y < anchor.y - Self.globalPlayLift
     }
 
     /// Moves the targeting thread and aims at whatever sits under the finger.
@@ -640,6 +650,11 @@ final class BattleViewModel {
         guard isDraggingCard, let card = selectedCard else { return }
         dragAnchor = anchor
         dragPoint = point
+
+        guard card.needsTarget else {
+            hoveredAllyID = nil
+            return
+        }
 
         let enemyUnderFinger = cardDealsDamage(card) ? enemyID(at: point) : nil
         let allyUnderFinger = (card.choices != nil || !cardDealsDamage(card)) ? allyID(at: point) : nil
@@ -652,9 +667,10 @@ final class BattleViewModel {
         }
     }
 
-    /// True when releasing now would land the card on something.
+    /// True when releasing now would play the card.
     var hasDropTarget: Bool {
         guard isDraggingCard, let card = selectedCard, let point = dragPoint else { return false }
+        guard card.needsTarget else { return isLiftedForGlobalPlay }
         if cardDealsDamage(card), enemyID(at: point) != nil { return true }
         if card.choices != nil || !cardDealsDamage(card), allyID(at: point) != nil { return true }
         return false
@@ -849,6 +865,15 @@ final class BattleViewModel {
         enemyHitTargetID = nil
         lastEnemyHealthPercent = 100
         syncPrimaryMirror()
+
+        // A hero the story promised rides in with this wave.
+        if let guest = wave.allyReinforcement, !party.contains(where: { $0.id == guest.id }) {
+            party.append(PartyMember(hero: guest, health: guest.maxHealth))
+            if index > 0 {
+                showNotice("\(guest.name) joins the fight")
+                emitSound("ally arrives")
+            }
+        }
     }
 
     private func beginNextWave() {

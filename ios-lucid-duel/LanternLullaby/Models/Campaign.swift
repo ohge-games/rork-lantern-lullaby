@@ -16,31 +16,51 @@ nonisolated struct Encounter: Codable, Identifiable, Hashable, Sendable {
 nonisolated struct BattleWave: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let encounter: Encounter
-    
+
     /// Narrative text shown before this wave begins.
     /// Example: "More wolves emerge from the shadows..."
     let introText: String?
-    
+
     /// Narrative text shown after clearing this wave (before next wave or victory).
     /// Example: "The pack leader howls — reinforcements are coming!"
     let outroText: String?
+
+    /// A hero who rides in when this wave starts and fights beside the
+    /// party for the rest of the battle. Used where the story says help
+    /// arrives — Lancelot at Chapter 1 Stage 5, Kay at Stage 8 — so the
+    /// promised ally is actually on the field.
+    let allyReinforcementID: Hero.ID?
+
+    init(
+        id: UUID,
+        encounter: Encounter,
+        introText: String?,
+        outroText: String?,
+        allyReinforcementID: Hero.ID? = nil
+    ) {
+        self.id = id
+        self.encounter = encounter
+        self.introText = introText
+        self.outroText = outroText
+        self.allyReinforcementID = allyReinforcementID
+    }
 }
 
 /// A complete battle consisting of 1-3 waves with narrative flow.
 nonisolated struct MultistageBattle: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let waves: [BattleWave]
-    
+
     /// Text shown at the very start of the battle.
     let openingNarrative: String?
-    
+
     /// Text shown after all waves are cleared.
     let victoryNarrative: String?
-    
+
     /// Optional hero-specific dialogue triggered by party composition.
     /// Key: heroID, Value: dialogue line when that hero is in party.
     let heroDialogue: [UUID: String]?
-    
+
     var waveCount: Int { waves.count }
     var isBossBattle: Bool { waves.count >= 2 }
 }
@@ -51,17 +71,17 @@ nonisolated struct Stage: Codable, Identifiable, Hashable, Sendable {
     /// Order within the parent chapter, starting at 0.
     let index: Int
     let name: String
-    
+
     /// Legacy single-encounter for simple battles.
     let encounter: Encounter?
-    
+
     /// Multi-stage battle with narrative (preferred for story content).
     let battle: MultistageBattle?
-    
+
     /// Convenience flag for UI/rewards; the boss is also derivable from the
     /// primary enemy's `tier`.
     let isBoss: Bool
-    
+
     /// Returns the primary enemy ID for this stage (from either format).
     var primaryEnemyID: Enemy.ID? {
         if let battle = battle {
@@ -99,7 +119,7 @@ nonisolated struct CampaignProgress: Codable, Sendable {
         else { return false }
         return clearedStageIDs.contains(previous.id)
     }
-    
+
     /// Returns true if a hero is available for selection.
     func isHeroUnlocked(_ heroID: Hero.ID) -> Bool {
         unlockedHeroIDs.contains(heroID)
@@ -109,13 +129,13 @@ nonisolated struct CampaignProgress: Codable, Sendable {
     /// and advances the cursor to the next stage in the chapter.
     mutating func markCleared(_ stage: Stage, in chapter: Chapter) {
         clearedStageIDs.insert(stage.id)
-        
+
         // Check for hero unlocks at this stage
         let newHeroes = HeroUnlocks.heroesUnlockedAt(chapter: chapter.index, stage: stage.index)
         for heroID in newHeroes {
             unlockedHeroIDs.insert(heroID)
         }
-        
+
         if let next = chapter.stages.first(where: { $0.index == stage.index + 1 }) {
             currentStageID = next.id
         }
@@ -133,28 +153,28 @@ nonisolated enum HeroUnlocks {
             return [CardCatalog.HeroIDs.lancelot]
         case (0, 7):  // Ch1-S8 (index 7)
             return [CardCatalog.HeroIDs.kay]
-            
+
         // Chapter 2: The Queen of Air and Darkness
         case (1, 2):  // Ch2-S3 (index 2)
             return [CardCatalog.HeroIDs.bedivere]
         case (1, 7):  // Ch2-S8 (index 7)
             return [CardCatalog.HeroIDs.morgana]
-            
+
         // Chapter 3: The Ill-Made Knight
         case (2, 4):  // Ch3-S5 (index 4)
             return [CardCatalog.HeroIDs.escanor]
         case (2, 7):  // Ch3-S8 (index 7)
             return [CardCatalog.HeroIDs.galahad]
-            
+
         // Chapter 4: The Candle in the Wind
         case (3, 0):  // Ch4-S1 (index 0) - Merlin joins at chapter start
             return [CardCatalog.HeroIDs.merlin]
-            
+
         default:
             return []
         }
     }
-    
+
     /// Starting heroes available before any progression.
     static var starterHeroIDs: Set<Hero.ID> {
         [CardCatalog.StarterIDs.wart, CardCatalog.StarterIDs.archimedes]

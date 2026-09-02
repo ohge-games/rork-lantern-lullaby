@@ -8,14 +8,14 @@ nonisolated enum GameRules {
     static let lucidityMin: Int = 0
     static let lucidityMax: Int = 100
 
-    static let startingHandSize: Int = 4
+    static let startingHandSize: Int = 7
     static let cardsDrawnPerTurn: Int = 1
-    static let maxHandSize: Int = 8
+    static let maxHandSize: Int = 10
 
     /// After the turn's draw, the hand is topped up to at least this many
     /// cards so a thin hand never leaves the player with nothing to do
     /// while the enemy keeps swinging. Draw passives raise it.
-    static let minimumHandSize: Int = 3
+    static let minimumHandSize: Int = 4
 
     /// Normal enemy attacks roll within this range each turn.
     static let enemyAttackRange: ClosedRange<Int> = 8...15

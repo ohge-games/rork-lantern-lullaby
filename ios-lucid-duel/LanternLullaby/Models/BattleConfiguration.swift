@@ -9,9 +9,13 @@ nonisolated struct WaveSpec: Hashable, Sendable {
     /// Missing entries mean zero.
     let openingShields: [Int]
 
-    init(enemies: [Enemy], openingShields: [Int] = []) {
+    /// A hero who joins the party when this wave arrives.
+    let allyReinforcement: Hero?
+
+    init(enemies: [Enemy], openingShields: [Int] = [], allyReinforcement: Hero? = nil) {
         self.enemies = enemies
         self.openingShields = openingShields
+        self.allyReinforcement = allyReinforcement
     }
 
     func openingShield(at index: Int) -> Int {

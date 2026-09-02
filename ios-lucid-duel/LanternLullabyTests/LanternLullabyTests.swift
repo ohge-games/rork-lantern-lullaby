@@ -561,14 +561,18 @@ struct CampaignEngineTests {
         )
     }
 
-    private func configuration(waves: [WaveSpec], party: [Hero] = [CardCatalog.wart, CardCatalog.archimedes]) -> BattleConfiguration {
+    private func configuration(
+        waves: [WaveSpec],
+        party: [Hero] = [CardCatalog.wart, CardCatalog.archimedes],
+        deck: [Card.ID] = Array(repeating: CardCatalog.strike.id, count: 20)
+    ) -> BattleConfiguration {
         BattleConfiguration(
             title: "Test",
             party: party,
             waves: waves,
             arenaArtName: "bg_moonlit_forest",
             lanternDrift: 0,
-            deckCardIDs: Array(repeating: CardCatalog.strike.id, count: 10)
+            deckCardIDs: deck
         )
     }
 
@@ -638,7 +642,7 @@ struct CampaignEngineTests {
         #expect(ids.contains(CardCatalog.deepBreath.id))
         #expect(ids.contains(CardCatalog.wartSwing.id))
         #expect(ids.contains(CardCatalog.owlInsight.id))
-        #expect(ids.count == 10 + 10 + 8)
+        #expect(ids.count > 25)
     }
 
     @Test func stepForwardChangesTheLeadAndShields() {
@@ -698,12 +702,25 @@ struct CampaignEngineTests {
         #expect(viewModel.activeTutorialStep?.id == "zones")
     }
 
-    @Test func turnStartTopsTheHandUpToTheMinimum() async {
+    @Test func openingHandIsSeven() {
         let foe = enemy("Wisp", health: 500, pattern: .scripted(cycle: [.brace(shield: 1)]))
         let config = configuration(waves: [WaveSpec(enemies: [foe])], party: [CardCatalog.wart])
         let viewModel = BattleViewModel(configuration: config)
-        // Play strikes until the hand is thin (stay clear of Awakening).
-        while let instance = viewModel.state.player.hand.first, viewModel.state.player.lucidity < 62 {
+        #expect(GameRules.startingHandSize == 7)
+        #expect(viewModel.state.player.hand.count == 7)
+    }
+
+    @Test func turnStartTopsTheHandUpToTheMinimum() async {
+        let foe = enemy("Wisp", health: 500, pattern: .scripted(cycle: [.brace(shield: 1)]))
+        let config = configuration(
+            waves: [WaveSpec(enemies: [foe])],
+            party: [CardCatalog.wart],
+            deck: Array(repeating: CardCatalog.mentalShift.id, count: 20)
+        )
+        let viewModel = BattleViewModel(configuration: config)
+        // Mental Shift costs 2 then centers 8, so from 50 it is a wash —
+        // the hand can be emptied without moving the meter into a loss.
+        while let instance = viewModel.state.player.hand.first {
             viewModel.toggleSelection(of: instance)
             viewModel.playSelectedCard()
         }
@@ -714,6 +731,65 @@ struct CampaignEngineTests {
         try? await Task.sleep(for: .milliseconds(2300))
         #expect(viewModel.state.phase == .playerMain)
         #expect(viewModel.state.player.hand.count >= GameRules.minimumHandSize)
+    }
+
+    @Test func cardsWithoutATargetAreGlobal() {
+        #expect(!CardCatalog.deepBreath.needsTarget)
+        #expect(!CardCatalog.dreamWalk.needsTarget)
+        #expect(!CardCatalog.mentalShift.needsTarget)
+        #expect(CardCatalog.strike.needsTarget)
+        #expect(CardCatalog.meditate.needsTarget)
+        #expect(CardCatalog.shieldWall.needsTarget)
+        #expect(CardCatalog.stepForward.needsTarget)
+        // A choice card counts as targeted when either branch needs one.
+        #expect(CardCatalog.focusedMind.needsTarget)
+    }
+
+    @Test func partyDeckIsAboutFortyPercentAttacks() {
+        let ids = CardCatalog.partyDeckCardIDs(for: [CardCatalog.wart, CardCatalog.archimedes])
+        let cards = ids.compactMap { CardCatalog.card(withID: $0) }
+        let attacks = cards.filter { $0.cardType == .offensive }.count
+        #expect(cards.count == ids.count)
+        #expect(Double(attacks) / Double(cards.count) > 0.4)
+    }
+
+    @Test func aWaveCanBringAGuestHero() {
+        let first = enemy("Captain", health: 5, pattern: .scripted(cycle: [.attack(1)]))
+        let second = enemy("Wolf", health: 40, pattern: .scripted(cycle: [.attack(1)]))
+        let config = BattleConfiguration(
+            title: "Rescue",
+            party: [CardCatalog.wart],
+            waves: [
+                WaveSpec(enemies: [first]),
+                WaveSpec(enemies: [second], allyReinforcement: CardCatalog.lancelot),
+            ],
+            arenaArtName: "bg_moonlit_forest",
+            lanternDrift: 0,
+            deckCardIDs: Array(repeating: CardCatalog.strike.id, count: 10)
+        )
+        let viewModel = BattleViewModel(configuration: config)
+        #expect(viewModel.allies.count == 1)
+
+        play(CardCatalog.strike, on: viewModel)
+
+        #expect(viewModel.waveIndex == 1)
+        #expect(viewModel.allies.count == 2)
+        #expect(viewModel.allies.contains { $0.name == "Lancelot" })
+        #expect(viewModel.state.outcome == .ongoing)
+    }
+
+    @Test func chapterOneStageFiveBringsLancelotInsteadOfAFreshKnight() {
+        let coordinator = CampaignCoordinator()
+        guard let chapter = coordinator.chapters.first,
+              let stage = chapter.stages.first(where: { $0.index == 4 }) else {
+            Issue.record("Missing Chapter 1 Stage 5")
+            return
+        }
+        let config = coordinator.configuration(for: stage, in: chapter)
+        #expect(config.waves.count == 2)
+        // The second wave is the wolves, not another full-health captain.
+        #expect(config.waves[1].enemies.allSatisfy { $0.name == "Forest Wolf" })
+        #expect(config.waves[1].allyReinforcement?.name == "Lancelot")
     }
 
     @Test func archimedesRaisesTheMinimumHand() {

@@ -184,11 +184,12 @@ enum CampaignCatalogBook1 {
                             id: waveID(1, 5, 2),
                             encounter: Encounter(
                                 id: encounterID(1, 5, 2),
-                                primaryEnemyID: EnemyCatalogBook1.waywardKnight.id,
+                                primaryEnemyID: EnemyCatalogBook1.forestWolf.id,
                                 supportEnemyIDs: [EnemyCatalogBook1.forestWolf.id]
                             ),
-                            introText: "'Stand back, young one. I am Lancelot du Lac.'",
-                            outroText: nil
+                            introText: "The captain's wolves break cover — and a knight in silver-blue armor rides in beside you. 'Stand back, young one. I am Lancelot du Lac.'",
+                            outroText: nil,
+                            allyReinforcementID: CardCatalog.HeroIDs.lancelot
                         ),
                     ],
                     openingNarrative: "EVERYTHING NOT FORBIDDEN IS COMPULSORY. The ants taught you about war. But this is different.",
@@ -278,10 +279,11 @@ enum CampaignCatalogBook1 {
                             encounter: Encounter(
                                 id: encounterID(1, 8, 2),
                                 primaryEnemyID: EnemyCatalogBook1.forestWolf.id,
-                                supportEnemyIDs: [EnemyCatalogBook1.forestWolf.id, EnemyCatalogBook1.forestWolf.id]
+                                supportEnemyIDs: [EnemyCatalogBook1.forestWolf.id]
                             ),
                             introText: "Kay draws his sword beside you. 'I've always got your back, Wart.'",
-                            outroText: nil
+                            outroText: nil,
+                            allyReinforcementID: CardCatalog.HeroIDs.kay
                         ),
                     ],
                     openingNarrative: "The Beast has the head of a snake, the body of a leopard, the haunches of a lion. It is impossible. It is real.",

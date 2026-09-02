@@ -8,6 +8,8 @@ nonisolated extension CardCatalog {
     /// which the hero pools mostly lack on purpose — the lantern is the
     /// player's, not any one companion's.
     static let lanternCards: [(card: Card, copies: Int)] = [
+        (strike, 2),
+        (focusStrike, 1),
         (deepBreath, 3),
         (mentalShift, 2),
         (focusedMind, 1),
@@ -30,16 +32,29 @@ nonisolated extension CardCatalog {
         heroID: nil
     )
 
-    /// Card IDs (one per copy) for a party deck: each hero contributes up to
-    /// eight of their cheapest cards — two copies of the four cheapest, one
-    /// of the rest — plus the shared lantern cards.
+    /// Card IDs (one per copy) for a party deck.
+    ///
+    /// Attacks are what actually end a fight, so each hero brings three
+    /// copies of their cheapest attacks, two of their cheapest defensive
+    /// cards and one each of a little utility — then the shared lantern
+    /// cards (which carry the Relax effects and two plain Strikes) go on
+    /// top. That lands a two-hero deck at roughly 45% attacks.
     static func partyDeckCardIDs(for heroes: [Hero]) -> [Card.ID] {
         var ids: [Card.ID] = []
         for hero in heroes {
             let pool = pool(for: hero).sorted { $0.lucidityCost < $1.lucidityCost }
-            for (index, card) in pool.prefix(8).enumerated() {
-                let copies = index < 4 ? 2 : 1
-                ids.append(contentsOf: Array(repeating: card.id, count: copies))
+            let offensive = pool.filter { $0.cardType == .offensive }.prefix(4)
+            let defensive = pool.filter { $0.cardType == .defensive }.prefix(2)
+            let utility = pool.filter { $0.cardType == .utility }.prefix(2)
+
+            for card in offensive {
+                ids.append(contentsOf: Array(repeating: card.id, count: 3))
+            }
+            for card in defensive {
+                ids.append(contentsOf: Array(repeating: card.id, count: 2))
+            }
+            for card in utility {
+                ids.append(card.id)
             }
         }
         for entry in lanternCards {

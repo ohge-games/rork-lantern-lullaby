@@ -55,9 +55,11 @@ struct BattlefieldView: View {
         let benched = allies.filter { !$0.isActive }
 
         // Back row: farther up the path, smaller, staggered so they read.
+        // Three slots, because a guest hero can make the party four strong.
         let backSlots: [(x: CGFloat, ground: CGFloat)] = [
-            (0.075, 0.78),
-            (0.16, 0.84),
+            (0.055, 0.74),
+            (0.135, 0.80),
+            (0.215, 0.86),
         ]
 
         return ZStack {

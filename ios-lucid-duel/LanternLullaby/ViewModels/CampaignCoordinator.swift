@@ -206,7 +206,12 @@ final class CampaignCoordinator {
             let specs: [WaveSpec] = battle.waves.compactMap { wave in
                 let ids = [wave.encounter.primaryEnemyID] + wave.encounter.supportEnemyIDs
                 let enemies = ids.compactMap { EnemyLookup.enemy(withID: $0) }
-                return enemies.isEmpty ? nil : WaveSpec(enemies: enemies)
+                guard !enemies.isEmpty else { return nil }
+                // A guest hero already in the party would be a duplicate.
+                let guest = wave.allyReinforcementID
+                    .flatMap { id in CardCatalog.playableHeroes.first { $0.id == id } }
+                    .flatMap { hero in party.contains(where: { $0.id == hero.id }) ? nil : hero }
+                return WaveSpec(enemies: enemies, allyReinforcement: guest)
             }
             if !specs.isEmpty { return specs }
         }

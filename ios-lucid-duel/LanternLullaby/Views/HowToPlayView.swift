@@ -28,13 +28,13 @@ struct HowToPlayView: View {
             id: "cards",
             icon: "rectangle.portrait.on.rectangle.portrait.angled.fill",
             title: "Playing cards",
-            body: "Touch a card and draw its thread to a target. Attacks go to an enemy. Shields, heals, Relax and Step Forward go to one of your heroes. Cards marked Choice let you pick a path after you drop them. You may play as many cards as you like, then End Turn."
+            body: "Touch a card and draw its thread to a target. Attacks go to an enemy. Shields, heals and Step Forward go to one of your heroes. Cards that need no target — Relax and card draw — are played by simply pulling them up. Cards marked Choice let you pick a path after you drop them. Play as many as you like, then End Turn."
         ),
         RuleSection(
             id: "party",
             icon: "person.3.fill",
             title: "Your party",
-            body: "Up to three heroes fight together with one shared hand and shield. Seat 1 leads: enemies aim at the lead and only the lead's passive is active. Set the order before each dream; in battle only a card like Step Forward can change it. If the lead falls, the next hero steps up. You lose when nobody is standing."
+            body: "You open with 7 cards and never start a turn with fewer than 4. Up to three heroes fight together with one shared hand and shield. Seat 1 leads: enemies aim at the lead and only the lead's passive is active. Set the order before each dream; in battle only a card like Step Forward can change it. If the lead falls, the next hero steps up. You lose when nobody is standing."
         ),
         RuleSection(
             id: "enemies",
