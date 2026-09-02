@@ -238,6 +238,7 @@ struct PlayCardPanelView: View {
         case .lucidityModify: return resolved > 0 ? "Lucidity +\(resolved)" : "Lucidity \(resolved)"
         case .lucidityCenter: return "Center \(resolved)"
         case .drawCards: return "Draw \(resolved)"
+        case .swapLead: return "Change lead"
         }
     }
 }

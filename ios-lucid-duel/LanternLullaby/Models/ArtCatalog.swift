@@ -50,6 +50,33 @@ enum ArtCatalog {
         heroFullBodyNames[hero.id] ?? "child_with_lantern"
     }
 
+    /// Heroes stand on the left and should face right; these paintings
+    /// were drawn facing left, so the battlefield mirrors them.
+    private static let mirroredHeroes: Set<UUID> = [
+        CardCatalog.HeroIDs.archimedes,
+        CardCatalog.HeroIDs.bedivere,
+        CardCatalog.HeroIDs.galahad,
+        CardCatalog.HeroIDs.merlin,
+    ]
+
+    /// Enemies stand on the right and should face left; these were drawn
+    /// facing right.
+    private static let mirroredEnemyArt: Set<String> = [
+        "enchanted_hound_full",
+        "forest_wolf_full",
+        "giant_boar_full",
+        "sir_ector_full",
+        "shadow_villain_cloak",
+    ]
+
+    static func isHeroMirrored(_ hero: Hero) -> Bool {
+        mirroredHeroes.contains(hero.id)
+    }
+
+    static func isEnemyMirrored(_ enemy: Enemy) -> Bool {
+        mirroredEnemyArt.contains(enemy.fullBodyArtName)
+    }
+
     static func heroPortrait(for hero: Hero) -> String {
         if let name = heroPortraitNames[hero.id] { return name }
         return PortraitRegistry.heroPortrait(for: hero.id)

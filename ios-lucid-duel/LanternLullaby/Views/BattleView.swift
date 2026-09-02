@@ -22,11 +22,28 @@ struct BattleView: View {
             DreamBackground(zone: viewModel.state.player.zone, artName: viewModel.arenaArtName)
 
             BattlefieldView(viewModel: viewModel)
-                .padding(.bottom, 60)
 
             topChrome
 
             bottomChrome
+
+            // The targeting thread from the held card to the finger.
+            if let from = viewModel.dragAnchor, let to = viewModel.dragPoint, viewModel.isDraggingCard {
+                TargetingThreadView(from: from, to: to, isOnTarget: viewModel.hasDropTarget)
+                    .zIndex(60)
+            }
+
+            // The first battle's lesson, pinned to whatever it explains.
+            if let step = viewModel.activeTutorialStep,
+               viewModel.narrativePhase == .none,
+               viewModel.state.phase != .gameOver,
+               !viewModel.isDraggingCard {
+                TutorialCalloutView(step: step) {
+                    viewModel.advanceTutorial()
+                }
+                .transition(.opacity)
+                .zIndex(70)
+            }
 
             // Standard cards play straight from the drag-and-drop; only
             // dual-direction cards open the branch picker after the drop.
@@ -93,6 +110,8 @@ struct BattleView: View {
         .sensoryFeedback(.impact(weight: .heavy), trigger: viewModel.waveTrigger)
         .animation(.easeInOut(duration: 0.3), value: viewModel.state.phase)
         .animation(.easeInOut(duration: 0.3), value: viewModel.narrativePhase)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.tutorialIndex)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.isDraggingCard)
         .confirmationDialog("Close the book?", isPresented: $confirmLeave, titleVisibility: .visible) {
             Button("Leave the dream", role: .destructive) { onExit(.retreat) }
             Button("Keep dreaming", role: .cancel) {}
@@ -257,7 +276,7 @@ struct BattleView: View {
     private var bottomChrome: some View {
         ZStack(alignment: .bottom) {
             HandView(viewModel: viewModel)
-                .frame(maxWidth: 470)
+                .frame(maxWidth: 420)
                 .opacity(viewModel.state.phase == .playerMain ? 1 : 0.55)
 
             HStack(alignment: .bottom) {
@@ -279,10 +298,14 @@ struct BattleView: View {
             pileChip(count: viewModel.state.player.deck.count, icon: "square.stack.fill", label: "Deck")
             pileChip(count: viewModel.state.player.discardPile.count, icon: "tray.full.fill", label: "Discard")
 
-            Text("Tap a teammate\nto switch heroes")
-                .font(.system(size: 8))
-                .foregroundStyle(.white.opacity(0.4))
-                .lineLimit(2)
+            HStack(spacing: 4) {
+                Image(systemName: "shield.lefthalf.filled")
+                    .font(.system(size: 8))
+                Text("Lead: \(viewModel.leadHeroName)")
+                    .font(.system(size: 9, weight: .semibold))
+            }
+            .foregroundStyle(.white.opacity(0.5))
+            .contentTransition(.opacity)
         }
     }
 
@@ -336,8 +359,8 @@ struct BattleView: View {
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.25), lineWidth: 1))
         }
         .buttonStyle(PressableButtonStyle())
-        .disabled(viewModel.state.phase != .playerMain || viewModel.isBattlePausedForDialogue)
-        .opacity(viewModel.state.phase == .playerMain && !viewModel.isBattlePausedForDialogue ? 1 : 0.4)
+        .disabled(viewModel.state.phase != .playerMain || viewModel.isBattlePausedForDialogue || viewModel.isTutorialBlocking)
+        .opacity(viewModel.state.phase == .playerMain && !viewModel.isBattlePausedForDialogue && !viewModel.isTutorialBlocking ? 1 : 0.4)
     }
 
     // MARK: - Card confirmation

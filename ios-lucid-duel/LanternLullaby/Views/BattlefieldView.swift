@@ -1,16 +1,17 @@
 import SwiftUI
 
-/// The landscape staging area: enemies stand on the left, heroes on the
-/// right, facing each other across the dream-forest clearing like figures
+/// The landscape staging area: the party stands on the left, enemies on
+/// the right, facing each other across the painted clearing like figures
 /// on facing pages of a storybook.
 ///
-/// Depth staggering: the front character (primary enemy / active hero)
-/// stands nearest the center, larger and lower; supports stand behind —
-/// smaller and higher up the receding ground plane.
+/// Every figure is planted on a ground line rather than floated at a
+/// center point, so feet sit on the painted path. The lead hero and the
+/// primary enemy stand nearest the center on the lowest, closest line;
+/// supports stand behind on higher, farther lines and draw smaller.
 ///
-/// Tap rules mirror the old rows: tapping an enemy targets (or confirms
-/// on) it; tapping an inactive hero switches the lead (free); tapping the
-/// active hero shows their passive tooltip.
+/// Tapping an enemy targets it (or confirms a selected attack on it);
+/// tapping a hero shows their passive. The party's order is set before
+/// the battle — only cards like Step Forward change it here.
 struct BattlefieldView: View {
     let viewModel: BattleViewModel
 
@@ -19,110 +20,70 @@ struct BattlefieldView: View {
     var body: some View {
         GeometryReader { geo in
             let size = geo.size
-            let frontHeight = size.height * 0.44
-            let backHeight = size.height * 0.36
+            let frontHeight = size.height * 0.42
+            let backHeight = size.height * 0.34
 
             ZStack {
-                enemySide(size: size, frontHeight: frontHeight, backHeight: backHeight)
                 heroSide(size: size, frontHeight: frontHeight, backHeight: backHeight)
+                enemySide(size: size, frontHeight: frontHeight, backHeight: backHeight)
 
                 if let ally = viewModel.allies.first(where: { $0.id == tooltipAllyID }) {
                     passiveTooltip(for: ally)
-                        .position(x: size.width * 0.74, y: size.height * 0.13)
+                        .position(x: size.width * 0.27, y: size.height * 0.12)
                         .transition(.scale(scale: 0.85).combined(with: .opacity))
                         .zIndex(10)
                 }
             }
             .animation(.spring(response: 0.3, dampingFraction: 0.8), value: tooltipAllyID)
             .animation(.spring(response: 0.38, dampingFraction: 0.72), value: viewModel.activeAllyID)
+            .animation(.easeInOut(duration: 0.35), value: viewModel.waveIndex)
         }
     }
 
-    // MARK: - Enemy side (left)
-
-    private func enemySide(size: CGSize, frontHeight: CGFloat, backHeight: CGFloat) -> some View {
-        // enemies[0] is the primary — it stands in front, nearest the center.
-        let enemies = viewModel.enemies
-        // Back-row first so the front enemy draws over them.
-        let slots: [(index: Int, x: CGFloat, y: CGFloat, height: CGFloat)] = [
-            (2, 0.085, 0.42, backHeight),
-            (1, 0.195, 0.45, backHeight),
-            (0, 0.325, 0.56, frontHeight),
-        ]
-
-        return ZStack {
-            ForEach(slots, id: \.index) { slot in
-                if enemies.indices.contains(slot.index) {
-                    let enemy = enemies[slot.index]
-                    BattlefieldCharacterView(
-                        artName: enemy.fullBodyArtName,
-                        name: enemy.name,
-                        health: enemy.health,
-                        maxHealth: enemy.maxHealth,
-                        shield: enemy.shield,
-                        healthTint: DreamTheme.danger,
-                        bodyHeight: slot.height,
-                        intent: enemy.intent,
-                        isTargeted: viewModel.targetedEnemyID == enemy.id,
-                        isTargetable: viewModel.isTargetingActive && enemy.health > 0,
-                        previewDamage: previewDamage(for: enemy),
-                        hit: viewModel.enemyHitTargetID == enemy.id ? viewModel.enemyHit : nil,
-                        breathDelay: Double(slot.index) * 0.55,
-                        onFrameChange: { viewModel.reportEnemyFrame(enemy.id, frame: $0) },
-                        onTap: { viewModel.tapEnemy(enemy.id) }
-                    )
-                    .position(x: size.width * slot.x, y: size.height * slot.y)
-                }
-            }
-        }
-        // The whole nightmare side lunges when it acts.
-        .phaseAnimator([false, true], trigger: viewModel.enemyActionTrigger) { content, pulsing in
-            content
-                .scaleEffect(pulsing ? 1.035 : 1, anchor: UnitPoint(x: 0.25, y: 0.7))
-                .brightness(pulsing ? 0.05 : 0)
-        } animation: { pulsing in
-            pulsing
-                ? .spring(response: 0.16, dampingFraction: 0.5)
-                : .spring(response: 0.45, dampingFraction: 0.75)
-        }
-        .opacity(viewModel.isEnemyThinking ? 0.92 : 1)
-        .animation(.easeInOut(duration: 0.4), value: viewModel.isEnemyThinking)
+    /// Plants a figure so its feet rest on `ground` (a y in the field).
+    private func planted<Content: View>(_ content: Content, x: CGFloat, ground: CGFloat) -> some View {
+        content
+            .frame(height: ground, alignment: .bottom)
+            .position(x: x, y: ground / 2)
     }
 
-    // MARK: - Hero side (right)
+    // MARK: - Hero side (left)
 
     private func heroSide(size: CGSize, frontHeight: CGFloat, backHeight: CGFloat) -> some View {
-        // The active hero steps to the front, nearest the center; the
-        // others wait behind. Order within the back row stays stable.
         let allies = viewModel.allies
-        let active = allies.first { $0.isActive }
+        let lead = allies.first { $0.isActive }
         let benched = allies.filter { !$0.isActive }
 
-        let backSlots: [(x: CGFloat, y: CGFloat)] = [
-            (0.815, 0.45),
-            (0.92, 0.42),
+        // Back row: farther up the path, smaller, staggered so they read.
+        let backSlots: [(x: CGFloat, ground: CGFloat)] = [
+            (0.075, 0.66),
+            (0.155, 0.72),
         ]
 
         return ZStack {
             ForEach(Array(benched.enumerated()), id: \.element.id) { index, ally in
                 if index < backSlots.count {
-                    heroView(ally, bodyHeight: backHeight, breathDelay: Double(index) * 0.7 + 0.3)
-                        .position(
-                            x: size.width * backSlots[index].x,
-                            y: size.height * backSlots[index].y
-                        )
+                    planted(
+                        heroView(ally, bodyHeight: backHeight, breathDelay: Double(index) * 0.7 + 0.3),
+                        x: size.width * backSlots[index].x,
+                        ground: size.height * backSlots[index].ground
+                    )
                 }
             }
 
-            if let active {
-                heroView(active, bodyHeight: frontHeight, breathDelay: 0)
-                    .position(x: size.width * 0.675, y: size.height * 0.56)
+            if let lead {
+                planted(
+                    heroView(lead, bodyHeight: frontHeight, breathDelay: 0),
+                    x: size.width * 0.235,
+                    ground: size.height * 0.80
+                )
             }
         }
     }
 
     private func heroView(_ ally: AllyMember, bodyHeight: CGFloat, breathDelay: Double) -> some View {
-        BattlefieldCharacterView(
+        let hero = viewModel.party.first { $0.id == ally.id }?.hero
+        return BattlefieldCharacterView(
             artName: ally.fullBodyArtName,
             name: ally.name,
             health: ally.health,
@@ -130,20 +91,16 @@ struct BattlefieldView: View {
             shield: ally.shield,
             healthTint: DreamTheme.healthGreen,
             bodyHeight: bodyHeight,
+            isMirrored: hero.map { ArtCatalog.isHeroMirrored($0) } ?? false,
+            targetTint: DreamTheme.gold,
             showsActiveTag: ally.isActive,
+            isTargeted: viewModel.hoveredAllyID == ally.id,
+            isTargetable: viewModel.isAllyTargetingActive && ally.health > 0,
             hit: viewModel.playerHitTargetID == ally.id ? viewModel.playerHit : nil,
             breathDelay: breathDelay,
-            onTap: { handleTap(on: ally) }
+            onFrameChange: { viewModel.reportAllyFrame(ally.id, frame: $0) },
+            onTap: { toggleTooltip(for: ally.id) }
         )
-    }
-
-    private func handleTap(on ally: AllyMember) {
-        if ally.isActive {
-            toggleTooltip(for: ally.id)
-        } else {
-            tooltipAllyID = nil
-            viewModel.switchActiveHero(to: ally.id)
-        }
     }
 
     private func toggleTooltip(for id: UUID) {
@@ -156,6 +113,55 @@ struct BattlefieldView: View {
             try? await Task.sleep(for: .milliseconds(3500))
             if tooltipAllyID == id { tooltipAllyID = nil }
         }
+    }
+
+    // MARK: - Enemy side (right)
+
+    private func enemySide(size: CGSize, frontHeight: CGFloat, backHeight: CGFloat) -> some View {
+        // enemies[0] is the primary — it stands in front, nearest the center.
+        let enemies = viewModel.enemies
+        let slots: [(index: Int, x: CGFloat, ground: CGFloat, height: CGFloat)] = [
+            (2, 0.925, 0.66, backHeight),
+            (1, 0.845, 0.72, backHeight),
+            (0, 0.765, 0.80, frontHeight),
+        ]
+
+        return ZStack {
+            ForEach(slots, id: \.index) { slot in
+                if enemies.indices.contains(slot.index) {
+                    let enemy = enemies[slot.index]
+                    let definition = viewModel.enemyLine.first { $0.id == enemy.id }?.enemy
+                    planted(
+                        BattlefieldCharacterView(
+                            artName: enemy.fullBodyArtName,
+                            name: enemy.name,
+                            health: enemy.health,
+                            maxHealth: enemy.maxHealth,
+                            shield: enemy.shield,
+                            healthTint: DreamTheme.danger,
+                            bodyHeight: slot.height,
+                            intent: enemy.intent,
+                            intentTargetName: viewModel.leadHeroName,
+                            isMirrored: definition.map { ArtCatalog.isEnemyMirrored($0) } ?? false,
+                            isTargeted: viewModel.targetedEnemyID == enemy.id,
+                            isTargetable: viewModel.isTargetingActive && enemy.health > 0,
+                            previewDamage: previewDamage(for: enemy),
+                            hit: viewModel.enemyHitTargetID == enemy.id ? viewModel.enemyHit : nil,
+                            breathDelay: Double(slot.index) * 0.55,
+                            onFrameChange: { viewModel.reportEnemyFrame(enemy.id, frame: $0) },
+                            onTap: { viewModel.tapEnemy(enemy.id) }
+                        )
+                        .scaleEffect(viewModel.actingEnemyID == enemy.id ? 1.05 : 1, anchor: .bottom)
+                        .animation(.spring(response: 0.2, dampingFraction: 0.5), value: viewModel.actingEnemyID),
+                        x: size.width * slot.x,
+                        ground: size.height * slot.ground
+                    )
+                    .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .bottom)))
+                }
+            }
+        }
+        .opacity(viewModel.isEnemyThinking ? 0.92 : 1)
+        .animation(.easeInOut(duration: 0.4), value: viewModel.isEnemyThinking)
     }
 
     // MARK: - Shared pieces
@@ -182,6 +188,11 @@ struct BattlefieldView: View {
                     .font(.system(size: 10))
                     .foregroundStyle(.white.opacity(0.75))
                     .fixedSize(horizontal: false, vertical: true)
+                if !ally.isActive {
+                    Text("Passive is active only while leading.")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.white.opacity(0.45))
+                }
             }
         }
         .padding(.horizontal, 12)

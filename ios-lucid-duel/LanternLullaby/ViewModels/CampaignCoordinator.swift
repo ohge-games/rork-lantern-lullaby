@@ -228,7 +228,8 @@ final class CampaignCoordinator {
             lanternDrift: 2,
             deckCardIDs: CardCatalog.partyDeckCardIDs(for: heroes),
             stageID: stage.id,
-            chapterIndex: chapter.index
+            chapterIndex: chapter.index,
+            tutorial: chapter.index == 0 && stage.index == 0 ? TutorialScript.firstBattle : nil
         )
     }
 

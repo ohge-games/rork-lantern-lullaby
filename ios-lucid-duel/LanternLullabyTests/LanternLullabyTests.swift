@@ -638,7 +638,64 @@ struct CampaignEngineTests {
         #expect(ids.contains(CardCatalog.deepBreath.id))
         #expect(ids.contains(CardCatalog.wartSwing.id))
         #expect(ids.contains(CardCatalog.owlInsight.id))
-        #expect(ids.count == 10 + 10 + 7)
+        #expect(ids.count == 10 + 10 + 8)
+    }
+
+    @Test func stepForwardChangesTheLeadAndShields() {
+        let foe = enemy("Wisp", health: 60, pattern: .scripted(cycle: [.attack(1)]))
+        let config = BattleConfiguration(
+            title: "Test",
+            party: [CardCatalog.wart, CardCatalog.archimedes],
+            waves: [WaveSpec(enemies: [foe])],
+            arenaArtName: "bg_moonlit_forest",
+            lanternDrift: 0,
+            deckCardIDs: Array(repeating: CardCatalog.stepForward.id, count: 6)
+        )
+        let viewModel = BattleViewModel(configuration: config)
+        guard let instance = viewModel.state.player.hand.first else {
+            Issue.record("Empty hand")
+            return
+        }
+        viewModel.toggleSelection(of: instance)
+        viewModel.playSelectedCard(allyTarget: CardCatalog.archimedes.id)
+
+        #expect(viewModel.activeAllyID == CardCatalog.archimedes.id)
+        #expect(viewModel.state.player.shield == 5)
+        #expect(viewModel.state.player.currentHealth == CardCatalog.archimedes.maxHealth)
+        #expect(viewModel.state.player.lucidity == 51)
+    }
+
+    @Test func tutorialPausesOnTapStepsAndAdvancesOnActions() {
+        let foe = enemy("Wolf", health: 200, pattern: .scripted(cycle: [.attack(1)]))
+        let config = BattleConfiguration(
+            title: "Lesson",
+            party: [CardCatalog.wart],
+            waves: [WaveSpec(enemies: [foe])],
+            arenaArtName: "bg_moonlit_forest",
+            lanternDrift: 0,
+            deckCardIDs: Array(repeating: CardCatalog.strike.id, count: 10),
+            tutorial: .firstBattle
+        )
+        let viewModel = BattleViewModel(configuration: config)
+        viewModel.configureNarrative(.empty)
+        viewModel.startStage()
+
+        #expect(viewModel.activeTutorialStep?.id == "lantern")
+        #expect(viewModel.isTutorialBlocking)
+
+        // Cards cannot be played while a tap step is showing.
+        play(CardCatalog.strike, on: viewModel)
+        #expect(viewModel.state.player.hand.count == GameRules.startingHandSize)
+
+        while viewModel.isTutorialBlocking { viewModel.advanceTutorial() }
+        #expect(viewModel.activeTutorialStep?.id == "play")
+
+        play(CardCatalog.strike, on: viewModel)
+        #expect(viewModel.activeTutorialStep?.id == "relax")
+        viewModel.advanceTutorial()
+        #expect(viewModel.activeTutorialStep?.id == "endTurn")
+        viewModel.endTurn()
+        #expect(viewModel.activeTutorialStep?.id == "zones")
     }
 
     @Test func leadHeroIsTheOnlyPassiveThatApplies() {

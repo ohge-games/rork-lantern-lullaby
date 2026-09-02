@@ -20,6 +20,13 @@ struct BattlefieldCharacterView: View {
     let healthTint: Color
     let bodyHeight: CGFloat
     var intent: EnemyIntent? = nil
+    /// Who an attack intent is aimed at ("→ Wart").
+    var intentTargetName: String? = nil
+    /// Paintings drawn facing the wrong way are mirrored so both sides
+    /// face the center of the field.
+    var isMirrored: Bool = false
+    /// Reticle and preview colour: danger red for enemies, gold for heroes.
+    var targetTint: Color = DreamTheme.danger
     var showsActiveTag: Bool = false
     var isTargeted: Bool = false
     var isTargetable: Bool = false
@@ -93,7 +100,15 @@ struct BattlefieldCharacterView: View {
                     .background(Capsule().fill(DreamTheme.gold))
                     .shadow(color: DreamTheme.gold.opacity(0.6), radius: 6)
             } else if let intent, !isDown {
-                IntentChip(intent: intent)
+                HStack(spacing: 4) {
+                    IntentChip(intent: intent)
+                    if let intentTargetName, case .attack = intent {
+                        Text("→ \(intentTargetName)")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.7))
+                            .shadow(color: .black.opacity(0.7), radius: 2, y: 1)
+                    }
+                }
             }
 
             HStack(spacing: 4) {
@@ -141,8 +156,9 @@ struct BattlefieldCharacterView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(height: bodyHeight)
+                .scaleEffect(x: isMirrored ? -1 : 1, y: 1)
                 .shadow(
-                    color: DreamTheme.gold.opacity(isTargetable && !isTargeted ? 0.65 : 0),
+                    color: (isTargeted ? targetTint : DreamTheme.gold).opacity(isTargetable ? 0.65 : 0),
                     radius: 14
                 )
                 .shadow(
@@ -164,13 +180,13 @@ struct BattlefieldCharacterView: View {
         return ZStack {
             // Soft danger glow pooling on the ground.
             Circle()
-                .stroke(DreamTheme.danger.opacity(0.30), lineWidth: 7)
+                .stroke(targetTint.opacity(0.30), lineWidth: 7)
                 .blur(radius: 5)
 
             // Dashes traveling around the ring.
             Circle()
                 .stroke(
-                    DreamTheme.danger.opacity(0.95),
+                    targetTint.opacity(0.95),
                     style: StrokeStyle(lineWidth: 2.2, dash: [10, 8])
                 )
                 .rotationEffect(.degrees(reticleAngle))
@@ -178,7 +194,7 @@ struct BattlefieldCharacterView: View {
             // Fixed crosshair ticks at the diagonals.
             ForEach(0..<4, id: \.self) { index in
                 Capsule()
-                    .fill(DreamTheme.danger)
+                    .fill(targetTint)
                     .frame(width: 3, height: 11)
                     .offset(y: -ringSize / 2)
                     .rotationEffect(.degrees(Double(index) * 90 + 45))
@@ -204,7 +220,7 @@ struct BattlefieldCharacterView: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 9)
             .padding(.vertical, 3)
-            .background(Capsule().fill(DreamTheme.danger))
-            .shadow(color: DreamTheme.danger.opacity(0.6), radius: 6)
+            .background(Capsule().fill(targetTint))
+            .shadow(color: targetTint.opacity(0.6), radius: 6)
     }
 }

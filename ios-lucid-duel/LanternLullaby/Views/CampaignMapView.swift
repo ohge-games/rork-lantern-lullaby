@@ -9,6 +9,7 @@ struct CampaignMapView: View {
     let onBegin: (Stage) -> Void
 
     @State private var showParty = false
+    @State private var showHelp = false
     @State private var confirmReset = false
 
     private var chapter: Chapter { coordinator.selectedChapter }
@@ -43,6 +44,14 @@ struct CampaignMapView: View {
                 .zIndex(50)
             }
 
+            if showHelp {
+                HowToPlayView {
+                    showHelp = false
+                }
+                .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                .zIndex(55)
+            }
+
             if let hero = coordinator.recentlyUnlockedHeroes.first, !showParty {
                 unlockBanner(for: hero)
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
@@ -50,6 +59,7 @@ struct CampaignMapView: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: showParty)
+        .animation(.easeInOut(duration: 0.3), value: showHelp)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: coordinator.recentlyUnlockedHeroes.count)
         .animation(.easeInOut(duration: 0.4), value: coordinator.selectedChapterIndex)
         .confirmationDialog("Start the book over?", isPresented: $confirmReset, titleVisibility: .visible) {
@@ -104,6 +114,15 @@ struct CampaignMapView: View {
 
             HStack {
                 Button {
+                    showHelp = true
+                } label: {
+                    Label("How to play", systemImage: "questionmark.circle")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(DreamTheme.gold.opacity(0.85))
+                }
+                .buttonStyle(PressableButtonStyle())
+                Spacer()
+                Button {
                     confirmReset = true
                 } label: {
                     Text("Start over")
@@ -111,7 +130,6 @@ struct CampaignMapView: View {
                         .foregroundStyle(.white.opacity(0.35))
                 }
                 .buttonStyle(PressableButtonStyle())
-                Spacer()
             }
         }
         .padding(16)

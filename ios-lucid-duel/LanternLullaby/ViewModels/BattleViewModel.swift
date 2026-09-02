@@ -284,10 +284,12 @@ final class BattleViewModel {
     /// Opens the stage: the pre-battle scene if there is one, otherwise the
     /// battle-start dialogue straight away.
     func startStage() {
+        tutorialPending = configuration.tutorial != nil
         if preStageScene != nil {
             narrativePhase = .showingPreScene
         } else {
             dialogueManager.checkTrigger(.battleStart)
+            if activeDialogue == nil { beginTutorialIfNeeded() }
         }
     }
 
@@ -296,6 +298,7 @@ final class BattleViewModel {
         preStageScene = nil
         narrativePhase = .none
         dialogueManager.checkTrigger(.battleStart)
+        if activeDialogue == nil { beginTutorialIfNeeded() }
     }
 
     /// Called when post-stage scene completes.
@@ -321,6 +324,9 @@ final class BattleViewModel {
             activeDialogue = nil
             if narrativePhase == .showingDialogue {
                 narrativePhase = .none
+            }
+            if tutorialPending, state.phase == .playerMain {
+                beginTutorialIfNeeded()
             }
             // The last victory line has been read: play the epilogue scene
             // before the victory card.
@@ -383,6 +389,48 @@ final class BattleViewModel {
 
     /// Painting behind the battlefield.
     var arenaArtName: String { configuration.arenaArtName }
+
+    /// Name of the hero enemies are aiming at.
+    var leadHeroName: String {
+        party.first { $0.id == activeAllyID }?.hero.name ?? playerHero.name
+    }
+
+    // MARK: - Tutorial
+
+    private(set) var tutorialSteps: [TutorialStep] = []
+    private(set) var tutorialIndex: Int = 0
+    private var tutorialPending = false
+
+    var activeTutorialStep: TutorialStep? {
+        tutorialIndex < tutorialSteps.count ? tutorialSteps[tutorialIndex] : nil
+    }
+
+    /// A callout that waits for a tap pauses play; one that waits for an
+    /// action lets the player try it.
+    var isTutorialBlocking: Bool {
+        activeTutorialStep?.advance == .tap
+    }
+
+    /// The player tapped the callout.
+    func advanceTutorial() {
+        guard let step = activeTutorialStep, step.advance == .tap else { return }
+        tutorialIndex += 1
+    }
+
+    private func tutorialEvent(_ event: TutorialAdvance) {
+        guard let step = activeTutorialStep, step.advance == event else { return }
+        tutorialIndex += 1
+    }
+
+    private func beginTutorialIfNeeded() {
+        guard let script = configuration.tutorial, tutorialSteps.isEmpty else {
+            tutorialPending = false
+            return
+        }
+        tutorialPending = false
+        tutorialSteps = script.steps
+        tutorialIndex = 0
+    }
 
     var waveCount: Int { configuration.waveCount }
 
@@ -496,6 +544,7 @@ final class BattleViewModel {
         activeAllyID = id
         syncLeadMirror()
         heroSwitchTrigger += 1
+        showNotice("\(member.hero.name) steps forward to lead")
         emitSound("hero switch")
     }
 
@@ -545,6 +594,76 @@ final class BattleViewModel {
     /// True while a card is being dragged out of the hand.
     private(set) var isDraggingCard = false
 
+    /// Tail of the targeting thread (global space): the dragged card's top.
+    private(set) var dragAnchor: CGPoint?
+
+    /// Head of the targeting thread (global space): the finger.
+    private(set) var dragPoint: CGPoint?
+
+    /// The hero under the finger while a support card is dragged.
+    private(set) var hoveredAllyID: UUID?
+
+    /// The hero a dual-direction card was dropped on; consumed when the
+    /// player picks a branch.
+    private(set) var pendingAllyTarget: UUID?
+
+    /// The ally target of the card currently resolving (for `swapLead`).
+    private var resolvingAllyTarget: UUID?
+
+    /// Battlefield frames reported by hero figures (global space).
+    @ObservationIgnored private var allyFrames: [UUID: CGRect] = [:]
+
+    func reportAllyFrame(_ id: UUID, frame: CGRect) {
+        allyFrames[id] = frame
+    }
+
+    /// The living hero under a drag location.
+    func allyID(at point: CGPoint) -> UUID? {
+        for member in party where !member.isDown {
+            if let frame = allyFrames[member.id],
+               frame.insetBy(dx: -16, dy: -16).contains(point) {
+                return member.id
+            }
+        }
+        return nil
+    }
+
+    /// True while the dragged card can be dropped on one of your heroes:
+    /// support cards always, dual-direction cards too.
+    var isAllyTargetingActive: Bool {
+        guard isDraggingCard, let card = selectedCard else { return false }
+        return card.choices != nil || !cardDealsDamage(card)
+    }
+
+    /// Moves the targeting thread and aims at whatever sits under the finger.
+    func updateCardDrag(anchor: CGPoint, point: CGPoint) {
+        guard isDraggingCard, let card = selectedCard else { return }
+        dragAnchor = anchor
+        dragPoint = point
+
+        let enemyUnderFinger = cardDealsDamage(card) ? enemyID(at: point) : nil
+        let allyUnderFinger = (card.choices != nil || !cardDealsDamage(card)) ? allyID(at: point) : nil
+
+        if let enemyUnderFinger {
+            hoverEnemy(enemyUnderFinger)
+            hoveredAllyID = nil
+        } else {
+            hoveredAllyID = allyUnderFinger
+        }
+    }
+
+    /// True when releasing now would land the card on something.
+    var hasDropTarget: Bool {
+        guard isDraggingCard, let card = selectedCard, let point = dragPoint else { return false }
+        if cardDealsDamage(card), enemyID(at: point) != nil { return true }
+        if card.choices != nil || !cardDealsDamage(card), allyID(at: point) != nil { return true }
+        return false
+    }
+
+    func setPendingAllyTarget(_ id: UUID?) {
+        pendingAllyTarget = id
+    }
+
     /// Battlefield frames reported by enemy figures (global space), used
     /// to hit-test card drops. Read only inside gestures — not observed.
     @ObservationIgnored private var enemyFrames: [UUID: CGRect] = [:]
@@ -567,13 +686,17 @@ final class BattleViewModel {
     /// Lifts a card out of the fan: it becomes the selected card so zone
     /// bonuses, targeting glow, and damage projections all track the drag.
     func beginCardDrag(of instance: CardInstance) {
-        guard state.phase == .playerMain, !isBattlePausedForDialogue else { return }
+        guard state.phase == .playerMain, !isBattlePausedForDialogue, !isTutorialBlocking else { return }
         selectedInstanceID = instance.id
+        pendingAllyTarget = nil
         isDraggingCard = true
     }
 
     func endCardDrag() {
         isDraggingCard = false
+        dragAnchor = nil
+        dragPoint = nil
+        hoveredAllyID = nil
     }
 
     /// Aims the dragged card at an enemy while hovering over it.
@@ -585,22 +708,27 @@ final class BattleViewModel {
     // MARK: - Player actions
 
     func toggleSelection(of instance: CardInstance) {
-        guard state.phase == .playerMain else { return }
+        guard state.phase == .playerMain, !isTutorialBlocking else { return }
         selectedInstanceID = selectedInstanceID == instance.id ? nil : instance.id
     }
 
     func clearSelection() {
         selectedInstanceID = nil
+        pendingAllyTarget = nil
     }
 
     /// Resolves the selected card: cost first, then base effects in order,
     /// then the chosen branch (for dual-direction cards), then the card
     /// moves to the discard pile and end conditions are checked.
     ///
-    /// - Parameter choice: required when the card carries `choices`; playing
-    ///   a dual-direction card without picking a branch is a no-op.
-    func playSelectedCard(choice: CardChoiceOption? = nil) {
-        guard !isBattlePausedForDialogue else { return }
+    /// - Parameters:
+    ///   - choice: required when the card carries `choices`; playing a
+    ///     dual-direction card without picking a branch is a no-op.
+    ///   - allyTarget: the hero the card was dropped on, for effects that
+    ///     act on a chosen hero (`swapLead`). Falls back to the target a
+    ///     dual-direction card was dropped on.
+    func playSelectedCard(choice: CardChoiceOption? = nil, allyTarget: UUID? = nil) {
+        guard !isBattlePausedForDialogue, !isTutorialBlocking else { return }
 
         guard state.phase == .playerMain,
               state.outcome == .ongoing,
@@ -622,20 +750,26 @@ final class BattleViewModel {
         applyPlayerLucidityDelta(effectiveCost(of: card))
         isFirstCardThisTurn = false
 
+        resolvingAllyTarget = allyTarget ?? pendingAllyTarget
+        pendingAllyTarget = nil
         for effect in card.effects + (choice?.effects ?? []) {
             resolve(effect, from: card, zoneAtPlay: zoneAtPlay)
         }
+        resolvingAllyTarget = nil
 
         playImpactTrigger += 1
         emitSound("card played")
+        tutorialEvent(.cardPlayed)
         refreshOutcome()
     }
 
     func endTurn() {
-        guard !isBattlePausedForDialogue else { return }
+        guard !isBattlePausedForDialogue, !isTutorialBlocking else { return }
         guard state.phase == .playerMain, state.outcome == .ongoing else { return }
         selectedInstanceID = nil
+        pendingAllyTarget = nil
         state.phase = .enemyTurn
+        tutorialEvent(.turnEnded)
         Task { await resolveEnemyTurn() }
     }
 
@@ -656,6 +790,11 @@ final class BattleViewModel {
         isFirstCardThisTurn = true
         enemyHitTargetID = nil
         playerHitTargetID = nil
+        pendingAllyTarget = nil
+        hoveredAllyID = nil
+        tutorialSteps = []
+        tutorialIndex = 0
+        tutorialPending = false
         spawnWave(0, seedingPrimaryFrom: nil)
         drawPlayerCards(GameRules.startingHandSize)
         state.phase = .playerMain
@@ -740,6 +879,10 @@ final class BattleViewModel {
             setPlayerLucidity(Self.shifted(state.player.lucidity, towardCenterBy: value))
         case .drawCards:
             drawPlayerCards(value)
+        case .swapLead:
+            if let target = resolvingAllyTarget {
+                switchActiveHero(to: target)
+            }
         }
     }
 
@@ -1069,6 +1212,7 @@ final class BattleViewModel {
         }
 
         state.phase = .playerMain
+        tutorialEvent(.enemyTurnDone)
     }
 
     /// Applies passives that trigger at the start of the player's turn.

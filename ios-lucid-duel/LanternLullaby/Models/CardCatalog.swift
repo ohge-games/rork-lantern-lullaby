@@ -134,7 +134,7 @@ nonisolated enum CardCatalog {
     static let neutralCards: [Card] = [
         strike, focusStrike, concentratedBlow,
         shieldWall, meditate, deepBreath,
-        dreamWalk, mentalShift, focusedMind,
+        dreamWalk, mentalShift, focusedMind, stepForward,
     ]
 
     /// Every card definition in the game: neutrals, starters, and each hero's pool.

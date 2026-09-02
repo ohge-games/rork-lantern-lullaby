@@ -15,6 +15,8 @@ nonisolated enum EffectType: String, Codable, CaseIterable, Sendable {
     case lucidityCenter
     /// Draw cards from deck into hand.
     case drawCards
+    /// The targeted ally steps to the front of the party and leads.
+    case swapLead
 }
 
 /// A single atomic card effect: what happens and by how much.
@@ -36,7 +38,7 @@ nonisolated struct Effect: Codable, Hashable, Sendable {
     ///   movement or draw counts would make zone bonuses self-referential.
     func resolvedValue(cardType: CardType, zone: LucidityZone) -> Int {
         switch type {
-        case .lucidityModify, .lucidityCenter, .drawCards:
+        case .lucidityModify, .lucidityCenter, .drawCards, .swapLead:
             return value
         case .damage, .heal, .shield:
             let multiplier: Double

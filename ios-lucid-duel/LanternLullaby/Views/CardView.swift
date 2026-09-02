@@ -110,6 +110,7 @@ struct CardView: View {
     }
 
     private func effectValueLabel(_ effect: Effect) -> String {
+        if effect.type == .swapLead { return "Lead" }
         if effect.type == .lucidityModify {
             return effect.value > 0 ? "+\(effect.value)" : "\(effect.value)"
         }

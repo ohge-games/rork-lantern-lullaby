@@ -50,6 +50,9 @@ nonisolated struct BattleConfiguration: Sendable {
     let stageID: Stage.ID?
     let chapterIndex: Int
 
+    /// A scripted lesson layered over this battle, if any.
+    let tutorial: TutorialScript?
+
     init(
         title: String,
         party: [Hero],
@@ -58,7 +61,8 @@ nonisolated struct BattleConfiguration: Sendable {
         lanternDrift: Int,
         deckCardIDs: [Card.ID],
         stageID: Stage.ID? = nil,
-        chapterIndex: Int = 0
+        chapterIndex: Int = 0,
+        tutorial: TutorialScript? = nil
     ) {
         self.title = title
         self.party = party.isEmpty ? [CardCatalog.dreamer] : party
@@ -68,6 +72,7 @@ nonisolated struct BattleConfiguration: Sendable {
         self.deckCardIDs = deckCardIDs
         self.stageID = stageID
         self.chapterIndex = chapterIndex
+        self.tutorial = tutorial
     }
 
     var waveCount: Int { waves.count }

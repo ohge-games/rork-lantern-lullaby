@@ -62,7 +62,7 @@ struct PartySelectView: View {
                 .padding(.vertical, 2)
             }
 
-            Text("Tap a hero to seat or unseat them. The first seat leads the party.")
+            Text("Tap a hero to seat or unseat them. Seat 1 leads: enemies aim at the lead, and only the lead's passive is active. Only a card like Step Forward can change the order mid-battle.")
                 .font(.system(size: 9))
                 .foregroundStyle(.white.opacity(0.45))
         }

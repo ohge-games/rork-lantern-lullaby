@@ -79,6 +79,7 @@ extension EffectType {
         case .lucidityModify: return "moon.zzz.fill"
         case .lucidityCenter: return "scope"
         case .drawCards: return "square.stack.fill"
+        case .swapLead: return "arrow.left.arrow.right"
         }
     }
 }
