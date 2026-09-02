@@ -63,8 +63,8 @@ struct ContentView: View {
 
             case .battle:
                 if let viewModel = battleViewModel {
-                    BattleView(viewModel: viewModel) { exit in
-                        finishBattle(exit)
+                    BattleView(viewModel: viewModel) { result in
+                        finishBattle(result)
                     }
                     .transition(.opacity)
                 }
@@ -101,8 +101,8 @@ struct ContentView: View {
         Task { await runSleepSequence() }
     }
 
-    private func finishBattle(_ exit: BattleExit) {
-        if exit == .victory, let stage = activeStage {
+    private func finishBattle(_ result: BattleExit) {
+        if result == .victory, let stage = activeStage {
             coordinator.recordVictory(stageID: stage.id)
         }
         activeStage = nil

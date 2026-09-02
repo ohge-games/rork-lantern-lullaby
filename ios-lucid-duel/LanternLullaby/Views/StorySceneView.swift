@@ -49,9 +49,22 @@ struct StorySceneView: View {
     @ViewBuilder
     private var backgroundLayer: some View {
         if let bgImage = scene.backgroundImage {
-            Image(bgImage)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
+            // Anchored by a Color so the .fill image can't distort layout.
+            Color(red: 0.07, green: 0.06, blue: 0.16)
+                .overlay {
+                    Image(bgImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .allowsHitTesting(false)
+                }
+                .clipped()
+                .overlay(
+                    LinearGradient(
+                        colors: [.black.opacity(0.15), .black.opacity(0.55)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
                 .ignoresSafeArea()
         } else {
             // Default dreamy gradient
