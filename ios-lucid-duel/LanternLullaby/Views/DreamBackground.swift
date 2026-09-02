@@ -6,6 +6,8 @@ import SwiftUI
 /// felt in color before it's read.
 struct DreamBackground: View {
     var zone: LucidityZone = .balanced
+    /// Bundled painting behind the veil; each chapter brings its own.
+    var artName: String = "enchanted_forest_night"
 
     @State private var drift = false
 
@@ -15,7 +17,7 @@ struct DreamBackground: View {
             // can't distort layout.
             Color(red: 0.07, green: 0.06, blue: 0.16)
                 .overlay {
-                    Image("enchanted_forest_night")
+                    Image(artName)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .allowsHitTesting(false)

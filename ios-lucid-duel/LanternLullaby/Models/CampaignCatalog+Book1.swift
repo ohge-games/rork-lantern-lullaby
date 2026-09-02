@@ -194,7 +194,7 @@ enum CampaignCatalogBook1 {
                     openingNarrative: "EVERYTHING NOT FORBIDDEN IS COMPULSORY. The ants taught you about war. But this is different.",
                     victoryNarrative: "'You fight with heart,' Lancelot says. 'Perhaps we'll meet again, in waking or in dreams.'",
                     heroDialogue: [
-                        CardCatalogHeroes.HeroIDs.lancelot: "Lancelot smiles grimly. 'I know this road. I've walked it in sorrow.'"
+                        CardCatalog.HeroIDs.lancelot: "Lancelot smiles grimly. 'I know this road. I've walked it in sorrow.'"
                     ]
                 ),
                 isBoss: false
@@ -287,7 +287,7 @@ enum CampaignCatalogBook1 {
                     openingNarrative: "The Beast has the head of a snake, the body of a leopard, the haunches of a lion. It is impossible. It is real.",
                     victoryNarrative: "'Not bad,' Kay admits reluctantly. 'For a dreamer.'",
                     heroDialogue: [
-                        CardCatalogHeroes.HeroIDs.kay: "Kay snorts. 'This is nothing. Remember when we faced those three outlaws?'"
+                        CardCatalog.HeroIDs.kay: "Kay snorts. 'This is nothing. Remember when we faced those three outlaws?'"
                     ]
                 ),
                 isBoss: false
@@ -353,8 +353,8 @@ enum CampaignCatalogBook1 {
                     openingNarrative: "WHOSO PULLETH OUT THIS SWORD OF THIS STONE AND ANVIL IS RIGHTWISE KING BORN OF ALL ENGLAND.",
                     victoryNarrative: "The sword slides free like it was waiting for you. Like it was always yours.\n\nYou wake.\n\nThe book is warm in your hands.",
                     heroDialogue: [
-                        CardCatalogHeroes.HeroIDs.lancelot: "Lancelot kneels. 'My king. I will serve you—in dreams and in waking.'",
-                        CardCatalogHeroes.HeroIDs.kay: "Kay laughs. 'I always knew. Even when I was terrible to you. I always knew.'"
+                        CardCatalog.HeroIDs.lancelot: "Lancelot kneels. 'My king. I will serve you—in dreams and in waking.'",
+                        CardCatalog.HeroIDs.kay: "Kay laughs. 'I always knew. Even when I was terrible to you. I always knew.'"
                     ]
                 ),
                 isBoss: true
@@ -427,7 +427,7 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "Morgause's castle is beautiful and terrible. Like its queen.",
                 victoryNarrative: "'I am Bedivere,' the knight says. 'I serve the true king. As will you.'",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.lancelot: "Lancelot nods at Bedivere. 'Old friend. It's been too long.'"
+                    CardCatalog.HeroIDs.lancelot: "Lancelot nods at Bedivere. 'Old friend. It's been too long.'"
                 ]
             ),
             isBoss: false
@@ -534,7 +534,7 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "The mirror shows you older. Crowned. Alone.",
                 victoryNarrative: "Morgana le Fay steps from the darkness. Sister to Arthur. Enemy? Ally? Both.",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.lancelot: "Lancelot's hand goes to his sword. 'Morgana. What game is this?'"
+                    CardCatalog.HeroIDs.lancelot: "Lancelot's hand goes to his sword. 'Morgana. What game is this?'"
                 ]
             ),
             isBoss: false
@@ -584,8 +584,8 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "She is beautiful. She is terrible. She knows things about Arthur's birth that could break the kingdom.",
                 victoryNarrative: "'You win nothing,' she whispers as she fades. 'The doom is already set. Mordred will come.'\n\nYou wake, cold with sweat.\n\nThe book's pages rustle in a wind that isn't there.",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.morgana: "Morgana faces her sister. 'This ends, Morgause. Here.'",
-                    CardCatalogHeroes.HeroIDs.bedivere: "Bedivere raises his shield. 'For the king. For Camelot.'"
+                    CardCatalog.HeroIDs.morgana: "Morgana faces her sister. 'This ends, Morgause. Here.'",
+                    CardCatalog.HeroIDs.bedivere: "Bedivere raises his shield. 'For the king. For Camelot.'"
                 ]
             ),
             isBoss: true
@@ -706,7 +706,7 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "Turquine hates Lancelot above all others. He takes his fury out on everyone.",
                 victoryNarrative: "The prisoners stumble into the light. Among them: Escanor, Pride of the Noonday Sun.",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.lancelot: "Lancelot's eyes harden. 'Turquine. At last.'"
+                    CardCatalog.HeroIDs.lancelot: "Lancelot's eyes harden. 'Turquine. At last.'"
                 ]
             ),
             isBoss: false
@@ -750,7 +750,7 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "The queen has been accused. Champions must fight for her honor.",
                 victoryNarrative: "Honor demands sacrifice. Love demands more.",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.lancelot: "Lancelot trembles. 'For her. Always for her.'"
+                    CardCatalog.HeroIDs.lancelot: "Lancelot trembles. 'For her. Always for her.'"
                 ]
             ),
             isBoss: false
@@ -773,7 +773,7 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "Corbenic. The Grail Castle. Where only the pure may enter.",
                 victoryNarrative: "'I am Galahad,' says the knight. 'Son of Lancelot. The Grail is my quest.'",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.lancelot: "Lancelot falls to his knees. 'My son. My sin made holy.'"
+                    CardCatalog.HeroIDs.lancelot: "Lancelot falls to his knees. 'My son. My sin made holy.'"
                 ]
             ),
             isBoss: false
@@ -823,8 +823,8 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "Meliagrance took the Queen. Now he pays.",
                 victoryNarrative: "Justice is served. But at what cost?\n\nYou wake with tears on your cheeks.\n\nThe book feels heavier now.",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.galahad: "Galahad prays. 'Father, your sins are not mine. I forgive you.'",
-                    CardCatalogHeroes.HeroIDs.escanor: "Escanor blazes with fury. 'This villain DARES touch the Queen?'"
+                    CardCatalog.HeroIDs.galahad: "Galahad prays. 'Father, your sins are not mine. I forgive you.'",
+                    CardCatalog.HeroIDs.escanor: "Escanor blazes with fury. 'This villain DARES touch the Queen?'"
                 ]
             ),
             isBoss: true
@@ -876,7 +876,7 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "Knights who once served Arthur now serve his son. His destroyer.",
                 victoryNarrative: "Every victory feels like defeat. These were your brothers.",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.merlin: "Merlin sighs. 'I told him. I told him about Mordred. He wouldn't listen.'"
+                    CardCatalog.HeroIDs.merlin: "Merlin sighs. 'I told him. I told him about Mordred. He wouldn't listen.'"
                 ]
             ),
             isBoss: false
@@ -920,7 +920,7 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "Agravaine exposed Lancelot and the Queen. Now he pays the price.",
                 victoryNarrative: "Agravaine falls. But his damage is done.",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.kay: "Kay spits. 'Agravaine was always rotten. Even as a boy.'"
+                    CardCatalog.HeroIDs.kay: "Kay spits. 'Agravaine was always rotten. Even as a boy.'"
                 ]
             ),
             isBoss: false
@@ -943,7 +943,7 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "Joyous Gard, once a place of celebration. Now besieged.",
                 victoryNarrative: "The walls hold. For now.",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.lancelot: "Lancelot defends his home. 'I never wanted this war.'"
+                    CardCatalog.HeroIDs.lancelot: "Lancelot defends his home. 'I never wanted this war.'"
                 ]
             ),
             isBoss: false
@@ -1008,7 +1008,7 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "Tomorrow, everything ends. Tonight, there are still enemies to face.",
                 victoryNarrative: "Sleep comes hard. Dreams of what might have been.",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.bedivere: "Bedivere prays. 'Let me serve him to the end.'"
+                    CardCatalog.HeroIDs.bedivere: "Bedivere prays. 'Let me serve him to the end.'"
                 ]
             ),
             isBoss: false
@@ -1058,8 +1058,8 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "'In my end is my beginning.' Arthur faces his fate.",
                 victoryNarrative: "Mordred falls. But Arthur...\n\n'Take me to the lake,' he whispers.\n\nYou wake screaming.\n\nThe book is cold in your hands. But not finished. One chapter remains.",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.bedivere: "Bedivere weeps. 'The sword. He asked me to return Excalibur to the lake.'",
-                    CardCatalogHeroes.HeroIDs.merlin: "Merlin is silent. He already knows what comes next."
+                    CardCatalog.HeroIDs.bedivere: "Bedivere weeps. 'The sword. He asked me to return Excalibur to the lake.'",
+                    CardCatalog.HeroIDs.merlin: "Merlin is silent. He already knows what comes next."
                 ]
             ),
             isBoss: true
@@ -1195,7 +1195,7 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "Remember those who stood with you. Their sacrifice matters.",
                 victoryNarrative: "They smile as they fade. They're proud of you.",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.lancelot: "Lancelot sees ghosts of Gareth and Gaheris. 'I'm sorry. I'm so sorry.'"
+                    CardCatalog.HeroIDs.lancelot: "Lancelot sees ghosts of Gareth and Gaheris. 'I'm sorry. I'm so sorry.'"
                 ]
             ),
             isBoss: false
@@ -1287,10 +1287,10 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "The lantern flickers. Dawn approaches. You must choose: wake, or sleep forever.",
                 victoryNarrative: "'Well done,' Merlin whispers. 'The dream is part of you now. Forever.'\n\nThe lantern glows steady.\n\nYou open your eyes.\n\nSunlight streams through your window. The book rests on your pillow, closed.\n\nOn the cover, new words have appeared:\n\nTHE END\n...\nAND THE BEGINNING\n\nYou smile.\n\nThere are more books on the shelf.",
                 heroDialogue: [
-                    CardCatalogHeroes.HeroIDs.merlin: "Merlin bows. 'Until we meet again, young dreamer. In another story.'",
-                    CardCatalogHeroes.HeroIDs.lancelot: "Lancelot salutes. 'You gave us another chance. We won't forget.'",
-                    CardCatalogHeroes.HeroIDs.bedivere: "Bedivere smiles. 'The king would be proud.'",
-                    CardCatalogHeroes.HeroIDs.galahad: "Galahad glows with inner light. 'The Grail's blessing goes with you.'"
+                    CardCatalog.HeroIDs.merlin: "Merlin bows. 'Until we meet again, young dreamer. In another story.'",
+                    CardCatalog.HeroIDs.lancelot: "Lancelot salutes. 'You gave us another chance. We won't forget.'",
+                    CardCatalog.HeroIDs.bedivere: "Bedivere smiles. 'The king would be proud.'",
+                    CardCatalog.HeroIDs.galahad: "Galahad glows with inner light. 'The Grail's blessing goes with you.'"
                 ]
             ),
             isBoss: true

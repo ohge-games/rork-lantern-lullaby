@@ -14,6 +14,11 @@ import SwiftUI
 /// sequence stays on one clock.
 struct StartScreenView: View {
     let phase: SleepPhase
+    /// Label on the call-to-action; the title screen opens the book, the
+    /// campaign page drifts to sleep.
+    var buttonTitle: String = "Drift to Sleep"
+    /// Hidden while the scene is only being used for the sleep transition.
+    var showsChrome: Bool = true
     let onBegin: () -> Void
 
     @State private var breathe = false
@@ -40,7 +45,7 @@ struct StartScreenView: View {
 
     /// Title and button stay visible only while the bedroom is at rest.
     private var chromeOpacity: Double {
-        phase == .none || phase == .flicker ? 1 : 0
+        showsChrome && (phase == .none || phase == .flicker) ? 1 : 0
     }
 
     var body: some View {
@@ -72,7 +77,7 @@ struct StartScreenView: View {
                     Button {
                         onBegin()
                     } label: {
-                        Text("Drift to Sleep")
+                        Text(buttonTitle)
                             .font(.title3.weight(.bold))
                             .foregroundStyle(.black)
                             .padding(.horizontal, 44)

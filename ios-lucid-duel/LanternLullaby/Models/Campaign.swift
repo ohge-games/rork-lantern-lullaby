@@ -123,32 +123,32 @@ nonisolated struct CampaignProgress: Codable, Sendable {
 }
 
 /// Defines which heroes unlock at which campaign milestones.
-enum HeroUnlocks {
+nonisolated enum HeroUnlocks {
     /// Returns hero IDs that unlock when clearing the specified stage.
     /// Chapter and stage indices are 0-based.
     static func heroesUnlockedAt(chapter: Int, stage: Int) -> [Hero.ID] {
         switch (chapter, stage) {
         // Chapter 1: The Sword in the Stone
         case (0, 4):  // Ch1-S5 (index 4)
-            return [CardCatalogHeroes.HeroIDs.lancelot]
+            return [CardCatalog.HeroIDs.lancelot]
         case (0, 7):  // Ch1-S8 (index 7)
-            return [CardCatalogHeroes.HeroIDs.kay]
+            return [CardCatalog.HeroIDs.kay]
             
         // Chapter 2: The Queen of Air and Darkness
         case (1, 2):  // Ch2-S3 (index 2)
-            return [CardCatalogHeroes.HeroIDs.bedivere]
+            return [CardCatalog.HeroIDs.bedivere]
         case (1, 7):  // Ch2-S8 (index 7)
-            return [CardCatalogHeroes.HeroIDs.morgana]
+            return [CardCatalog.HeroIDs.morgana]
             
         // Chapter 3: The Ill-Made Knight
         case (2, 4):  // Ch3-S5 (index 4)
-            return [CardCatalogHeroes.HeroIDs.escanor]
+            return [CardCatalog.HeroIDs.escanor]
         case (2, 7):  // Ch3-S8 (index 7)
-            return [CardCatalogHeroes.HeroIDs.galahad]
+            return [CardCatalog.HeroIDs.galahad]
             
         // Chapter 4: The Candle in the Wind
         case (3, 0):  // Ch4-S1 (index 0) - Merlin joins at chapter start
-            return [CardCatalogHeroes.HeroIDs.merlin]
+            return [CardCatalog.HeroIDs.merlin]
             
         default:
             return []
@@ -157,6 +157,6 @@ enum HeroUnlocks {
     
     /// Starting heroes available before any progression.
     static var starterHeroIDs: Set<Hero.ID> {
-        [CardCatalog.dreamer.id]  // Wart + Archimedes handled as starters
+        [CardCatalog.StarterIDs.wart, CardCatalog.StarterIDs.archimedes]
     }
 }

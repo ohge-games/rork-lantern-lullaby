@@ -14,8 +14,8 @@ extension CardCatalog {
     /// the rationale) keep hero→card and save→definition references stable
     /// across launches.
     enum HeroIDs {
-        static let wart       = CardCatalogStarters.StarterIDs.wart
-        static let archimedes = CardCatalogStarters.StarterIDs.archimedes
+        static let wart       = CardCatalog.StarterIDs.wart
+        static let archimedes = CardCatalog.StarterIDs.archimedes
         static let lancelot = UUID(uuidString: "B2000000-0000-4000-8000-000000000001")!
         static let bedivere = UUID(uuidString: "B3000000-0000-4000-8000-000000000001")!
         static let escanor  = UUID(uuidString: "B4000000-0000-4000-8000-000000000001")!

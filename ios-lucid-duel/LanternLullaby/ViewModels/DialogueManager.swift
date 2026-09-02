@@ -81,6 +81,12 @@ final class DialogueManager {
     
     // MARK: - Queue Management
     
+    /// Shows a dialogue that was built at runtime (wave banners, hero
+    /// entrances) without registering a trigger for it.
+    func enqueue(_ dialogue: BattleDialogue) {
+        queueDialogue(dialogue)
+    }
+    
     private func queueDialogue(_ dialogue: BattleDialogue) {
         // Mark first-time dialogues as shown
         if case .firstTimeOnly(let key) = dialogue.trigger {

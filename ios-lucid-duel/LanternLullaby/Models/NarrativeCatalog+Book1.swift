@@ -20,9 +20,9 @@ enum NarrativeCatalogBook1 {
         ),
         postStageScene: StoryScene(
             lines: [
-                .hero(CardCatalogHeroes.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
+                .hero(CardCatalog.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
                       text: "That was... you were incredible!"),
-                .hero(CardCatalogHeroes.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
+                .hero(CardCatalog.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
                       text: "I've never seen anyone fight like that. Maybe we could train together?"),
                 .mcThought("Did I really just do that? It felt like the book was... guiding me.")
             ]
@@ -31,9 +31,9 @@ enum NarrativeCatalogBook1 {
             BattleDialogue(
                 trigger: .battleStart,
                 lines: [
-                    .hero(CardCatalogHeroes.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
+                    .hero(CardCatalog.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
                           text: "Hey! Over here! I don't know how you got here, but I'm glad you did."),
-                    .hero(CardCatalogHeroes.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
+                    .hero(CardCatalog.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
                           text: "Something's wrong in the forest tonight. The wolves are acting strange."),
                     .mcThought("The lantern in my hand... it's warm. Like it knows where to go.")
                 ]
@@ -45,21 +45,21 @@ enum NarrativeCatalogBook1 {
         preStageScene: nil,
         postStageScene: StoryScene(
             lines: [
-                .hero(CardCatalogHeroes.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
+                .hero(CardCatalog.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
                       text: "You fight well, young dreamer. Better than most knights I've known."),
-                .hero(CardCatalogHeroes.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
+                .hero(CardCatalog.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
                       text: "I am Lancelot du Lac. The finest knight in Arthur's service."),
-                .hero(CardCatalogHeroes.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
+                .hero(CardCatalog.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
                       text: "At least... that's what they say. Whether I deserve the title is another matter."),
-                .hero(CardCatalogHeroes.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
+                .hero(CardCatalog.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
                       text: "But I see something in you. A flame that refuses to go out. I would follow that flame, if you'll have me."),
-                .hero(CardCatalogHeroes.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
+                .hero(CardCatalog.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
                       text: "Lancelot? THE Lancelot? He's even more impressive than Merlyn's stories!")
             ]
         ),
         battleDialogues: [
             BattleDialogue(
-                trigger: .heroUnlock(heroID: CardCatalogHeroes.HeroIDs.lancelot),
+                trigger: .heroUnlock(heroID: CardCatalog.HeroIDs.lancelot),
                 lines: [
                     .mcThought("A knight. A real knight. And he wants to follow me?"),
                     .mcThought("I'm just a kid. I just moved here. I spend my lunches reading alone."),
@@ -73,17 +73,17 @@ enum NarrativeCatalogBook1 {
         preStageScene: nil,
         postStageScene: StoryScene(
             lines: [
-                .hero(CardCatalogHeroes.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
+                .hero(CardCatalog.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
                       text: "Wait. You're not one of them."),
-                .hero(CardCatalogHeroes.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
+                .hero(CardCatalog.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
                       text: "You're with Wart? Of course you are. That boy attracts trouble like honey attracts flies."),
-                .hero(CardCatalogHeroes.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
+                .hero(CardCatalog.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
                       text: "Kay! You're okay!"),
-                .hero(CardCatalogHeroes.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
+                .hero(CardCatalog.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
                       text: "No thanks to you, running off into cursed forests."),
-                .hero(CardCatalogHeroes.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
+                .hero(CardCatalog.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
                       text: "I'm his brother. Well, foster brother. I'm also the better fighter, the better hunter, and the better everything."),
-                .hero(CardCatalogHeroes.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
+                .hero(CardCatalog.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
                       text: "But fine. If you're keeping this idiot alive, I suppose I'll help.")
             ]
         ),
@@ -104,9 +104,9 @@ enum NarrativeCatalogBook1 {
             backgroundImage: "bg_sword_in_stone",
             lines: [
                 .narrator("The sword slides free like it was waiting for you. Like it was always yours."),
-                .hero(CardCatalogHeroes.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
+                .hero(CardCatalog.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
                       text: "My king. I will serve you—in dreams and in waking."),
-                .hero(CardCatalogHeroes.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
+                .hero(CardCatalog.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
                       text: "I always knew. Even when I was terrible to you. I always knew."),
                 .mcThought("The sword in the stone. I helped him pull it."),
                 .mcThought("I helped make a king."),
@@ -122,7 +122,7 @@ enum NarrativeCatalogBook1 {
                              text: "So. The woodland creatures have brought help."),
                     .villain(name: "Sir Ector", portrait: "portrait_ector",
                              text: "I raised Wart. I know his limits. He will never be more than a servant boy."),
-                    .hero(CardCatalogHeroes.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
+                    .hero(CardCatalog.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
                           text: "Father..."),
                     .villain(name: "Sir Ector", portrait: "portrait_ector",
                              text: "I am NOT your father. I never was. And I never will be.")
@@ -133,7 +133,7 @@ enum NarrativeCatalogBook1 {
                 lines: [
                     .villain(name: "Sir Ector", portrait: "portrait_ector",
                              text: "You think yourself worthy of that sword? Prove it!"),
-                    .hero(CardCatalogHeroes.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
+                    .hero(CardCatalog.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
                           text: "I'm not fighting for the sword. I'm fighting for my friends.")
                 ]
             )
@@ -146,17 +146,17 @@ enum NarrativeCatalogBook1 {
         preStageScene: nil,
         postStageScene: StoryScene(
             lines: [
-                .hero(CardCatalogHeroes.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
+                .hero(CardCatalog.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
                       text: "Hold. You're not Morgause's creatures."),
-                .hero(CardCatalogHeroes.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
+                .hero(CardCatalog.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
                       text: "And that light... I haven't seen its like in many years."),
-                .hero(CardCatalogHeroes.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
+                .hero(CardCatalog.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
                       text: "I am Bedivere. The king's man. The last of his original companions."),
-                .hero(CardCatalogHeroes.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
+                .hero(CardCatalog.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
                       text: "I gave my arm for Arthur. I would give the rest if duty demanded."),
-                .hero(CardCatalogHeroes.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
+                .hero(CardCatalog.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
                       text: "Old friend. It's been too long."),
-                .hero(CardCatalogHeroes.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
+                .hero(CardCatalog.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
                       text: "The dreamer leads this company? Then so do I. One-armed or not, my shield is yours.")
             ]
         ),
@@ -167,17 +167,17 @@ enum NarrativeCatalogBook1 {
         preStageScene: nil,
         postStageScene: StoryScene(
             lines: [
-                .hero(CardCatalogHeroes.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
+                .hero(CardCatalog.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
                       text: "You've come far, little dreamer. Farther than most who enter these pages."),
-                .hero(CardCatalogHeroes.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
+                .hero(CardCatalog.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
                       text: "I am Morgana le Fay. Called witch by those who fear me. Called worse by those who should know better."),
-                .hero(CardCatalogHeroes.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
+                .hero(CardCatalog.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
                       text: "She's dangerous. Don't trust her."),
-                .hero(CardCatalogHeroes.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
+                .hero(CardCatalog.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
                       text: "I have been many things. Villain. Victim. Villain again. The stories change depending on who tells them."),
-                .hero(CardCatalogHeroes.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
+                .hero(CardCatalog.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
                       text: "But your light... it doesn't judge. It simply illuminates."),
-                .hero(CardCatalogHeroes.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
+                .hero(CardCatalog.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
                       text: "Let me show you what I could be. If someone believed in me.")
             ]
         ),
@@ -219,7 +219,7 @@ enum NarrativeCatalogBook1 {
                 lines: [
                     .villain(name: "Morgause", portrait: "portrait_morgause",
                              text: "You fight well... but you cannot defeat what you do not understand."),
-                    .hero(CardCatalogHeroes.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
+                    .hero(CardCatalog.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
                           text: "This ends, Morgause. Here. Sister.")
                 ]
             )
@@ -232,17 +232,17 @@ enum NarrativeCatalogBook1 {
         preStageScene: nil,
         postStageScene: StoryScene(
             lines: [
-                .hero(CardCatalogHeroes.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
+                .hero(CardCatalog.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
                       text: "FINALLY! Sixty knights he imprisoned! SIXTY! And none with the courage to face him!"),
-                .hero(CardCatalogHeroes.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
+                .hero(CardCatalog.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
                       text: "But you... you are small. Why would one so small dare Turquine's castle?"),
-                .hero(CardCatalogHeroes.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
+                .hero(CardCatalog.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
                       text: "They came to help. They always help."),
-                .hero(CardCatalogHeroes.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
+                .hero(CardCatalog.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
                       text: "Hmm. Bravery is not measured in inches."),
-                .hero(CardCatalogHeroes.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
+                .hero(CardCatalog.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
                       text: "I am Escanor! My strength grows with the sun! I will GRACE this company with my magnificence!"),
-                .hero(CardCatalogHeroes.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
+                .hero(CardCatalog.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
                       text: "Great. Another humble one.")
             ]
         ),
@@ -250,7 +250,7 @@ enum NarrativeCatalogBook1 {
             BattleDialogue(
                 trigger: .battleStart,
                 lines: [
-                    .hero(CardCatalogHeroes.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
+                    .hero(CardCatalog.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
                           text: "Turquine. At last. He hates me above all others."),
                     .mcThought("The prison tower looms ahead. Sixty knights wait for rescue.")
                 ]
@@ -268,17 +268,17 @@ enum NarrativeCatalogBook1 {
         ),
         postStageScene: StoryScene(
             lines: [
-                .hero(CardCatalogHeroes.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
+                .hero(CardCatalog.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
                       text: "The light told me you would come."),
-                .hero(CardCatalogHeroes.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
+                .hero(CardCatalog.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
                       text: "I am Galahad. Son of Lancelot. Seeker of the Holy Grail."),
-                .hero(CardCatalogHeroes.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
+                .hero(CardCatalog.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
                       text: "My... my son."),
-                .hero(CardCatalogHeroes.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
+                .hero(CardCatalog.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
                       text: "Father. Your sins are known to me. And forgiven."),
-                .hero(CardCatalogHeroes.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
+                .hero(CardCatalog.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
                       text: "The Grail calls only the pure. But your lantern burns with the same light."),
-                .hero(CardCatalogHeroes.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
+                .hero(CardCatalog.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
                       text: "I would be honored to walk this path beside you.")
             ]
         ),
@@ -301,7 +301,7 @@ enum NarrativeCatalogBook1 {
                 lines: [
                     .villain(name: "Meliagrance", portrait: "portrait_meliagrance",
                              text: "The queen belongs to me! I claimed her fairly!"),
-                    .hero(CardCatalogHeroes.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
+                    .hero(CardCatalog.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
                           text: "You kidnapped her. There is nothing fair in that."),
                     .villain(name: "Meliagrance", portrait: "portrait_meliagrance",
                              text: "Fairness is for those too weak to take what they want!")
@@ -310,7 +310,7 @@ enum NarrativeCatalogBook1 {
             BattleDialogue(
                 trigger: .enemyHealthThreshold(percent: 25),
                 lines: [
-                    .hero(CardCatalogHeroes.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
+                    .hero(CardCatalog.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
                           text: "This villain DARES touch the Queen? Feel the fury of the NOONDAY SUN!")
                 ]
             )
@@ -330,17 +330,17 @@ enum NarrativeCatalogBook1 {
         ),
         postStageScene: StoryScene(
             lines: [
-                .hero(CardCatalogHeroes.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
+                .hero(CardCatalog.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
                       text: "Ah. There you are. I've been looking forward to this."),
-                .hero(CardCatalogHeroes.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
+                .hero(CardCatalog.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
                       text: "Or backward to it. Time is rather complicated when you live in the wrong direction."),
-                .hero(CardCatalogHeroes.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
+                .hero(CardCatalog.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
                       text: "Merlyn!"),
-                .hero(CardCatalogHeroes.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
+                .hero(CardCatalog.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
                       text: "Wart. Still small. Still brave. Still terrible at your lessons."),
-                .hero(CardCatalogHeroes.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
+                .hero(CardCatalog.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
                       text: "And you, dreamer. I've seen your future. All the books you'll read. All the dreams you'll dream."),
-                .hero(CardCatalogHeroes.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
+                .hero(CardCatalog.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
                       text: "It's rather impressive.")
             ]
         ),
@@ -361,9 +361,9 @@ enum NarrativeCatalogBook1 {
             lines: [
                 .narrator("Mordred falls. But Arthur..."),
                 .narrator("'Take me to the lake,' he whispers."),
-                .hero(CardCatalogHeroes.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
+                .hero(CardCatalog.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
                       text: "The sword. He asked me to return Excalibur to the lake."),
-                .hero(CardCatalogHeroes.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
+                .hero(CardCatalog.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
                       text: "..."),
                 .narrator("You wake screaming."),
                 .narrator("The book is cold in your hands. But not finished. One chapter remains.")
@@ -389,7 +389,7 @@ enum NarrativeCatalogBook1 {
                 lines: [
                     .villain(name: "Mordred", portrait: "portrait_mordred",
                              text: "Even now he refuses to strike! His own son! His own DOOM!"),
-                    .hero(CardCatalogHeroes.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
+                    .hero(CardCatalog.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
                           text: "Then I will strike for him. For the king I failed.")
                 ]
             )
@@ -410,15 +410,15 @@ enum NarrativeCatalogBook1 {
         postStageScene: StoryScene(
             backgroundImage: "bg_bedroom_morning",
             lines: [
-                .hero(CardCatalogHeroes.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
+                .hero(CardCatalog.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
                       text: "Well done. The dream is part of you now. Forever."),
-                .hero(CardCatalogHeroes.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
+                .hero(CardCatalog.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
                       text: "Until we meet again, young dreamer. In another story."),
-                .hero(CardCatalogHeroes.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
+                .hero(CardCatalog.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
                       text: "You gave us another chance. We won't forget."),
-                .hero(CardCatalogHeroes.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
+                .hero(CardCatalog.HeroIDs.bedivere, name: "Bedivere", portrait: "portrait_bedivere",
                       text: "The king would be proud."),
-                .hero(CardCatalogHeroes.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
+                .hero(CardCatalog.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
                       text: "The Grail's blessing goes with you."),
                 .narrator("You open your eyes."),
                 .narrator("Sunlight streams through your window. The book rests on your pillow, closed."),
@@ -437,7 +437,7 @@ enum NarrativeCatalogBook1 {
                              text: "Dreamer. You cannot stay here forever."),
                     .villain(name: "The Awakening", portrait: "portrait_awakening",
                              text: "Morning always comes. Let go. Wake up. Leave them behind."),
-                    .hero(CardCatalogHeroes.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
+                    .hero(CardCatalog.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
                           text: "Don't listen. The dream can be part of you. Forever."),
                     .mcThought("Not like this. Not until I'm ready.")
                 ]
@@ -460,11 +460,11 @@ enum NarrativeCatalogBook1 {
     static let lancelotGalahadCombo = BattleDialogue(
         trigger: .firstTimeOnly(key: "combo_lancelot_galahad"),
         lines: [
-            .hero(CardCatalogHeroes.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
+            .hero(CardCatalog.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
                   text: "Stay behind me. I won't lose you again."),
-            .hero(CardCatalogHeroes.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
+            .hero(CardCatalog.HeroIDs.galahad, name: "Galahad", portrait: "portrait_galahad",
                   text: "Father. I am not yours to protect. I am here to protect others."),
-            .hero(CardCatalogHeroes.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
+            .hero(CardCatalog.HeroIDs.lancelot, name: "Lancelot", portrait: "portrait_lancelot",
                   text: "I know. That's what makes it harder.")
         ],
         pausesBattle: true
@@ -473,15 +473,15 @@ enum NarrativeCatalogBook1 {
     static let kayWartCombo = BattleDialogue(
         trigger: .firstTimeOnly(key: "combo_kay_wart"),
         lines: [
-            .hero(CardCatalogHeroes.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
+            .hero(CardCatalog.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
                   text: "Remember when I used to make you carry my armor?"),
-            .hero(CardCatalogHeroes.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
+            .hero(CardCatalog.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
                   text: "Every day."),
-            .hero(CardCatalogHeroes.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
+            .hero(CardCatalog.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
                   text: "...I'm sorry about that."),
-            .hero(CardCatalogHeroes.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
+            .hero(CardCatalog.HeroIDs.wart, name: "Wart", portrait: "portrait_wart",
                   text: "Kay?"),
-            .hero(CardCatalogHeroes.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
+            .hero(CardCatalog.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
                   text: "Don't get used to it.")
         ],
         pausesBattle: true
@@ -490,13 +490,13 @@ enum NarrativeCatalogBook1 {
     static let morganaMerlinCombo = BattleDialogue(
         trigger: .firstTimeOnly(key: "combo_morgana_merlin"),
         lines: [
-            .hero(CardCatalogHeroes.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
+            .hero(CardCatalog.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
                   text: "Old man. Still meddling."),
-            .hero(CardCatalogHeroes.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
+            .hero(CardCatalog.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
                   text: "Young woman. Still grudging."),
-            .hero(CardCatalogHeroes.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
+            .hero(CardCatalog.HeroIDs.morgana, name: "Morgana", portrait: "portrait_morgana",
                   text: "I could have been your student."),
-            .hero(CardCatalogHeroes.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
+            .hero(CardCatalog.HeroIDs.merlin, name: "Merlin", portrait: "portrait_merlin",
                   text: "You could have been more than that. You still can.")
         ],
         pausesBattle: true
@@ -505,15 +505,15 @@ enum NarrativeCatalogBook1 {
     static let escanorKayCombo = BattleDialogue(
         trigger: .firstTimeOnly(key: "combo_escanor_kay"),
         lines: [
-            .hero(CardCatalogHeroes.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
+            .hero(CardCatalog.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
                   text: "Your confidence is admirable!"),
-            .hero(CardCatalogHeroes.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
+            .hero(CardCatalog.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
                   text: "Obviously."),
-            .hero(CardCatalogHeroes.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
+            .hero(CardCatalog.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
                   text: "Though misplaced. MY confidence is superior!"),
-            .hero(CardCatalogHeroes.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
+            .hero(CardCatalog.HeroIDs.kay, name: "Kay", portrait: "portrait_kay",
                   text: "Is this a competition?"),
-            .hero(CardCatalogHeroes.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
+            .hero(CardCatalog.HeroIDs.escanor, name: "Escanor", portrait: "portrait_escanor",
                   text: "One I will WIN!")
         ],
         pausesBattle: true
@@ -547,23 +547,23 @@ enum NarrativeCatalogBook1 {
         let heroSet = Set(heroIDs)
         
         // Check each combo
-        if heroSet.contains(CardCatalogHeroes.HeroIDs.lancelot) &&
-           heroSet.contains(CardCatalogHeroes.HeroIDs.galahad) {
+        if heroSet.contains(CardCatalog.HeroIDs.lancelot) &&
+           heroSet.contains(CardCatalog.HeroIDs.galahad) {
             dialogues.append(lancelotGalahadCombo)
         }
         
-        if heroSet.contains(CardCatalogHeroes.HeroIDs.kay) &&
-           heroSet.contains(CardCatalogHeroes.HeroIDs.wart) {
+        if heroSet.contains(CardCatalog.HeroIDs.kay) &&
+           heroSet.contains(CardCatalog.HeroIDs.wart) {
             dialogues.append(kayWartCombo)
         }
         
-        if heroSet.contains(CardCatalogHeroes.HeroIDs.morgana) &&
-           heroSet.contains(CardCatalogHeroes.HeroIDs.merlin) {
+        if heroSet.contains(CardCatalog.HeroIDs.morgana) &&
+           heroSet.contains(CardCatalog.HeroIDs.merlin) {
             dialogues.append(morganaMerlinCombo)
         }
         
-        if heroSet.contains(CardCatalogHeroes.HeroIDs.escanor) &&
-           heroSet.contains(CardCatalogHeroes.HeroIDs.kay) {
+        if heroSet.contains(CardCatalog.HeroIDs.escanor) &&
+           heroSet.contains(CardCatalog.HeroIDs.kay) {
             dialogues.append(escanorKayCombo)
         }
         

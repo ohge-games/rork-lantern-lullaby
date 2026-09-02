@@ -5,7 +5,9 @@
 
 import SwiftUI
 
-/// App flow for Lantern & Lullaby: bedroom → sleep transition → battle.
+/// App flow for Lantern & Lullaby:
+/// title (bedroom) → prologue (first run) → campaign page → sleep
+/// transition → battle → back to the campaign page with progress saved.
 ///
 /// The sleep sequence runs on one clock here:
 /// 1. Bedroom at rest (child in bed, book open, lantern on the nightstand)
@@ -14,23 +16,57 @@ import SwiftUI
 /// 4. Black curtain (the loading breath between worlds)
 /// 5. Fade in: the child standing in soft fog, lantern in hand
 /// 6. The fog lifts (2s), revealing the arena behind them
-/// 7. The battle UI settles in — the chapter begins
+/// 7. The battle UI settles in — the stage's story begins
 struct ContentView: View {
-    @State private var viewModel = BattleViewModel()
-    @State private var isInBattle = false
+    enum Screen: Equatable {
+        case title
+        case prologue
+        case campaign
+        case sleeping
+        case battle
+    }
+
+    @State private var coordinator = CampaignCoordinator()
+    @State private var battleViewModel: BattleViewModel?
+    @State private var screen: Screen = .title
     @State private var sleepPhase: SleepPhase = .none
     /// Opacity of the black curtain between the bedroom and the dream.
     @State private var curtain: Double = 0
+    /// The stage being fought, so victory can be written back.
+    @State private var activeStage: Stage?
 
     var body: some View {
         ZStack {
-            if isInBattle {
-                BattleView(viewModel: viewModel) {
-                    isInBattle = false
+            switch screen {
+            case .title:
+                StartScreenView(phase: .none, buttonTitle: "Open the Book") {
+                    openBook()
                 }
-            } else {
-                StartScreenView(phase: sleepPhase) {
-                    beginSleepSequence()
+                .transition(.opacity)
+
+            case .prologue:
+                PrologueView(scenes: NarrativeCatalogBook1.prologueScenes) {
+                    coordinator.markPrologueSeen()
+                    withAnimation(.easeInOut(duration: 0.6)) { screen = .campaign }
+                }
+                .transition(.opacity)
+
+            case .campaign:
+                CampaignMapView(coordinator: coordinator) { stage in
+                    beginStage(stage)
+                }
+                .transition(.opacity)
+
+            case .sleeping:
+                StartScreenView(phase: sleepPhase, showsChrome: false) {}
+                    .transition(.opacity)
+
+            case .battle:
+                if let viewModel = battleViewModel {
+                    BattleView(viewModel: viewModel) { exit in
+                        finishBattle(exit)
+                    }
+                    .transition(.opacity)
                 }
             }
 
@@ -45,16 +81,44 @@ struct ContentView: View {
                 .opacity(curtain)
                 .allowsHitTesting(curtain > 0.1)
         }
-        .animation(.easeInOut(duration: 0.5), value: isInBattle)
+        .animation(.easeInOut(duration: 0.5), value: screen)
     }
 
-    private func beginSleepSequence() {
-        guard sleepPhase == .none, !isInBattle else { return }
+    // MARK: - Flow
+
+    private func openBook() {
+        if coordinator.hasSeenPrologue {
+            screen = .campaign
+        } else {
+            screen = .prologue
+        }
+    }
+
+    private func beginStage(_ stage: Stage) {
+        guard screen == .campaign else { return }
+        activeStage = stage
+        battleViewModel = coordinator.makeBattle(for: stage)
         Task { await runSleepSequence() }
+    }
+
+    private func finishBattle(_ exit: BattleExit) {
+        if exit == .victory, let stage = activeStage {
+            coordinator.recordVictory(stageID: stage.id)
+        }
+        activeStage = nil
+        withAnimation(.easeInOut(duration: 0.6)) {
+            screen = .campaign
+        }
+        battleViewModel = nil
     }
 
     @MainActor
     private func runSleepSequence() async {
+        // 1. Back to the bedroom; the child closes the book.
+        sleepPhase = .none
+        screen = .sleeping
+        try? await Task.sleep(for: .milliseconds(700))
+
         // 2. The flame flickers twice (StartScreenView performs the gasps).
         sleepPhase = .flicker
         try? await Task.sleep(for: .milliseconds(1500))
@@ -70,18 +134,15 @@ struct ContentView: View {
         try? await Task.sleep(for: .milliseconds(1100))
 
         // The loading moment: swap worlds behind the curtain.
-        if viewModel.state.phase == .gameOver {
-            viewModel.startNewDuel()
-        }
         var noFade = Transaction()
         noFade.disablesAnimations = true
         withTransaction(noFade) {
-            isInBattle = true
+            screen = .battle
             sleepPhase = .fogChild
         }
         try? await Task.sleep(for: .milliseconds(600))
 
-        // 5. Fade in: the child standing in the fog, lantern in hand.
+        // 5. Fade in: the party standing in the fog.
         withAnimation(.easeOut(duration: 1.1)) { curtain = 0 }
         try? await Task.sleep(for: .milliseconds(1700))
 
@@ -91,6 +152,8 @@ struct ContentView: View {
 
         // 7. The last veil dissolves; the chapter begins.
         withAnimation(.easeOut(duration: 0.7)) { sleepPhase = .none }
+        try? await Task.sleep(for: .milliseconds(400))
+        battleViewModel?.startStage()
     }
 }
 

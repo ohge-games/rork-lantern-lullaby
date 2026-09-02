@@ -1,16 +1,25 @@
 import SwiftUI
 
+/// How a battle screen was left: a recorded victory, or the player closing
+/// the book on a fight (lost or abandoned).
+enum BattleExit: Equatable {
+    case victory
+    case retreat
+}
+
 /// The main duel screen of Lantern & Lullaby, staged in landscape like a
 /// storybook spread: enemies stand on the left page, heroes on the right,
 /// the card hand fans at the bottom center, and the living lantern keeps
 /// watch in the bottom-right corner.
 struct BattleView: View {
     let viewModel: BattleViewModel
-    let onExit: () -> Void
+    let onExit: (BattleExit) -> Void
+
+    @State private var confirmLeave = false
 
     var body: some View {
         ZStack {
-            DreamBackground(zone: viewModel.state.player.zone)
+            DreamBackground(zone: viewModel.state.player.zone, artName: viewModel.arenaArtName)
 
             BattlefieldView(viewModel: viewModel)
                 .padding(.bottom, 60)
@@ -25,18 +34,23 @@ struct BattleView: View {
                 confirmPanel(for: card)
             }
 
-            if viewModel.state.phase == .gameOver {
+            // The ending card waits until the stage's last lines are read.
+            if viewModel.state.phase == .gameOver, viewModel.narrativePhase == .none {
                 GameOverOverlayView(
                     outcome: viewModel.state.outcome,
                     finalLucidity: viewModel.state.player.lucidity,
+                    victorySubtitle: "\(viewModel.configuration.title) — the page turns.",
                     onRestart: { viewModel.startNewDuel() },
-                    onContinue: onExit
+                    onContinue: {
+                        onExit(viewModel.state.outcome == .victory ? .victory : .retreat)
+                    }
                 )
                 .transition(.opacity)
+                .zIndex(80)
             }
-            
+
             // MARK: - Narrative Overlays
-            
+
             // Pre-battle story scene
             if let preScene = viewModel.preStageScene,
                viewModel.narrativePhase == .showingPreScene {
@@ -47,7 +61,7 @@ struct BattleView: View {
                 .transition(.opacity)
                 .zIndex(100)
             }
-            
+
             // In-battle dialogue overlay (appears in card zone area)
             if let dialogue = viewModel.activeDialogue,
                viewModel.narrativePhase == .showingDialogue {
@@ -55,10 +69,11 @@ struct BattleView: View {
                     dialogue: dialogue,
                     onDismiss: { viewModel.dismissDialogue() }
                 )
+                .id(dialogue.id)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .zIndex(99)
             }
-            
+
             // Post-battle story scene
             if let postScene = viewModel.postStageScene,
                viewModel.narrativePhase == .showingPostScene {
@@ -75,27 +90,43 @@ struct BattleView: View {
         .sensoryFeedback(.selection, trigger: viewModel.selectedInstanceID)
         .sensoryFeedback(.selection, trigger: viewModel.targetedEnemyID)
         .sensoryFeedback(.impact(weight: .light), trigger: viewModel.heroSwitchTrigger)
+        .sensoryFeedback(.impact(weight: .heavy), trigger: viewModel.waveTrigger)
         .animation(.easeInOut(duration: 0.3), value: viewModel.state.phase)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.narrativePhase)
+        .confirmationDialog("Close the book?", isPresented: $confirmLeave, titleVisibility: .visible) {
+            Button("Leave the dream", role: .destructive) { onExit(.retreat) }
+            Button("Keep dreaming", role: .cancel) {}
+        } message: {
+            Text("Progress on this page will be lost.")
+        }
     }
 
     // MARK: - Top chrome
 
-    /// Sound chip (left) · turn banner + zone notification (center) ·
-    /// restart (right).
+    /// Leave + sound chip (left) · turn banner + wave chip (center) ·
+    /// restart (right), with zone and battle notices beneath.
     private var topChrome: some View {
         VStack(spacing: 6) {
             HStack(alignment: .top) {
-                soundChip
-                    .frame(width: 110, alignment: .leading)
+                HStack(spacing: 8) {
+                    leaveButton
+                    soundChip
+                }
+                .frame(width: 150, alignment: .leading)
 
                 Spacer()
 
-                turnBanner
+                VStack(spacing: 4) {
+                    turnBanner
+                    if viewModel.waveCount > 1 {
+                        waveChip
+                    }
+                }
 
                 Spacer()
 
                 restartButton
-                    .frame(width: 110, alignment: .trailing)
+                    .frame(width: 150, alignment: .trailing)
             }
 
             if let notification = viewModel.zoneNotification {
@@ -107,6 +138,18 @@ struct BattleView: View {
                     )
             }
 
+            if let notice = viewModel.battleNotice {
+                Text(notice.text)
+                    .font(.system(size: 11, weight: .bold))
+                    .tracking(1)
+                    .foregroundStyle(DreamTheme.gold)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(.black.opacity(0.5)))
+                    .overlay(Capsule().stroke(DreamTheme.gold.opacity(0.35), lineWidth: 1))
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
             Spacer()
         }
         .padding(.horizontal, 16)
@@ -115,6 +158,10 @@ struct BattleView: View {
         .animation(
             .spring(response: 0.4, dampingFraction: 0.8),
             value: viewModel.zoneNotification?.id
+        )
+        .animation(
+            .spring(response: 0.4, dampingFraction: 0.8),
+            value: viewModel.battleNotice?.id
         )
     }
 
@@ -130,12 +177,26 @@ struct BattleView: View {
             .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 1))
     }
 
+    private var waveChip: some View {
+        Text("WAVE \(viewModel.waveIndex + 1) OF \(viewModel.waveCount)")
+            .font(.system(size: 9, weight: .heavy))
+            .tracking(1.5)
+            .foregroundStyle(DreamTheme.gold.opacity(0.9))
+            .padding(.horizontal, 9)
+            .padding(.vertical, 3)
+            .background(Capsule().fill(.black.opacity(0.35)))
+            .contentTransition(.numericText())
+            .animation(.easeInOut(duration: 0.3), value: viewModel.waveIndex)
+    }
+
     private var bannerText: String {
         switch viewModel.state.phase {
         case .playerDraw, .playerMain:
             return "TURN \(viewModel.state.turnNumber) · YOUR MOVE"
         case .enemyTurn:
-            return viewModel.isEnemyThinking ? "ENEMY THINKING…" : "THE NIGHTMARE STRIKES"
+            if viewModel.isEnemyThinking { return "ENEMY THINKING…" }
+            let name = viewModel.primaryEnemy?.name ?? "THE NIGHTMARE"
+            return "\(name.uppercased()) STRIKES"
         case .gameOver:
             return "DUEL OVER"
         }
@@ -158,6 +219,21 @@ struct BattleView: View {
             .background(Capsule().fill(.black.opacity(0.35)))
             .transition(.opacity.combined(with: .scale(scale: 0.85)))
         }
+    }
+
+    private var leaveButton: some View {
+        Button {
+            confirmLeave = true
+        } label: {
+            Image(systemName: "book.closed.fill")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(.white.opacity(0.6))
+                .frame(width: 32, height: 32)
+                .background(Circle().fill(.black.opacity(0.3)))
+                .overlay(Circle().stroke(.white.opacity(0.14), lineWidth: 1))
+        }
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityLabel("Close the book")
     }
 
     private var restartButton: some View {
@@ -260,8 +336,8 @@ struct BattleView: View {
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.25), lineWidth: 1))
         }
         .buttonStyle(PressableButtonStyle())
-        .disabled(viewModel.state.phase != .playerMain)
-        .opacity(viewModel.state.phase == .playerMain ? 1 : 0.4)
+        .disabled(viewModel.state.phase != .playerMain || viewModel.isBattlePausedForDialogue)
+        .opacity(viewModel.state.phase == .playerMain && !viewModel.isBattlePausedForDialogue ? 1 : 0.4)
     }
 
     // MARK: - Card confirmation
@@ -285,5 +361,5 @@ struct BattleView: View {
 }
 
 #Preview(traits: .landscapeLeft) {
-    BattleView(viewModel: BattleViewModel(), onExit: {})
+    BattleView(viewModel: BattleViewModel(), onExit: { _ in })
 }

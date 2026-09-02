@@ -89,6 +89,7 @@ nonisolated enum CampaignCatalog {
                     primaryEnemyID: dozingWisp.id,
                     supportEnemyIDs: []
                 ),
+                battle: nil,
                 isBoss: false
             ),
             Stage(
@@ -100,6 +101,7 @@ nonisolated enum CampaignCatalog {
                     primaryEnemyID: hollowKnight.id,
                     supportEnemyIDs: [dozingWisp.id]
                 ),
+                battle: nil,
                 isBoss: false
             ),
             Stage(
@@ -111,6 +113,7 @@ nonisolated enum CampaignCatalog {
                     primaryEnemyID: theInsomniac.id,
                     supportEnemyIDs: []
                 ),
+                battle: nil,
                 isBoss: true
             ),
         ]

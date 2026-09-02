@@ -154,23 +154,23 @@ enum PortraitRegistry {
     static func heroPortrait(for heroID: UUID) -> String {
         // Map known hero IDs to portrait assets
         switch heroID {
-        case CardCatalogHeroes.HeroIDs.wart:
+        case CardCatalog.HeroIDs.wart:
             return "portrait_wart"
-        case CardCatalogHeroes.HeroIDs.archimedes:
+        case CardCatalog.HeroIDs.archimedes:
             return "portrait_archimedes"
-        case CardCatalogHeroes.HeroIDs.lancelot:
+        case CardCatalog.HeroIDs.lancelot:
             return "portrait_lancelot"
-        case CardCatalogHeroes.HeroIDs.kay:
+        case CardCatalog.HeroIDs.kay:
             return "portrait_kay"
-        case CardCatalogHeroes.HeroIDs.bedivere:
+        case CardCatalog.HeroIDs.bedivere:
             return "portrait_bedivere"
-        case CardCatalogHeroes.HeroIDs.morgana:
+        case CardCatalog.HeroIDs.morgana:
             return "portrait_morgana"
-        case CardCatalogHeroes.HeroIDs.escanor:
+        case CardCatalog.HeroIDs.escanor:
             return "portrait_escanor"
-        case CardCatalogHeroes.HeroIDs.galahad:
+        case CardCatalog.HeroIDs.galahad:
             return "portrait_galahad"
-        case CardCatalogHeroes.HeroIDs.merlin:
+        case CardCatalog.HeroIDs.merlin:
             return "portrait_merlin"
         default:
             return "portrait_unknown"

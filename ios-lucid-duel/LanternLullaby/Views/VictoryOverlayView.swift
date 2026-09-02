@@ -4,6 +4,7 @@ import SwiftUI
 /// upward through a soft glow while the final Lucidity position is shown.
 struct VictoryOverlayView: View {
     let finalLucidity: Int
+    var subtitle: String = "The Nightmare dissolves into morning light."
     let onContinue: () -> Void
 
     @State private var appeared = false
@@ -61,7 +62,7 @@ struct VictoryOverlayView: View {
                     .fontDesign(.serif)
                     .foregroundStyle(.white)
 
-                Text("The Nightmare dissolves into morning light.")
+                Text(subtitle)
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.65))
                     .multilineTextAlignment(.center)

@@ -17,6 +17,11 @@ struct IntentChip: View {
                     .font(.system(size: 10, weight: .bold))
                     .monospacedDigit()
                     .foregroundStyle(DreamTheme.shieldBlue)
+            case .buff(let label):
+                Label(label, systemImage: "arrow.up.circle.fill")
+                    .font(.system(size: 9, weight: .bold))
+                    .lineLimit(1)
+                    .foregroundStyle(DreamTheme.gold)
             }
         }
         .padding(.horizontal, 7)

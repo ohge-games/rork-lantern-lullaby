@@ -2,10 +2,12 @@ import CoreGraphics
 import Foundation
 import Observation
 
-/// What the enemy plans to do next turn (telegraphed to the player).
+/// What an enemy plans to do next turn (telegraphed to the player).
 nonisolated enum EnemyIntent: Hashable, Sendable {
     case attack(Int)
     case brace(Int)
+    /// A self-buff; the label is what the intent chip reads.
+    case buff(String)
 }
 
 /// Tracks narrative flow state during battle.
@@ -76,18 +78,64 @@ nonisolated struct SoundCue: Identifiable, Hashable, Sendable {
     }
 }
 
+/// A short banner for battle events that are not zone changes: a hero
+/// falling, a teammate stepping up, a new wave arriving.
+nonisolated struct BattleNotice: Identifiable, Hashable, Sendable {
+    let id: UUID
+    let text: String
+
+    init(text: String) {
+        self.id = UUID()
+        self.text = text
+    }
+}
+
+/// Runtime state for one hero in the party. Health lives here for every
+/// member; the engine mirrors the lead hero's health into `GameState`.
+nonisolated struct PartyMember: Identifiable, Hashable, Sendable {
+    let hero: Hero
+    var health: Int
+
+    var id: UUID { hero.id }
+    var isDown: Bool { health <= 0 }
+}
+
+/// Runtime state for one enemy in the current wave.
+nonisolated struct EnemyCombatant: Identifiable, Hashable, Sendable {
+    /// Unique per slot — two Forest Sprites in one wave need distinct ids.
+    let id: UUID
+    let enemy: Enemy
+    var health: Int
+    var shield: Int
+    var brain: EnemyBrain
+    let isPrimary: Bool
+
+    var isDown: Bool { health <= 0 }
+    var healthFraction: Double {
+        guard enemy.maxHealth > 0 else { return 0 }
+        return Double(health) / Double(enemy.maxHealth)
+    }
+}
+
 /// The battle engine: owns the mutable `GameState` and enforces every rule
-/// of card play, lucidity movement, zone bonuses, and turn flow.
+/// of card play, lucidity movement, zone bonuses, waves, and turn flow.
+///
+/// The party fights as a unit: one shared hand, deck, shield and Lucidity
+/// meter, while each hero keeps their own health. The lead hero takes the
+/// hits and contributes their passive; switching leads is free. Enemies
+/// arrive in waves and each living enemy acts on its own turn.
 @Observable
 final class BattleViewModel {
     private(set) var state: GameState
     private(set) var selectedInstanceID: CardInstance.ID?
-    private(set) var enemyIntent: EnemyIntent
     private(set) var enemyHit: HitEvent?
     private(set) var playerHit: HitEvent?
 
     /// Banner shown when the meter crosses into a new zone; auto-clears.
     private(set) var zoneNotification: ZoneNotification?
+
+    /// Banner for hero switches, wave arrivals and the like; auto-clears.
+    private(set) var battleNotice: BattleNotice?
 
     /// Direction cue for the last lucidity movement; auto-clears.
     private(set) var lucidityPulse: LucidityPulse?
@@ -95,41 +143,56 @@ final class BattleViewModel {
     /// Increments on every card play; drives impact haptics.
     private(set) var playImpactTrigger: Int = 0
 
-    /// Increments when the enemy acts; drives the enemy panel pulse.
+    /// Increments when an enemy acts; drives the enemy panel pulse.
     private(set) var enemyActionTrigger: Int = 0
+
+    /// Increments when a new wave arrives; drives the wave banner.
+    private(set) var waveTrigger: Int = 0
 
     /// True during the enemy's 1-second "thinking" beat.
     private(set) var isEnemyThinking: Bool = false
+
+    /// The enemy currently taking its action (for the lunge animation).
+    private(set) var actingEnemyID: UUID?
 
     /// The sound that would play right now (placeholder); auto-clears.
     private(set) var soundCue: SoundCue?
 
     // MARK: - Dialogue System
-    
+
     /// Manages dialogue triggers and queue.
     let dialogueManager = DialogueManager()
-    
+
     /// Currently active dialogue to display (nil = no dialogue showing).
     private(set) var activeDialogue: BattleDialogue?
-    
+
     /// Pre-battle story scene to show before combat begins.
     private(set) var preStageScene: StoryScene?
-    
+
     /// Post-battle story scene to show after victory.
     private(set) var postStageScene: StoryScene?
-    
+
     /// Current phase of narrative flow.
     private(set) var narrativePhase: NarrativePhase = .none
-    
-    /// Tracks the last enemy health percentage for threshold checks.
+
+    /// Everything registered for this stage, kept so a retry can re-arm it.
+    private var registeredDialogues: [BattleDialogue] = []
+
+    /// Tracks the last primary-enemy health percentage for threshold checks.
     private var lastEnemyHealthPercent: Int = 100
 
-    /// Placeholder teammates for the team layout (mockup; not yet playable).
-    private(set) var supportAllies: [AllyMember]
+    // MARK: - Roster
 
-    /// Placeholder extra enemies. They keep local health so targeting them
-    /// works, but only the primary enemy decides the duel.
-    private(set) var supportEnemies: [EnemyMember]
+    let configuration: BattleConfiguration
+
+    /// The heroes in the party, lead first in the initial order.
+    private(set) var party: [PartyMember]
+
+    /// The enemies of the current wave, primary first.
+    private(set) var enemyLine: [EnemyCombatant]
+
+    /// Index into `configuration.waves` of the wave on the field.
+    private(set) var waveIndex: Int = 0
 
     /// Which enemy offensive cards will hit.
     private(set) var targetedEnemyID: UUID
@@ -153,91 +216,100 @@ final class BattleViewModel {
     /// Current turn number, cached for growing passives (Escanor).
     private var currentTurnForPassives: Int { state.turnNumber }
 
+    /// The first hero of the party (the Dreamer in the sandbox duel).
     let playerHero: Hero
-    let enemyHero: Hero
     private let cardsByID: [Card.ID: Card]
 
-    /// All heroes currently in the battle party (for future multi-hero passive stacking).
+    /// The heroes whose passives apply right now: the lead hero only, so
+    /// choosing who stands in front is a real decision.
     private var activeHeroes: [Hero] {
-        // For now, just the player hero. Will expand when roster selection is wired.
-        [playerHero]
+        guard let lead = party.first(where: { $0.id == activeAllyID }) else { return [] }
+        return [lead.hero]
     }
 
+    /// Builds the engine for a configuration.
+    ///
     /// - Parameter initialState: test hook; when `nil` a fresh shuffled duel
-    ///   is created and the opening hand is drawn.
-    init(initialState: GameState? = nil) {
-        let player = CardCatalog.dreamer
-        let enemy = CardCatalog.nightmare
-        playerHero = player
-        enemyHero = enemy
+    ///   is created and the opening hand is drawn. When given, the lead
+    ///   hero and the primary enemy are seeded from it.
+    init(configuration: BattleConfiguration, initialState: GameState? = nil) {
+        self.configuration = configuration
+        let heroes = configuration.party
+        let lead = heroes[0]
+        playerHero = lead
         cardsByID = Dictionary(uniqueKeysWithValues: CardCatalog.allCards.map { ($0.id, $0) })
-        supportAllies = Self.placeholderAllies()
-        supportEnemies = Self.placeholderEnemies()
-        targetedEnemyID = enemy.id
-        activeAllyID = player.id
+        party = heroes.map { PartyMember(hero: $0, health: $0.maxHealth) }
+        enemyLine = []
+        activeAllyID = lead.id
+        targetedEnemyID = lead.id
 
         if let initialState {
             state = initialState
-            enemyIntent = Self.intent(forTurn: initialState.turnNumber)
+            party[0].health = initialState.player.currentHealth
+            spawnWave(0, seedingPrimaryFrom: initialState.enemy)
         } else {
-            state = Self.freshDuel(playerHero: player, enemyHero: enemy)
-            enemyIntent = Self.intent(forTurn: 1)
+            state = Self.freshDuel(for: configuration)
+            spawnWave(0, seedingPrimaryFrom: nil)
             drawPlayerCards(GameRules.startingHandSize)
             state.phase = .playerMain
         }
-    }
 
-    // MARK: - Narrative System
-    
-    /// Configure narrative content for this battle.
-    /// Call this after init to set up stage-specific story content.
-    func configureNarrative(_ narrative: StageNarrative, partyHeroIDs: [UUID] = []) {
-        // Store pre/post scenes
-        preStageScene = narrative.preStageScene
-        postStageScene = narrative.postStageScene
-        
-        // Register all battle dialogues
-        var allDialogues = narrative.battleDialogues
-        
-        // Add hero combination dialogues based on party
-        let comboDialogues = NarrativeCatalogBook1.comboDialogues(forParty: partyHeroIDs)
-        allDialogues.append(contentsOf: comboDialogues)
-        
-        dialogueManager.registerDialogues(allDialogues)
-        dialogueManager.loadShownKeys()
-        
-        // Set up callback for dialogue state changes
         dialogueManager.onDialogueStateChanged = { [weak self] isShowing in
             self?.handleDialogueStateChange(isShowing)
         }
-        
-        // Check if we should show pre-scene
+    }
+
+    /// The original sandbox duel: the Dreamer versus the Nightmare.
+    convenience init(initialState: GameState? = nil) {
+        self.init(configuration: .legacyDuel, initialState: initialState)
+    }
+
+    // MARK: - Narrative System
+
+    /// Configure narrative content for this battle. Call after init; then
+    /// call `startStage()` once the battle is actually on screen.
+    func configureNarrative(_ narrative: StageNarrative, partyHeroIDs: [UUID] = []) {
+        preStageScene = narrative.preStageScene
+        postStageScene = narrative.postStageScene
+
+        var allDialogues = narrative.battleDialogues
+        let comboDialogues = NarrativeCatalogBook1.comboDialogues(forParty: partyHeroIDs)
+        allDialogues.append(contentsOf: comboDialogues)
+        registeredDialogues = allDialogues
+
+        dialogueManager.registerDialogues(allDialogues)
+        dialogueManager.loadShownKeys()
+    }
+
+    /// Opens the stage: the pre-battle scene if there is one, otherwise the
+    /// battle-start dialogue straight away.
+    func startStage() {
         if preStageScene != nil {
             narrativePhase = .showingPreScene
+        } else {
+            dialogueManager.checkTrigger(.battleStart)
         }
     }
-    
+
     /// Called when pre-stage scene completes.
     func dismissPreScene() {
         preStageScene = nil
         narrativePhase = .none
-        
-        // Now trigger battle start dialogues
         dialogueManager.checkTrigger(.battleStart)
     }
-    
+
     /// Called when post-stage scene completes.
     func dismissPostScene() {
         postStageScene = nil
         narrativePhase = .none
         dialogueManager.saveShownKeys()
     }
-    
+
     /// Called when user taps to dismiss current dialogue.
     func dismissDialogue() {
         dialogueManager.dismissCurrentDialogue()
     }
-    
+
     /// Handle dialogue manager state changes.
     private func handleDialogueStateChange(_ isShowing: Bool) {
         if isShowing, let dialogue = dialogueManager.activeDialogue {
@@ -250,15 +322,19 @@ final class BattleViewModel {
             if narrativePhase == .showingDialogue {
                 narrativePhase = .none
             }
+            // The last victory line has been read: play the epilogue scene
+            // before the victory card.
+            if state.outcome == .victory, postStageScene != nil, narrativePhase == .none {
+                narrativePhase = .showingPostScene
+            }
         }
     }
-    
-    /// Check for enemy health threshold dialogues.
+
+    /// Check for primary-enemy health threshold dialogues.
     private func checkEnemyHealthDialogues() {
-        let maxHealth = enemyHero.maxHealth
-        let currentHealth = state.enemy.currentHealth
-        let currentPercent = (currentHealth * 100) / maxHealth
-        
+        guard let primary = enemyLine.first(where: { $0.isPrimary }), primary.enemy.maxHealth > 0 else { return }
+        let currentPercent = (primary.health * 100) / primary.enemy.maxHealth
+
         // Check thresholds: 75%, 50%, 25%, 10%
         let thresholds = [75, 50, 25, 10]
         for threshold in thresholds {
@@ -266,31 +342,23 @@ final class BattleViewModel {
                 dialogueManager.checkHealthThreshold(enemyHealthPercent: threshold)
             }
         }
-        
+
         lastEnemyHealthPercent = currentPercent
     }
-    
-    /// Trigger victory dialogue and post-scene.
+
+    /// Trigger victory dialogue, then the post scene once it has been read.
     private func triggerVictoryNarrative() {
         dialogueManager.checkTrigger(.battleEnd)
-        
-        // After battle end dialogues, show post scene if present
-        if postStageScene != nil {
-            // Delay to let any battle end dialogues play first
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                if self?.activeDialogue == nil {
-                    self?.narrativePhase = .showingPostScene
-                }
-            }
+        if activeDialogue == nil, postStageScene != nil {
+            narrativePhase = .showingPostScene
         }
-        
         dialogueManager.saveShownKeys()
     }
-    
+
     /// Check if battle should be paused for dialogue.
     var isBattlePausedForDialogue: Bool {
-        narrativePhase == .showingDialogue || 
-        narrativePhase == .showingPreScene || 
+        narrativePhase == .showingDialogue ||
+        narrativePhase == .showingPreScene ||
         narrativePhase == .showingPostScene
     }
 
@@ -308,6 +376,18 @@ final class BattleViewModel {
         selectedInstance.flatMap { cardsByID[$0.cardID] }
     }
 
+    /// The enemy standing in front of the current wave.
+    var primaryEnemy: Enemy? {
+        enemyLine.first { $0.isPrimary }?.enemy
+    }
+
+    /// Painting behind the battlefield.
+    var arenaArtName: String { configuration.arenaArtName }
+
+    var waveCount: Int { configuration.waveCount }
+
+    var hasMoreWaves: Bool { waveIndex + 1 < configuration.waves.count }
+
     /// True when the player's current zone boosts this card by +20%.
     func isBonusActive(for card: Card) -> Bool {
         let zone = state.player.zone
@@ -322,16 +402,14 @@ final class BattleViewModel {
     /// - `firstCardDiscount`: reduces cost of first card each turn (Kay)
     func effectiveCost(of card: Card) -> Int {
         var cost = card.lucidityCost
-        
+
         for hero in activeHeroes {
             switch hero.passive.kind {
             case .cheaperLucidityCosts(let amount):
-                // Only applies while in Drifting zone
                 if state.player.zone == .drifting {
                     cost -= amount
                 }
             case .firstCardDiscount(let amount):
-                // Only applies to first card played this turn
                 if isFirstCardThisTurn {
                     cost -= amount
                 }
@@ -339,7 +417,7 @@ final class BattleViewModel {
                 break
             }
         }
-        
+
         return max(0, cost)
     }
 
@@ -365,65 +443,63 @@ final class BattleViewModel {
         return lucidity
     }
 
-    // MARK: - Team roster (layout mockup)
+    // MARK: - Team roster
 
-    /// The player's three-hero row. Slot one mirrors live engine state; the
-    /// others keep local placeholder health. The gold ring follows
-    /// `activeAllyID`.
+    /// The player's hero row. The shared shield is shown on the lead; the
+    /// gold ring follows `activeAllyID`.
     var allies: [AllyMember] {
-        let dreamer = AllyMember(
-            id: playerHero.id,
-            name: playerHero.name,
-            iconName: "moon.stars.fill",
-            artName: "dreamer_child_portrait",
-            fullBodyArtName: "child_with_lantern",
-            health: state.player.currentHealth,
-            maxHealth: playerHero.maxHealth,
-            shield: state.player.shield,
-            passiveName: playerHero.passive.name,
-            passiveText: playerHero.passive.text,
-            isActive: false
-        )
-        return ([dreamer] + supportAllies).map { ally in
-            var member = ally
-            member.isActive = ally.id == activeAllyID
-            return member
+        party.map { member in
+            AllyMember(
+                id: member.id,
+                name: member.hero.name,
+                iconName: ArtCatalog.heroIcon(for: member.hero),
+                artName: ArtCatalog.heroPortrait(for: member.hero),
+                fullBodyArtName: ArtCatalog.heroFullBody(for: member.hero),
+                health: member.health,
+                maxHealth: member.hero.maxHealth,
+                shield: member.id == activeAllyID ? state.player.shield : 0,
+                passiveName: member.hero.passive.name,
+                passiveText: member.hero.passive.text,
+                isActive: member.id == activeAllyID
+            )
         }
     }
 
-    /// The enemy row: the live primary enemy plus placeholder minions.
+    /// The enemy row of the current wave: primary first.
     var enemies: [EnemyMember] {
-        let primary = EnemyMember(
-            id: enemyHero.id,
-            name: enemyHero.name,
-            iconName: "theatermasks.fill",
-            artName: "nightmare_shadow_mask",
-            fullBodyArtName: "shadow_villain_cloak",
-            maxHealth: enemyHero.maxHealth,
-            health: state.enemy.currentHealth,
-            shield: state.enemy.shield,
-            intent: enemyIntent,
-            isPrimary: true
-        )
-        return [primary] + supportEnemies
+        enemyLine.map { combatant in
+            EnemyMember(
+                id: combatant.id,
+                name: combatant.enemy.name,
+                iconName: combatant.enemy.iconName,
+                artName: combatant.enemy.artName,
+                fullBodyArtName: combatant.enemy.fullBodyArtName,
+                maxHealth: combatant.enemy.maxHealth,
+                health: combatant.health,
+                shield: combatant.shield,
+                intent: combatant.brain.intent,
+                isPrimary: combatant.isPrimary
+            )
+        }
     }
 
     // MARK: - Hero switching
 
     /// Puts a living teammate in the lead. Free action: no turn, no
-    /// Lucidity. The shared hand stays as-is (per-hero decks come later).
+    /// Lucidity. The shared hand stays as-is.
     func switchActiveHero(to id: UUID) {
         guard state.outcome == .ongoing,
               id != activeAllyID,
-              let ally = allies.first(where: { $0.id == id }),
-              ally.health > 0 else { return }
+              let member = party.first(where: { $0.id == id }),
+              !member.isDown else { return }
 
         activeAllyID = id
+        syncLeadMirror()
         heroSwitchTrigger += 1
         emitSound("hero switch")
     }
 
-    // MARK: - Targeting (layout mockup)
+    // MARK: - Targeting
 
     /// True while an offensive card is selected — enemies light up as targets.
     var isTargetingActive: Bool {
@@ -432,7 +508,7 @@ final class BattleViewModel {
     }
 
     var targetedEnemyName: String {
-        enemies.first { $0.id == targetedEnemyID }?.name ?? enemyHero.name
+        enemies.first { $0.id == targetedEnemyID }?.name ?? primaryEnemy?.name ?? "the enemy"
     }
 
     func cardDealsDamage(_ card: Card) -> Bool {
@@ -455,7 +531,7 @@ final class BattleViewModel {
     /// plays the card on it. Dual-direction cards still need a branch pick.
     func tapEnemy(_ id: UUID) {
         guard state.phase == .playerMain else { return }
-        guard let member = enemies.first(where: { $0.id == id }), member.health > 0 else { return }
+        guard let member = enemyLine.first(where: { $0.id == id }), !member.isDown else { return }
 
         if isTargetingActive, targetedEnemyID == id, let card = selectedCard, card.choices == nil {
             playSelectedCard()
@@ -479,7 +555,7 @@ final class BattleViewModel {
 
     /// The living enemy under a drag location, front-most first.
     func enemyID(at point: CGPoint) -> UUID? {
-        for enemy in enemies where enemy.health > 0 {
+        for enemy in enemyLine where !enemy.isDown {
             if let frame = enemyFrames[enemy.id],
                frame.insetBy(dx: -16, dy: -16).contains(point) {
                 return enemy.id
@@ -491,7 +567,7 @@ final class BattleViewModel {
     /// Lifts a card out of the fan: it becomes the selected card so zone
     /// bonuses, targeting glow, and damage projections all track the drag.
     func beginCardDrag(of instance: CardInstance) {
-        guard state.phase == .playerMain else { return }
+        guard state.phase == .playerMain, !isBattlePausedForDialogue else { return }
         selectedInstanceID = instance.id
         isDraggingCard = true
     }
@@ -502,7 +578,7 @@ final class BattleViewModel {
 
     /// Aims the dragged card at an enemy while hovering over it.
     func hoverEnemy(_ id: UUID) {
-        guard let member = enemies.first(where: { $0.id == id }), member.health > 0 else { return }
+        guard let member = enemyLine.first(where: { $0.id == id }), !member.isDown else { return }
         targetedEnemyID = id
     }
 
@@ -524,9 +600,8 @@ final class BattleViewModel {
     /// - Parameter choice: required when the card carries `choices`; playing
     ///   a dual-direction card without picking a branch is a no-op.
     func playSelectedCard(choice: CardChoiceOption? = nil) {
-        // Block card play while dialogue is showing
         guard !isBattlePausedForDialogue else { return }
-        
+
         guard state.phase == .playerMain,
               state.outcome == .ongoing,
               let instance = selectedInstance,
@@ -545,8 +620,6 @@ final class BattleViewModel {
         selectedInstanceID = nil
 
         applyPlayerLucidityDelta(effectiveCost(of: card))
-        
-        // Mark that we've played a card this turn (for Kay's first card discount)
         isFirstCardThisTurn = false
 
         for effect in card.effects + (choice?.effects ?? []) {
@@ -559,49 +632,106 @@ final class BattleViewModel {
     }
 
     func endTurn() {
-        // Block ending turn while dialogue is showing
         guard !isBattlePausedForDialogue else { return }
-        
         guard state.phase == .playerMain, state.outcome == .ongoing else { return }
         selectedInstanceID = nil
         state.phase = .enemyTurn
         Task { await resolveEnemyTurn() }
     }
 
+    /// Restarts the same fight from the first wave with everyone healed.
     func startNewDuel() {
-        state = Self.freshDuel(playerHero: playerHero, enemyHero: enemyHero)
+        state = Self.freshDuel(for: configuration)
+        party = configuration.party.map { PartyMember(hero: $0, health: $0.maxHealth) }
+        activeAllyID = configuration.party[0].id
         selectedInstanceID = nil
         enemyHit = nil
         playerHit = nil
         zoneNotification = nil
+        battleNotice = nil
         lucidityPulse = nil
         soundCue = nil
         isEnemyThinking = false
+        actingEnemyID = nil
         isFirstCardThisTurn = true
-        supportAllies = Self.placeholderAllies()
-        supportEnemies = Self.placeholderEnemies()
-        targetedEnemyID = enemyHero.id
         enemyHitTargetID = nil
-        activeAllyID = playerHero.id
         playerHitTargetID = nil
-        enemyIntent = Self.intent(forTurn: 1)
+        spawnWave(0, seedingPrimaryFrom: nil)
         drawPlayerCards(GameRules.startingHandSize)
         state.phase = .playerMain
+
+        // Re-arm the stage's dialogue for the retry (one-time beats stay
+        // spent) and skip straight to the opening lines.
+        preStageScene = nil
+        narrativePhase = .none
+        activeDialogue = nil
+        dialogueManager.registerDialogues(registeredDialogues)
+        dialogueManager.loadShownKeys()
+        dialogueManager.checkTrigger(.battleStart)
+    }
+
+    // MARK: - Waves
+
+    /// Puts a wave on the field. The primary can be seeded from a saved
+    /// `CombatantState` (test hook) so its health and shield carry over.
+    private func spawnWave(_ index: Int, seedingPrimaryFrom seed: CombatantState?) {
+        waveIndex = index
+        let wave = configuration.waves[index]
+        var line: [EnemyCombatant] = []
+        var usedIDs = Set<UUID>()
+
+        for (slot, enemy) in wave.enemies.enumerated() {
+            var id = enemy.id
+            if usedIDs.contains(id) { id = UUID() }
+            usedIDs.insert(id)
+
+            var health = enemy.maxHealth
+            var shield = wave.openingShield(at: slot)
+            if slot == 0, let seed {
+                health = seed.currentHealth
+                shield = seed.shield
+            }
+            let fraction = enemy.maxHealth > 0 ? Double(health) / Double(enemy.maxHealth) : 0
+            let brain = EnemyBrain(pattern: enemy.pattern, turn: state.turnNumber, healthFraction: fraction)
+            line.append(
+                EnemyCombatant(
+                    id: id,
+                    enemy: enemy,
+                    health: health,
+                    shield: shield,
+                    brain: brain,
+                    isPrimary: slot == 0
+                )
+            )
+        }
+
+        enemyLine = line
+        targetedEnemyID = line.first?.id ?? targetedEnemyID
+        enemyHitTargetID = nil
+        lastEnemyHealthPercent = 100
+        syncPrimaryMirror()
+    }
+
+    private func beginNextWave() {
+        spawnWave(waveIndex + 1, seedingPrimaryFrom: nil)
+        waveTrigger += 1
+        let name = primaryEnemy?.name ?? "The enemy"
+        showNotice("Wave \(waveIndex + 1) of \(waveCount) — \(name) approaches")
+        emitSound("new wave")
+        dialogueManager.checkWaveStart(waveIndex: waveIndex)
     }
 
     // MARK: - Effect resolution
 
     private func resolve(_ effect: Effect, from card: Card, zoneAtPlay: LucidityZone) {
         var value = effect.resolvedValue(cardType: card.cardType, zone: zoneAtPlay)
-        
-        // Apply passive bonuses based on effect type
         value = applyPassiveBonuses(to: value, effectType: effect.type, cardType: card.cardType, zone: zoneAtPlay)
-        
+
         switch effect.type {
         case .damage:
             dealDamageToEnemy(value)
         case .heal:
-            state.player.currentHealth = min(playerHero.maxHealth, state.player.currentHealth + value)
+            healLead(value)
         case .shield:
             state.player.shield += value
         case .lucidityModify:
@@ -612,41 +742,34 @@ final class BattleViewModel {
             drawPlayerCards(value)
         }
     }
-    
+
     /// Applies hero passive bonuses to an effect value.
     ///
-    /// Passives that modify effect values:
     /// - `vividFury`: bonus damage while Vivid (Lancelot)
     /// - `growingMight`: bonus damage per turn (Escanor)
-    /// - `driftingBulwark`: bonus shield while Drifting (unused currently, but wired)
+    /// - `driftingBulwark`: bonus shield while Drifting
     private func applyPassiveBonuses(to value: Int, effectType: EffectType, cardType: CardType, zone: LucidityZone) -> Int {
         var modified = value
-        
+
         for hero in activeHeroes {
             switch hero.passive.kind {
             case .vividFury(let amount):
-                // Bonus damage while in Vivid zone, offensive cards only
                 if effectType == .damage && cardType == .offensive && zone == .vivid {
                     modified += amount
                 }
-                
             case .growingMight(let perTurn):
-                // Bonus damage that grows each turn (turn 1 = 0, turn 2 = perTurn, etc.)
                 if effectType == .damage {
                     modified += perTurn * (currentTurnForPassives - 1)
                 }
-                
             case .driftingBulwark(let amount):
-                // Bonus shield while in Drifting zone
                 if effectType == .shield && zone == .drifting {
                     modified += amount
                 }
-                
             default:
                 break
             }
         }
-        
+
         return modified
     }
 
@@ -702,6 +825,15 @@ final class BattleViewModel {
         }
     }
 
+    private func showNotice(_ text: String) {
+        let notice = BattleNotice(text: text)
+        battleNotice = notice
+        Task {
+            try? await Task.sleep(for: .milliseconds(2400))
+            if battleNotice?.id == notice.id { battleNotice = nil }
+        }
+    }
+
     /// Sound placeholder: flashes a "♪" chip where a sound would play.
     private func emitSound(_ label: String) {
         let cue = SoundCue(label: label)
@@ -713,42 +845,39 @@ final class BattleViewModel {
     }
 
     private func dealDamageToEnemy(_ amount: Int) {
-        // Placeholder minion target: local bookkeeping only (layout mockup).
-        if let index = supportEnemies.firstIndex(where: { $0.id == targetedEnemyID }) {
-            var minion = supportEnemies[index]
-            let absorbed = min(minion.shield, amount)
-            minion.shield -= absorbed
-            minion.health = max(0, minion.health - (amount - absorbed))
-            supportEnemies[index] = minion
+        guard let index = enemyLine.firstIndex(where: { $0.id == targetedEnemyID && !$0.isDown })
+                ?? enemyLine.firstIndex(where: { !$0.isDown }) else { return }
 
-            let hit = HitEvent(amount: amount, absorbed: absorbed)
-            enemyHit = hit
-            enemyHitTargetID = minion.id
-            scheduleHitClear(id: hit.id, isEnemy: true)
+        let absorbed = min(enemyLine[index].shield, amount)
+        enemyLine[index].shield -= absorbed
+        enemyLine[index].health = max(0, enemyLine[index].health - (amount - absorbed))
 
-            if minion.health == 0 { targetedEnemyID = enemyHero.id }
-            return
-        }
-
-        let absorbed = min(state.enemy.shield, amount)
-        state.enemy.shield -= absorbed
-        state.enemy.currentHealth = max(0, state.enemy.currentHealth - (amount - absorbed))
         let hit = HitEvent(amount: amount, absorbed: absorbed)
         enemyHit = hit
-        enemyHitTargetID = enemyHero.id
+        enemyHitTargetID = enemyLine[index].id
         scheduleHitClear(id: hit.id, isEnemy: true)
-        
-        // Check for health threshold dialogue triggers
-        checkEnemyHealthDialogues()
+
+        if enemyLine[index].isDown {
+            emitSound("enemy falls")
+            if let primary = enemyLine.first(where: { $0.isPrimary && !$0.isDown }) {
+                targetedEnemyID = primary.id
+            } else if let next = enemyLine.first(where: { !$0.isDown }) {
+                targetedEnemyID = next.id
+            }
+        }
+
+        syncPrimaryMirror()
+        if enemyLine[index].isPrimary {
+            checkEnemyHealthDialogues()
+        }
     }
 
     /// Enemy damage lands on whoever leads the team. The shared shield
-    /// absorbs first either way. If a teammate falls, the Dreamer retakes
-    /// the lead; the duel is only lost when the Dreamer falls (engine rule).
+    /// absorbs first. If the lead falls, the next living teammate steps
+    /// forward; the battle is lost only when nobody is left standing.
     private func dealDamageToPlayer(_ amount: Int) {
-        // Apply damage reduction passives (Bedivere's balancedResilience)
         let reducedAmount = applyDamageReductionPassives(to: amount)
-        
+
         let absorbed = min(state.player.shield, reducedAmount)
         state.player.shield -= absorbed
         let remainder = reducedAmount - absorbed
@@ -758,24 +887,28 @@ final class BattleViewModel {
         playerHitTargetID = activeAllyID
         scheduleHitClear(id: hit.id, isEnemy: false)
 
-        if let index = supportAllies.firstIndex(where: { $0.id == activeAllyID }) {
-            supportAllies[index].health = max(0, supportAllies[index].health - remainder)
-            if supportAllies[index].health == 0 {
-                activeAllyID = playerHero.id
-            }
-            return
-        }
+        guard let index = party.firstIndex(where: { $0.id == activeAllyID }) else { return }
+        party[index].health = max(0, party[index].health - remainder)
+        syncLeadMirror()
 
-        state.player.currentHealth = max(0, state.player.currentHealth - remainder)
+        if party[index].isDown {
+            let fallen = party[index].hero.name
+            if let next = party.first(where: { !$0.isDown }) {
+                activeAllyID = next.id
+                heroSwitchTrigger += 1
+                syncLeadMirror()
+                showNotice("\(fallen) falls — \(next.hero.name) steps forward")
+                emitSound("hero falls")
+            }
+        }
     }
-    
+
     /// Applies damage reduction passives to incoming damage.
     ///
-    /// Passives handled:
-    /// - `balancedResilience`: reduce damage by percent while in Balanced zone (Bedivere)
+    /// - `balancedResilience`: reduce damage by percent while Balanced (Bedivere)
     private func applyDamageReductionPassives(to damage: Int) -> Int {
         var reduced = damage
-        
+
         for hero in activeHeroes {
             if case .balancedResilience(let percent) = hero.passive.kind {
                 if state.player.zone == .balanced {
@@ -784,8 +917,32 @@ final class BattleViewModel {
                 }
             }
         }
-        
+
         return reduced
+    }
+
+    private func healLead(_ amount: Int) {
+        guard let index = party.firstIndex(where: { $0.id == activeAllyID }) else { return }
+        let maxHealth = party[index].hero.maxHealth
+        party[index].health = min(maxHealth, party[index].health + amount)
+        syncLeadMirror()
+    }
+
+    /// Mirrors the lead hero's health into `GameState` so the serializable
+    /// snapshot (and its end-condition checks) stays truthful.
+    private func syncLeadMirror() {
+        if let lead = party.first(where: { $0.id == activeAllyID }) {
+            state.player.currentHealth = lead.health
+        } else {
+            state.player.currentHealth = 0
+        }
+    }
+
+    /// Mirrors the primary enemy's health and shield into `GameState`.
+    private func syncPrimaryMirror() {
+        guard let primary = enemyLine.first(where: { $0.isPrimary }) else { return }
+        state.enemy.currentHealth = primary.health
+        state.enemy.shield = primary.shield
     }
 
     private func drawPlayerCards(_ count: Int) {
@@ -802,22 +959,44 @@ final class BattleViewModel {
         }
     }
 
+    /// Evaluates end conditions in priority order: Lucidity losses first
+    /// (overextending on the killing blow still costs the game), then the
+    /// party falling, then a cleared final wave.
+    private func evaluateOutcome() -> GameOutcome {
+        if state.player.hasLostByLucidity {
+            return .lostToLucidity(zone: state.player.zone)
+        }
+        if party.allSatisfy({ $0.isDown }) {
+            return .defeated
+        }
+        if enemyLine.allSatisfy({ $0.isDown }) && !hasMoreWaves {
+            return .victory
+        }
+        return .ongoing
+    }
+
     private func refreshOutcome() {
-        state.outcome = state.resolvedOutcome
-        if state.outcome != .ongoing {
-            state.phase = .gameOver
-            selectedInstanceID = nil
-            switch state.outcome {
-            case .victory:
-                emitSound("victory chime")
-                triggerVictoryNarrative()
-            case .lostToLucidity(let zone):
-                emitSound(zone == .awakening ? "alarm blare" : "fading hum")
-            case .defeated:
-                emitSound("defeat toll")
-            case .ongoing:
-                break
+        let outcome = evaluateOutcome()
+        if outcome == .ongoing {
+            if enemyLine.allSatisfy({ $0.isDown }) && hasMoreWaves {
+                beginNextWave()
             }
+            return
+        }
+
+        state.outcome = outcome
+        state.phase = .gameOver
+        selectedInstanceID = nil
+        switch outcome {
+        case .victory:
+            emitSound("victory chime")
+            triggerVictoryNarrative()
+        case .lostToLucidity(let zone):
+            emitSound(zone == .awakening ? "alarm blare" : "fading hum")
+        case .defeated:
+            emitSound("defeat toll")
+        case .ongoing:
+            break
         }
     }
 
@@ -830,75 +1009,86 @@ final class BattleViewModel {
         isEnemyThinking = false
         guard state.phase == .enemyTurn else { return }
 
-        // A combatant's shield lasts until the start of its own next turn.
-        state.enemy.shield = 0
+        var hasActed = false
+        for index in enemyLine.indices where !enemyLine[index].isDown {
+            if hasActed {
+                try? await Task.sleep(for: .milliseconds(500))
+                guard state.phase == .enemyTurn else { return }
+            }
+            hasActed = true
 
-        enemyActionTrigger += 1
+            // A combatant's shield lasts until the start of its own next turn.
+            enemyLine[index].shield = 0
+            actingEnemyID = enemyLine[index].id
+            enemyActionTrigger += 1
 
-        switch enemyIntent {
-        case .attack(let amount):
-            dealDamageToPlayer(amount)
-            emitSound("enemy strike")
-        case .brace(let amount):
-            state.enemy.shield += amount
-            emitSound("enemy braces")
+            let move = enemyLine[index].brain.execute()
+            switch move {
+            case .attack(let amount):
+                dealDamageToPlayer(amount)
+                emitSound("enemy strike")
+            case .brace(let shield):
+                enemyLine[index].shield += shield
+                emitSound("enemy braces")
+            case .buff(let buff):
+                emitSound(EnemyBrain.label(for: buff).lowercased())
+            }
+
+            syncPrimaryMirror()
+            refreshOutcome()
+            guard state.outcome == .ongoing else { return }
         }
 
-        refreshOutcome()
-        guard state.outcome == .ongoing else { return }
-
+        actingEnemyID = nil
         try? await Task.sleep(for: .milliseconds(600))
+        guard state.phase == .enemyTurn else { return }
         beginPlayerTurn()
     }
 
     private func beginPlayerTurn() {
         state.turnNumber += 1
         state.player.shield = 0
-        
-        // Reset first card tracking for Kay's passive
         isFirstCardThisTurn = true
-        
-        // Apply turn-start passives
+
+        // The lantern's steady pull toward Balanced.
+        if configuration.lanternDrift > 0 {
+            setPlayerLucidity(Self.shifted(state.player.lucidity, towardCenterBy: configuration.lanternDrift))
+        }
+
         applyTurnStartPassives()
-        
-        // Check for turn-based dialogue triggers
         dialogueManager.checkTurnNumber(state.turnNumber)
-        
+
         drawPlayerCards(GameRules.cardsDrawnPerTurn)
-        
-        // Apply bonus card draw passives (Archimedes)
         applyBonusCardDrawPassives()
-        
         emitSound("card drawn")
-        enemyIntent = Self.intent(forTurn: state.turnNumber)
+
+        // Every living enemy telegraphs its next move.
+        for index in enemyLine.indices where !enemyLine[index].isDown {
+            let fraction = enemyLine[index].healthFraction
+            enemyLine[index].brain.plan(turn: state.turnNumber, healthFraction: fraction)
+        }
+
         state.phase = .playerMain
     }
-    
+
     /// Applies passives that trigger at the start of the player's turn.
     ///
-    /// Passives handled:
-    /// - `lucidityDrift`: drift toward center (generic)
+    /// - `lucidityDrift`: drift toward center (the Dreamer)
     /// - `purityHealing`: heal if no debuffs (Galahad)
     private func applyTurnStartPassives() {
         for hero in activeHeroes {
             switch hero.passive.kind {
             case .lucidityDrift(let amount):
                 setPlayerLucidity(Self.shifted(state.player.lucidity, towardCenterBy: amount))
-                
             case .purityHealing(let amount):
-                // Heal at turn start if hero has no debuffs
-                // Note: debuff system not yet implemented, so always heals for now
-                let hasDebuffs = false // TODO: check actual debuff state when implemented
-                if !hasDebuffs {
-                    state.player.currentHealth = min(playerHero.maxHealth, state.player.currentHealth + amount)
-                }
-                
+                // Debuffs are not implemented yet, so the hero is always pure.
+                healLead(amount)
             default:
                 break
             }
         }
     }
-    
+
     /// Applies bonus card draw passives (Archimedes).
     private func applyBonusCardDrawPassives() {
         for hero in activeHeroes {
@@ -921,8 +1111,8 @@ final class BattleViewModel {
         }
     }
 
-    /// Simple MVP AI: 8–15 random damage each turn, with a telegraphed
-    /// 20-damage heavy blow every third turn.
+    /// The sandbox Nightmare's rhythm: 8–15 random damage each turn, with a
+    /// telegraphed 20-damage heavy blow every third turn.
     static func intent(forTurn turn: Int) -> EnemyIntent {
         if turn % GameRules.enemyHeavyTurnInterval == 0 {
             return .attack(GameRules.enemyHeavyAttackDamage)
@@ -938,73 +1128,24 @@ final class BattleViewModel {
         return lucidity
     }
 
-    /// Fixed-identity placeholder teammates (stable across restarts).
-    private static func placeholderAllies() -> [AllyMember] {
-        [
-            AllyMember(
-                id: UUID(uuidString: "AA000000-0000-0000-0000-000000000001")!,
-                name: "Sleepwalker",
-                iconName: "figure.walk",
-                artName: "sleepwalker_child",
-                fullBodyArtName: "sleepwalker_child_2",
-                health: 38,
-                maxHealth: 48,
-                shield: 0,
-                passiveName: "Light Step",
-                passiveText: "Takes 2 less damage while in the Drifting zone.",
-                isActive: false
-            ),
-            AllyMember(
-                id: UUID(uuidString: "AA000000-0000-0000-0000-000000000002")!,
-                name: "Ember Muse",
-                iconName: "flame.fill",
-                artName: "ember_muse_portrait",
-                fullBodyArtName: "ember_fire_spirit_child",
-                health: 52,
-                maxHealth: 52,
-                shield: 0,
-                passiveName: "Kindled Verse",
-                passiveText: "Offensive cards deal 2 extra damage while Vivid.",
-                isActive: false
-            ),
-        ]
+    /// A `Hero` stand-in for the primary enemy so `GameState.newGame` can
+    /// mirror its health.
+    private static func mirrorHero(for enemy: Enemy) -> Hero {
+        Hero(
+            id: enemy.id,
+            name: enemy.name,
+            maxHealth: enemy.maxHealth,
+            passive: enemy.passive ?? PassiveAbility(name: "None", text: "", kind: .none),
+            cardIDs: []
+        )
     }
 
-    /// Fixed-identity placeholder minions flanking the primary enemy.
-    private static func placeholderEnemies() -> [EnemyMember] {
-        [
-            EnemyMember(
-                id: UUID(uuidString: "EE000000-0000-0000-0000-000000000001")!,
-                name: "Night Shade",
-                iconName: "cloud.fog.fill",
-                artName: "shadow_creature_fog",
-                fullBodyArtName: "night_shade_fog_creature",
-                maxHealth: 30,
-                health: 30,
-                shield: 0,
-                intent: .attack(6),
-                isPrimary: false
-            ),
-            EnemyMember(
-                id: UUID(uuidString: "EE000000-0000-0000-0000-000000000002")!,
-                name: "Dread Wisp",
-                iconName: "wind",
-                artName: "dread_wisp_spirit",
-                fullBodyArtName: "dread_wisp_spirit_2",
-                maxHealth: 22,
-                health: 22,
-                shield: 5,
-                intent: .brace(5),
-                isPrimary: false
-            ),
-        ]
-    }
-
-    private static func freshDuel(playerHero: Hero, enemyHero: Hero) -> GameState {
-        GameState.newGame(
-            playerHero: playerHero,
-            enemyHero: enemyHero,
-            playerDeck: CardCatalog.starterDeck().shuffled(),
+    private static func freshDuel(for configuration: BattleConfiguration) -> GameState {
+        let primary = configuration.waves[0].enemies[0]
+        return GameState.newGame(
+            playerHero: configuration.party[0],
+            enemyHero: mirrorHero(for: primary),
+            playerDeck: configuration.freshDeck().shuffled(),
             enemyDeck: []
         )
     }

@@ -216,7 +216,7 @@ struct StorySceneView: View {
             lines: [
                 .narrator("The forest grows dark around you."),
                 .hero(
-                    CardCatalogHeroes.HeroIDs.wart,
+                    CardCatalog.HeroIDs.wart,
                     name: "Wart",
                     portrait: "portrait_wart",
                     text: "I don't like this. The wolves are acting strange tonight."

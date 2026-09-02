@@ -6,13 +6,14 @@ import SwiftUI
 struct GameOverOverlayView: View {
     let outcome: GameOutcome
     let finalLucidity: Int
+    var victorySubtitle: String = "The Nightmare dissolves into morning light."
     let onRestart: () -> Void
     let onContinue: () -> Void
 
     var body: some View {
         switch outcome {
         case .victory:
-            VictoryOverlayView(finalLucidity: finalLucidity, onContinue: onContinue)
+            VictoryOverlayView(finalLucidity: finalLucidity, subtitle: victorySubtitle, onContinue: onContinue)
         case .lostToLucidity(let zone):
             if zone == .awakening {
                 AwakeningOverlayView(onRetry: onRestart)
@@ -42,7 +43,7 @@ struct GameOverOverlayView: View {
                     .fontDesign(.serif)
                     .foregroundStyle(.white)
 
-                Text("The Nightmare overwhelmed you.")
+                Text("The dream overwhelmed your party.")
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.65))
 
@@ -66,6 +67,15 @@ struct GameOverOverlayView: View {
                 }
                 .buttonStyle(PressableButtonStyle())
                 .padding(.top, 8)
+
+                Button {
+                    onContinue()
+                } label: {
+                    Text("Close the book")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+                .buttonStyle(PressableButtonStyle())
             }
             .padding(28)
             .background(

@@ -337,7 +337,7 @@ struct SpeechBubbleShape: Shape {
                 trigger: .battleStart,
                 lines: [
                     .hero(
-                        CardCatalogHeroes.HeroIDs.lancelot,
+                        CardCatalog.HeroIDs.lancelot,
                         name: "Lancelot",
                         portrait: "portrait_lancelot",
                         text: "You fight well, young dreamer. Better than most knights I've known."
