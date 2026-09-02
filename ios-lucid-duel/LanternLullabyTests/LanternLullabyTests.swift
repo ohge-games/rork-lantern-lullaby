@@ -83,6 +83,11 @@ struct CardModelTests {
         #expect(card.netLucidityShift == -4)
     }
 
+    @Test func enemyCatalogIDsAreUnique() {
+        let ids = EnemyCatalogBook1.allEnemies.map(\.id)
+        #expect(Set(ids).count == ids.count)
+    }
+
     @Test func catalogCardIDsAreUnique() {
         let ids = CardCatalog.allCards.map(\.id)
         #expect(Set(ids).count == ids.count)

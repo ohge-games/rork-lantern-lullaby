@@ -462,10 +462,13 @@ enum EnemyCatalogBook1 {
     // MARK: - Helper
     // ─────────────────────────────────────────────────────────────────────────
 
+    /// Stable UUID from a short code such as "C1-M01": the code's six bytes
+    /// are spelled out in hex so distinct codes can never collide (a byte
+    /// sum would make "C1-M02" and "C2-M01" the same enemy).
     private static func enemyID(_ shortCode: String) -> UUID {
-        // Generate stable UUIDs from short codes for consistent saves
-        let hash = shortCode.utf8.reduce(0) { $0 &+ UInt64($1) }
-        let uuidString = String(format: "E1%06X00-0000-4000-8000-000000000001", hash % 0xFFFFFF)
+        let hex = shortCode.utf8.map { String(format: "%02X", $0) }.joined()
+        let padded = String((hex + "000000000000").prefix(12))
+        let uuidString = "\(padded.prefix(8))-\(padded.suffix(4))-4000-8000-000000000001"
         return UUID(uuidString: uuidString) ?? UUID()
     }
 
