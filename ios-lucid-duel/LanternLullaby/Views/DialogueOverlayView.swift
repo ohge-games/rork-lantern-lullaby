@@ -7,27 +7,29 @@ import SwiftUI
 struct DialogueOverlayView: View {
     let dialogue: BattleDialogue
     let onDismiss: () -> Void
-    
+
     @State private var currentLineIndex = 0
     @State private var displayedText = ""
     @State private var isTyping = false
     @State private var isVisible = false
-    
+    /// The typing task for the current line; cancelled on every line change.
+    @State private var typingTask: Task<Void, Never>?
+
     private let typingSpeed: Double = 0.025
-    
+
     private var currentLine: DialogueLine? {
         guard currentLineIndex < dialogue.lines.count else { return nil }
         return dialogue.lines[currentLineIndex]
     }
-    
+
     private var isLastLine: Bool {
         currentLineIndex >= dialogue.lines.count - 1
     }
-    
+
     var body: some View {
         VStack {
             Spacer()
-            
+
             // Dialogue container - same height as card zone
             dialogueContainer
                 .frame(height: 160)
@@ -44,15 +46,15 @@ struct DialogueOverlayView: View {
             handleTap()
         }
     }
-    
+
     // MARK: - Dialogue Container
-    
+
     private var dialogueContainer: some View {
         HStack(alignment: .center, spacing: 0) {
             // Portrait area (left)
             portraitArea
                 .frame(width: 120)
-            
+
             // Speech bubble (right, spanning remaining width)
             speechBubble
         }
@@ -60,9 +62,9 @@ struct DialogueOverlayView: View {
         .padding(.horizontal, 8)
         .padding(.bottom, 8)
     }
-    
+
     // MARK: - Portrait Area
-    
+
     private var portraitArea: some View {
         ZStack {
             // Character portrait
@@ -84,7 +86,7 @@ struct DialogueOverlayView: View {
                                 )
                             )
                             .frame(width: 100, height: 100)
-                        
+
                         // Portrait image
                         if !line.speakerPortrait.isEmpty {
                             Image(line.speakerPortrait)
@@ -104,7 +106,7 @@ struct DialogueOverlayView: View {
                                 .foregroundColor(.white.opacity(0.7))
                         }
                     }
-                    
+
                     // Speaker name badge
                     if !line.speakerName.isEmpty && !line.isPlayerThought {
                         Text(line.speakerName)
@@ -123,9 +125,9 @@ struct DialogueOverlayView: View {
         }
         .frame(maxHeight: .infinity)
     }
-    
+
     // MARK: - Speech Bubble
-    
+
     private var speechBubble: some View {
         ZStack(alignment: .leading) {
             // Bubble background with pointer
@@ -135,7 +137,7 @@ struct DialogueOverlayView: View {
                     SpeechBubbleShape()
                         .stroke(Color.white.opacity(0.2), lineWidth: 1)
                 )
-            
+
             // Text content
             VStack(alignment: .leading, spacing: 4) {
                 if let line = currentLine {
@@ -149,7 +151,7 @@ struct DialogueOverlayView: View {
                         }
                         .foregroundColor(.white.opacity(0.5))
                     }
-                    
+
                     // Dialogue text
                     Text(displayedText)
                         .font(line.isPlayerThought ? .body.italic() : .body)
@@ -157,9 +159,9 @@ struct DialogueOverlayView: View {
                         .lineSpacing(3)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                
+
                 Spacer()
-                
+
                 // Tap indicator
                 HStack {
                     Spacer()
@@ -179,9 +181,9 @@ struct DialogueOverlayView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     // MARK: - Background
-    
+
     private var dialogueBackground: some View {
         Rectangle()
             .fill(
@@ -195,9 +197,9 @@ struct DialogueOverlayView: View {
                 )
             )
     }
-    
+
     // MARK: - Helper Functions
-    
+
     private func portraitGlowColor(for line: DialogueLine) -> Color {
         if line.isPlayerThought {
             return .blue
@@ -205,43 +207,44 @@ struct DialogueOverlayView: View {
         // Could extend to differentiate heroes vs villains
         return .yellow
     }
-    
+
     private func portraitBorderColor(for line: DialogueLine) -> Color {
         if line.isPlayerThought {
             return .blue.opacity(0.7)
         }
         return .yellow.opacity(0.7)
     }
-    
+
     // MARK: - Typing Animation
-    
+
     private func startTypingCurrentLine() {
+        typingTask?.cancel()
         guard let line = currentLine else {
             dismiss()
             return
         }
-        
+
         displayedText = ""
         isTyping = true
-        
+
         let characters = Array(line.text)
-        
-        for (index, character) in characters.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + typingSpeed * Double(index)) {
-                if isTyping {
-                    displayedText.append(character)
-                    
-                    if index == characters.count - 1 {
-                        isTyping = false
-                    }
-                }
+        let delay = typingSpeed
+        typingTask = Task { @MainActor in
+            var revealed = ""
+            for character in characters {
+                try? await Task.sleep(for: .seconds(delay))
+                if Task.isCancelled { return }
+                revealed.append(character)
+                displayedText = revealed
             }
+            isTyping = false
         }
     }
-    
+
     private func handleTap() {
         if isTyping {
             // Skip to full text
+            typingTask?.cancel()
             isTyping = false
             displayedText = currentLine?.text ?? ""
         } else {
@@ -254,8 +257,9 @@ struct DialogueOverlayView: View {
             }
         }
     }
-    
+
     private func dismiss() {
+        typingTask?.cancel()
         withAnimation(.easeOut(duration: 0.2)) {
             isVisible = false
         }
@@ -270,58 +274,58 @@ struct DialogueOverlayView: View {
 struct SpeechBubbleShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
-        
+
         let cornerRadius: CGFloat = 12
         let pointerWidth: CGFloat = 15
         let pointerHeight: CGFloat = 12
         let pointerOffset: CGFloat = 30  // From left edge
-        
+
         // Start at top-left, after corner
         path.move(to: CGPoint(x: cornerRadius, y: 0))
-        
+
         // Top edge
         path.addLine(to: CGPoint(x: rect.width - cornerRadius, y: 0))
-        
+
         // Top-right corner
         path.addQuadCurve(
             to: CGPoint(x: rect.width, y: cornerRadius),
             control: CGPoint(x: rect.width, y: 0)
         )
-        
+
         // Right edge
         path.addLine(to: CGPoint(x: rect.width, y: rect.height - cornerRadius))
-        
+
         // Bottom-right corner
         path.addQuadCurve(
             to: CGPoint(x: rect.width - cornerRadius, y: rect.height),
             control: CGPoint(x: rect.width, y: rect.height)
         )
-        
+
         // Bottom edge (no pointer on this side - pointer points left)
         path.addLine(to: CGPoint(x: cornerRadius, y: rect.height))
-        
+
         // Bottom-left corner
         path.addQuadCurve(
             to: CGPoint(x: 0, y: rect.height - cornerRadius),
             control: CGPoint(x: 0, y: rect.height)
         )
-        
+
         // Left edge with pointer
         path.addLine(to: CGPoint(x: 0, y: pointerOffset + pointerHeight))
-        
+
         // Pointer (pointing left toward portrait)
         path.addLine(to: CGPoint(x: -pointerWidth, y: pointerOffset + pointerHeight / 2))
         path.addLine(to: CGPoint(x: 0, y: pointerOffset))
-        
+
         // Continue left edge
         path.addLine(to: CGPoint(x: 0, y: cornerRadius))
-        
+
         // Top-left corner
         path.addQuadCurve(
             to: CGPoint(x: cornerRadius, y: 0),
             control: CGPoint(x: 0, y: 0)
         )
-        
+
         return path
     }
 }
@@ -331,7 +335,7 @@ struct SpeechBubbleShape: Shape {
 #Preview {
     ZStack {
         Color.gray
-        
+
         DialogueOverlayView(
             dialogue: BattleDialogue(
                 trigger: .battleStart,

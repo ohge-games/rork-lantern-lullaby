@@ -1,17 +1,24 @@
 import SwiftUI
 
-/// Small chip telegraphing what an enemy will do next turn.
+/// Small chip telegraphing what an enemy will do next turn, and at whom.
 struct IntentChip: View {
     let intent: EnemyIntent
+    var targetName: String? = nil
 
     var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 4) {
             switch intent {
             case .attack(let amount):
                 Label("\(amount)", systemImage: "bolt.fill")
                     .font(.system(size: 10, weight: .bold))
                     .monospacedDigit()
                     .foregroundStyle(DreamTheme.danger)
+                if let targetName {
+                    Text("→ \(targetName)")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .lineLimit(1)
+                }
             case .brace(let amount):
                 Label("\(amount)", systemImage: "shield.fill")
                     .font(.system(size: 10, weight: .bold))
@@ -26,7 +33,7 @@ struct IntentChip: View {
         }
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
-        .background(Capsule().fill(.black.opacity(0.3)))
+        .background(Capsule().fill(.black.opacity(0.35)))
         .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 1))
     }
 }

@@ -20,7 +20,7 @@ nonisolated extension CardCatalog {
     static let stepForward = Card(
         id: UUID(uuidString: "A1000000-0000-4000-8000-000000000010")!,
         name: "Step Forward",
-        text: "A hero of your choice leads the party. They gain 5 shield.",
+        text: "Chosen hero leads. Gain 5 shield.",
         lucidityCost: 1,
         cardType: .utility,
         effects: [

@@ -11,8 +11,8 @@ import SwiftUI
 /// - Dual-direction cards: release on either to open the branch picker.
 /// Releasing anywhere else snaps the thread back.
 ///
-/// Up to five cards fan out from the center; larger hands switch to a
-/// horizontal scroll (hold a card briefly, then drag).
+/// The whole hand always fans from the center; bigger hands simply pack
+/// tighter, and the card you touch lifts above its neighbours.
 struct HandView: View {
     let viewModel: BattleViewModel
 
@@ -20,7 +20,6 @@ struct HandView: View {
     @State private var cardFrames: [UUID: CGRect] = [:]
 
     private let cardWidth: CGFloat = 100
-    private let fanLimit = 5
     /// Enlargement while a card is held.
     private let dragScale: CGFloat = 1.28
     /// How far a held card lifts out of the fan.
@@ -32,20 +31,14 @@ struct HandView: View {
     }
 
     var body: some View {
-        Group {
-            if viewModel.state.player.hand.count > fanLimit {
-                scrollLayout
-            } else {
-                fanLayout
-            }
-        }
+        fanLayout
         .frame(height: 168)
         .overlay(alignment: .top) { dragHintLabel }
         .animation(.spring(response: 0.42, dampingFraction: 0.75), value: viewModel.state.player.hand)
         .animation(.spring(response: 0.35, dampingFraction: 0.7), value: viewModel.selectedInstanceID)
     }
 
-    // MARK: - Fanned layout (≤ 5 cards)
+    // MARK: - Fanned layout
 
     private var fanLayout: some View {
         GeometryReader { geo in
@@ -78,30 +71,6 @@ struct HandView: View {
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
-    }
-
-    // MARK: - Scrollable layout (6+ cards)
-
-    private var scrollLayout: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(viewModel.state.player.hand) { instance in
-                    if let card = viewModel.card(for: instance) {
-                        let isDragging = draggingID == instance.id
-                        let awaitsChoice = !isDragging && viewModel.selectedInstanceID == instance.id
-
-                        cardFace(instance: instance, card: card, isDragging: isDragging, isHighlighted: isDragging || awaitsChoice)
-                            .gesture(pressDragGesture(instance: instance, card: card))
-                            .offset(y: isDragging ? dragLift : (awaitsChoice ? -18 : tappableLift))
-                            .zIndex(isDragging ? 300 : 0)
-                    }
-                }
-            }
-            .padding(.top, 30)
-            .padding(.bottom, 12)
-        }
-        .contentMargins(.horizontal, 4, for: .scrollContent)
-        .scrollClipDisabled()
     }
 
     // MARK: - Shared card face
@@ -152,21 +121,6 @@ struct HandView: View {
             }
             .onEnded { value in
                 handleDragEnded(value, instance: instance, card: card)
-            }
-    }
-
-    /// Inside the scroll layout a bare drag would fight the scroll view,
-    /// so a short press lifts the card first, then the drag takes over.
-    private func pressDragGesture(instance: CardInstance, card: Card) -> some Gesture {
-        LongPressGesture(minimumDuration: 0.15)
-            .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .global))
-            .onChanged { value in
-                guard case .second(true, let drag?) = value else { return }
-                handleDragChanged(drag, instance: instance, card: card)
-            }
-            .onEnded { value in
-                guard case .second(true, let drag?) = value else { return }
-                handleDragEnded(drag, instance: instance, card: card)
             }
     }
 
@@ -273,6 +227,6 @@ struct HandView: View {
     }
 
     private func yOffset(index: Int, count: Int) -> CGFloat {
-        abs(CGFloat(index) - CGFloat(mid(count))) * 6
+        abs(CGFloat(index) - CGFloat(mid(count))) * (count > 5 ? 3 : 6)
     }
 }

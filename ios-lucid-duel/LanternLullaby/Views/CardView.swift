@@ -31,7 +31,8 @@ struct CardView: View {
                 .font(.system(size: 9.5))
                 .foregroundStyle(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
-                .lineLimit(3)
+                .lineLimit(4)
+                .minimumScaleFactor(0.8)
 
             Spacer(minLength: 2)
 

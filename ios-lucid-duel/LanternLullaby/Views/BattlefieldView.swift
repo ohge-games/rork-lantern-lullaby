@@ -20,8 +20,8 @@ struct BattlefieldView: View {
     var body: some View {
         GeometryReader { geo in
             let size = geo.size
-            let frontHeight = size.height * 0.42
-            let backHeight = size.height * 0.34
+            let frontHeight = size.height * 0.50
+            let backHeight = size.height * 0.40
 
             ZStack {
                 heroSide(size: size, frontHeight: frontHeight, backHeight: backHeight)
@@ -56,8 +56,8 @@ struct BattlefieldView: View {
 
         // Back row: farther up the path, smaller, staggered so they read.
         let backSlots: [(x: CGFloat, ground: CGFloat)] = [
-            (0.075, 0.66),
-            (0.155, 0.72),
+            (0.075, 0.78),
+            (0.16, 0.84),
         ]
 
         return ZStack {
@@ -74,8 +74,8 @@ struct BattlefieldView: View {
             if let lead {
                 planted(
                     heroView(lead, bodyHeight: frontHeight, breathDelay: 0),
-                    x: size.width * 0.235,
-                    ground: size.height * 0.80
+                    x: size.width * 0.245,
+                    ground: size.height * 0.92
                 )
             }
         }
@@ -121,9 +121,9 @@ struct BattlefieldView: View {
         // enemies[0] is the primary — it stands in front, nearest the center.
         let enemies = viewModel.enemies
         let slots: [(index: Int, x: CGFloat, ground: CGFloat, height: CGFloat)] = [
-            (2, 0.925, 0.66, backHeight),
-            (1, 0.845, 0.72, backHeight),
-            (0, 0.765, 0.80, frontHeight),
+            (2, 0.925, 0.78, backHeight),
+            (1, 0.84, 0.84, backHeight),
+            (0, 0.755, 0.92, frontHeight),
         ]
 
         return ZStack {

@@ -698,6 +698,31 @@ struct CampaignEngineTests {
         #expect(viewModel.activeTutorialStep?.id == "zones")
     }
 
+    @Test func turnStartTopsTheHandUpToTheMinimum() async {
+        let foe = enemy("Wisp", health: 500, pattern: .scripted(cycle: [.brace(shield: 1)]))
+        let config = configuration(waves: [WaveSpec(enemies: [foe])], party: [CardCatalog.wart])
+        let viewModel = BattleViewModel(configuration: config)
+        // Play strikes until the hand is thin (stay clear of Awakening).
+        while let instance = viewModel.state.player.hand.first, viewModel.state.player.lucidity < 62 {
+            viewModel.toggleSelection(of: instance)
+            viewModel.playSelectedCard()
+        }
+        #expect(viewModel.state.player.hand.count < GameRules.minimumHandSize)
+        #expect(viewModel.minimumHandSize == GameRules.minimumHandSize)
+
+        viewModel.endTurn()
+        try? await Task.sleep(for: .milliseconds(2300))
+        #expect(viewModel.state.phase == .playerMain)
+        #expect(viewModel.state.player.hand.count >= GameRules.minimumHandSize)
+    }
+
+    @Test func archimedesRaisesTheMinimumHand() {
+        let foe = enemy("Wisp", health: 60, pattern: .scripted(cycle: [.attack(1)]))
+        let config = configuration(waves: [WaveSpec(enemies: [foe])], party: [CardCatalog.archimedes, CardCatalog.wart])
+        let viewModel = BattleViewModel(configuration: config)
+        #expect(viewModel.minimumHandSize == GameRules.minimumHandSize + 1)
+    }
+
     @Test func leadHeroIsTheOnlyPassiveThatApplies() {
         let foe = enemy("Wisp", health: 60, pattern: .scripted(cycle: [.attack(1)]))
         // Archimedes leads: his bonus draw applies, Wart's nothing.

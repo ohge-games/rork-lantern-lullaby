@@ -88,10 +88,12 @@ struct BattlefieldCharacterView: View {
 
     // MARK: - Overhead plate
 
+    /// Three short rows on a dark backing: what they will do, who they are,
+    /// how they are doing. Kept compact so nothing stacks into a column.
     private var overhead: some View {
         VStack(spacing: 3) {
             if showsActiveTag {
-                Text("ACTIVE")
+                Text("LEAD")
                     .font(.system(size: 8, weight: .heavy))
                     .tracking(1.5)
                     .foregroundStyle(.black)
@@ -100,21 +102,13 @@ struct BattlefieldCharacterView: View {
                     .background(Capsule().fill(DreamTheme.gold))
                     .shadow(color: DreamTheme.gold.opacity(0.6), radius: 6)
             } else if let intent, !isDown {
-                HStack(spacing: 4) {
-                    IntentChip(intent: intent)
-                    if let intentTargetName, case .attack = intent {
-                        Text("→ \(intentTargetName)")
-                            .font(.system(size: 8, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.7))
-                            .shadow(color: .black.opacity(0.7), radius: 2, y: 1)
-                    }
-                }
+                IntentChip(intent: intent, targetName: intentTargetName)
             }
 
             HStack(spacing: 4) {
                 Text(name)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.9))
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 if shield > 0 {
@@ -122,17 +116,19 @@ struct BattlefieldCharacterView: View {
                         .transition(.scale.combined(with: .opacity))
                 }
             }
-            .shadow(color: .black.opacity(0.7), radius: 2, y: 1)
 
-            HealthBarView(current: health, maximum: maxHealth, tint: healthTint)
-                .frame(width: barWidth, height: 6)
-
-            Text(isDown ? "Defeated" : "\(health)/\(maxHealth)")
-                .font(.system(size: 8, weight: .semibold))
-                .monospacedDigit()
-                .foregroundStyle(.white.opacity(0.65))
-                .shadow(color: .black.opacity(0.7), radius: 2, y: 1)
+            HStack(spacing: 5) {
+                HealthBarView(current: health, maximum: maxHealth, tint: healthTint)
+                    .frame(width: barWidth, height: 6)
+                Text(isDown ? "Down" : "\(health)/\(maxHealth)")
+                    .font(.system(size: 8, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(.white.opacity(0.8))
+            }
         }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(RoundedRectangle(cornerRadius: 10).fill(.black.opacity(0.42)))
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: shield)
     }
 
@@ -140,12 +136,12 @@ struct BattlefieldCharacterView: View {
 
     private var figure: some View {
         ZStack(alignment: .bottom) {
-            // Ground contact: soft shadow pooling under the feet.
+            // Ground contact: a wide, soft shadow pooling under the feet.
             Ellipse()
-                .fill(.black.opacity(0.38))
-                .frame(width: bodyHeight * 0.46, height: bodyHeight * 0.085)
-                .blur(radius: 6)
-                .offset(y: bodyHeight * 0.02)
+                .fill(.black.opacity(0.5))
+                .frame(width: bodyHeight * 0.62, height: bodyHeight * 0.11)
+                .blur(radius: 7)
+                .offset(y: bodyHeight * 0.03)
 
             if isTargeted {
                 groundReticle

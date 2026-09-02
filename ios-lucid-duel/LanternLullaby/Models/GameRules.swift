@@ -12,6 +12,11 @@ nonisolated enum GameRules {
     static let cardsDrawnPerTurn: Int = 1
     static let maxHandSize: Int = 8
 
+    /// After the turn's draw, the hand is topped up to at least this many
+    /// cards so a thin hand never leaves the player with nothing to do
+    /// while the enemy keeps swinging. Draw passives raise it.
+    static let minimumHandSize: Int = 3
+
     /// Normal enemy attacks roll within this range each turn.
     static let enemyAttackRange: ClosedRange<Int> = 8...15
 

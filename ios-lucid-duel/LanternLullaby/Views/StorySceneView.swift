@@ -6,32 +6,35 @@ import SwiftUI
 struct StorySceneView: View {
     let scene: StoryScene
     let onComplete: () -> Void
-    
+
     @State private var currentLineIndex = 0
     @State private var displayedText = ""
     @State private var isTyping = false
     @State private var showTapHint = false
-    
+    /// The typing task for the current line; cancelled whenever the line
+    /// changes so a previous line's characters can never leak in.
+    @State private var typingTask: Task<Void, Never>?
+
     private let typingSpeed: Double = 0.03  // Seconds per character
-    
+
     private var currentLine: DialogueLine? {
         guard currentLineIndex < scene.lines.count else { return nil }
         return scene.lines[currentLineIndex]
     }
-    
+
     private var isLastLine: Bool {
         currentLineIndex >= scene.lines.count - 1
     }
-    
+
     var body: some View {
         ZStack {
             // Background
             backgroundLayer
-            
+
             // Content
             VStack {
                 Spacer()
-                
+
                 // Dialogue area (bottom third of screen)
                 dialogueArea
             }
@@ -43,9 +46,9 @@ struct StorySceneView: View {
             handleTap()
         }
     }
-    
+
     // MARK: - Background Layer
-    
+
     @ViewBuilder
     private var backgroundLayer: some View {
         if let bgImage = scene.backgroundImage {
@@ -79,9 +82,9 @@ struct StorySceneView: View {
             .ignoresSafeArea()
         }
     }
-    
+
     // MARK: - Dialogue Area
-    
+
     private var dialogueArea: some View {
         VStack(spacing: 0) {
             // Semi-transparent dialogue box
@@ -90,7 +93,7 @@ struct StorySceneView: View {
                 if let line = currentLine, !line.speakerPortrait.isEmpty {
                     portraitView(for: line)
                 }
-                
+
                 // Text area (right side, full width)
                 VStack(alignment: .leading, spacing: 8) {
                     // Speaker name
@@ -100,7 +103,7 @@ struct StorySceneView: View {
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                     }
-                    
+
                     // Dialogue text
                     if let line = currentLine {
                         Text(displayedText)
@@ -109,9 +112,9 @@ struct StorySceneView: View {
                             .lineSpacing(4)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    
+
                     Spacer(minLength: 8)
-                    
+
                     // Tap hint
                     if showTapHint {
                         HStack {
@@ -141,9 +144,9 @@ struct StorySceneView: View {
             .padding(.bottom, 32)
         }
     }
-    
+
     // MARK: - Portrait View
-    
+
     private func portraitView(for line: DialogueLine) -> some View {
         ZStack {
             // Portrait background
@@ -152,13 +155,13 @@ struct StorySceneView: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
-                            line.isPlayerThought 
-                                ? Color.blue.opacity(0.5) 
+                            line.isPlayerThought
+                                ? Color.blue.opacity(0.5)
                                 : Color.yellow.opacity(0.5),
                             lineWidth: 2
                         )
                 )
-            
+
             // Portrait image
             Image(line.speakerPortrait)
                 .resizable()
@@ -168,41 +171,41 @@ struct StorySceneView: View {
         }
         .frame(width: 110, height: 120)
     }
-    
+
     // MARK: - Typing Animation
-    
+
     private func startTypingCurrentLine() {
+        typingTask?.cancel()
         guard let line = currentLine else {
             onComplete()
             return
         }
-        
+
         displayedText = ""
         isTyping = true
         showTapHint = false
-        
+
         let characters = Array(line.text)
-        
-        for (index, character) in characters.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + typingSpeed * Double(index)) {
-                if isTyping {
-                    displayedText.append(character)
-                    
-                    // Show tap hint when done
-                    if index == characters.count - 1 {
-                        isTyping = false
-                        withAnimation(.easeIn(duration: 0.3)) {
-                            showTapHint = true
-                        }
-                    }
-                }
+        let delay = typingSpeed
+        typingTask = Task { @MainActor in
+            var revealed = ""
+            for character in characters {
+                try? await Task.sleep(for: .seconds(delay))
+                if Task.isCancelled { return }
+                revealed.append(character)
+                displayedText = revealed
+            }
+            isTyping = false
+            withAnimation(.easeIn(duration: 0.3)) {
+                showTapHint = true
             }
         }
     }
-    
+
     private func handleTap() {
         if isTyping {
             // Skip to full text
+            typingTask?.cancel()
             isTyping = false
             displayedText = currentLine?.text ?? ""
             withAnimation(.easeIn(duration: 0.3)) {

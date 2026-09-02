@@ -127,11 +127,14 @@ struct BattleView: View {
     private var topChrome: some View {
         VStack(spacing: 6) {
             HStack(alignment: .top) {
-                HStack(spacing: 8) {
-                    leaveButton
-                    soundChip
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 8) {
+                        leaveButton
+                        soundChip
+                    }
+                    pileCounters
                 }
-                .frame(width: 150, alignment: .leading)
+                .frame(width: 170, alignment: .leading)
 
                 Spacer()
 
@@ -280,8 +283,6 @@ struct BattleView: View {
                 .opacity(viewModel.state.phase == .playerMain ? 1 : 0.55)
 
             HStack(alignment: .bottom) {
-                pileCounters
-
                 Spacer()
 
                 lanternCorner
@@ -294,18 +295,9 @@ struct BattleView: View {
     }
 
     private var pileCounters: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        HStack(spacing: 6) {
             pileChip(count: viewModel.state.player.deck.count, icon: "square.stack.fill", label: "Deck")
             pileChip(count: viewModel.state.player.discardPile.count, icon: "tray.full.fill", label: "Discard")
-
-            HStack(spacing: 4) {
-                Image(systemName: "shield.lefthalf.filled")
-                    .font(.system(size: 8))
-                Text("Lead: \(viewModel.leadHeroName)")
-                    .font(.system(size: 9, weight: .semibold))
-            }
-            .foregroundStyle(.white.opacity(0.5))
-            .contentTransition(.opacity)
         }
     }
 

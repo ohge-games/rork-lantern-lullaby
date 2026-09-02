@@ -1203,6 +1203,7 @@ final class BattleViewModel {
 
         drawPlayerCards(GameRules.cardsDrawnPerTurn)
         applyBonusCardDrawPassives()
+        topUpHand()
         emitSound("card drawn")
 
         // Every living enemy telegraphs its next move.
@@ -1239,6 +1240,26 @@ final class BattleViewModel {
             if case .bonusCardDraw(let amount) = hero.passive.kind {
                 drawPlayerCards(amount)
             }
+        }
+    }
+
+    /// The smallest hand the player starts a turn with: the rule's minimum
+    /// plus any draw passive the lead carries.
+    var minimumHandSize: Int {
+        var minimum = GameRules.minimumHandSize
+        for hero in activeHeroes {
+            if case .bonusCardDraw(let amount) = hero.passive.kind {
+                minimum += amount
+            }
+        }
+        return minimum
+    }
+
+    /// Draws until the hand reaches `minimumHandSize` (deck permitting).
+    private func topUpHand() {
+        let shortfall = minimumHandSize - state.player.hand.count
+        if shortfall > 0 {
+            drawPlayerCards(shortfall)
         }
     }
 
