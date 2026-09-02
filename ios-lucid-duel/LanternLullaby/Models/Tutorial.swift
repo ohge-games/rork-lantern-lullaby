@@ -35,6 +35,39 @@ nonisolated struct TutorialStep: Identifiable, Hashable, Codable, Sendable {
 nonisolated struct TutorialScript: Hashable, Codable, Sendable {
     let steps: [TutorialStep]
 
+    /// The lesson after Lancelot joins: what a party is, what the lead
+    /// does, and where passives come from.
+    static let partyAndPassives = TutorialScript(steps: [
+        TutorialStep(
+            id: "party-intro",
+            title: "A company, not a champion",
+            text: "Lancelot fights with you now. Up to three heroes share one hand, one deck and one lantern — but each keeps their own health.",
+            anchor: .hero,
+            advance: .tap
+        ),
+        TutorialStep(
+            id: "party-lead",
+            title: "The lead takes the blows",
+            text: "The hero standing in front is the lead. Every enemy aims at them, and if they fall the next hero steps up. You only lose when nobody is left standing.",
+            anchor: .hero,
+            advance: .tap
+        ),
+        TutorialStep(
+            id: "party-passive",
+            title: "Only the lead's passive counts",
+            text: "Every hero has a passive. Lancelot's Peerless Blade adds 3 damage to attacks while the lantern burns Vivid — but only while he leads. Tap any hero to read theirs.",
+            anchor: .hero,
+            advance: .tap
+        ),
+        TutorialStep(
+            id: "party-order",
+            title: "Choose before you sleep",
+            text: "Set your party and its order on the book page, before the dream begins. In battle, only a card like Step Forward can change who leads.",
+            anchor: .center,
+            advance: .tap
+        ),
+    ])
+
     /// The first battle: the lantern, cards, intents, Relax, and turns.
     static let firstBattle = TutorialScript(steps: [
         TutorialStep(
@@ -76,6 +109,13 @@ nonisolated struct TutorialScript: Hashable, Codable, Sendable {
             id: "relax",
             title: "Relax to dim the flame",
             text: "Cards like Deep Breath and Mental Shift lower Lucidity. Balance attacks with rest and the lantern stays steady.",
+            anchor: .hand,
+            advance: .tap
+        ),
+        TutorialStep(
+            id: "strain",
+            title: "Vary what you play",
+            text: "Leaning on one kind of card wears the dream thin. Each repeat of a type in the same turn costs +1 more Lucidity, shown on the card. Mixing attack, defense and rest keeps the flame low.",
             anchor: .hand,
             advance: .tap
         ),

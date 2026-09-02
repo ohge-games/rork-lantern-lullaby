@@ -31,6 +31,12 @@ struct HowToPlayView: View {
             body: "Touch a card and draw its thread to a target. Attacks go to an enemy. Shields, heals and Step Forward go to one of your heroes. Cards that need no target — Relax and card draw — are played by simply pulling them up. Cards marked Choice let you pick a path after you drop them. Play as many as you like, then End Turn."
         ),
         RuleSection(
+            id: "strain",
+            icon: "flame.fill",
+            title: "Focus Strain",
+            body: "Leaning on one kind of card wears the dream thin. The second card of a type you play in a turn costs +1 Lucidity, the third +2, and so on — attacks, defense and utility each strain on their own. The card shows its real cost, so a varied turn is always cheaper than a mono turn."
+        ),
+        RuleSection(
             id: "party",
             icon: "person.3.fill",
             title: "Your party",

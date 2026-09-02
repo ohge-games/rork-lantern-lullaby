@@ -234,7 +234,7 @@ final class CampaignCoordinator {
             deckCardIDs: CardCatalog.partyDeckCardIDs(for: heroes),
             stageID: stage.id,
             chapterIndex: chapter.index,
-            tutorial: chapter.index == 0 && stage.index == 0 ? TutorialScript.firstBattle : nil
+            tutorial: Self.tutorial(forChapter: chapter.index, stage: stage.index)
         )
     }
 
@@ -295,6 +295,17 @@ final class CampaignCoordinator {
         let viewModel = BattleViewModel(configuration: configuration(for: stage, in: chapter))
         viewModel.configureNarrative(narrative(for: stage, in: chapter), partyHeroIDs: party.map(\.id))
         return viewModel
+    }
+
+    /// The scripted lesson for a stage, if it has one. Chapter and stage
+    /// are 0-based, so this is page 1 and page 6 of Chapter 1 — the second
+    /// landing the turn after Lancelot joins the party.
+    static func tutorial(forChapter chapter: Int, stage: Int) -> TutorialScript? {
+        switch (chapter, stage) {
+        case (0, 0): return .firstBattle
+        case (0, 5): return .partyAndPassives
+        default: return nil
+        }
     }
 
     // MARK: - Recording results

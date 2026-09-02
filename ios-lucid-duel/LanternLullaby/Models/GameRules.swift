@@ -17,6 +17,14 @@ nonisolated enum GameRules {
     /// while the enemy keeps swinging. Draw passives raise it.
     static let minimumHandSize: Int = 4
 
+    /// Focus Strain: leaning on one kind of card wears the dream thin.
+    /// Each card of a type already played this turn adds this much to the
+    /// next one's Lucidity cost, so the second attack in a turn costs +1,
+    /// the third +2, and so on. Attacks, defense and utility strain
+    /// separately, which makes a varied turn cheaper than a mono turn and
+    /// puts a soft ceiling on burst without hiding damage numbers.
+    static let focusStrainPerRepeat: Int = 1
+
     /// Normal enemy attacks roll within this range each turn.
     static let enemyAttackRange: ClosedRange<Int> = 8...15
 

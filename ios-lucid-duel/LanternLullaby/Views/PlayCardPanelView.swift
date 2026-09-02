@@ -171,10 +171,16 @@ struct PlayCardPanelView: View {
 
     private var effectLines: some View {
         HStack(spacing: 10) {
+            let strain = viewModel.strain(for: card)
             Label("+\(viewModel.effectiveCost(of: card))", systemImage: "eye")
                 .font(.system(size: 11, weight: .semibold))
                 .monospacedDigit()
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(strain > 0 ? DreamTheme.goldDeep : .white.opacity(0.6))
+            if strain > 0 {
+                Text("strain +\(strain)")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(DreamTheme.goldDeep)
+            }
 
             ForEach(Array(card.effects.enumerated()), id: \.offset) { _, effect in
                 let resolved = viewModel.resolvedEffectValue(for: effect, on: card)

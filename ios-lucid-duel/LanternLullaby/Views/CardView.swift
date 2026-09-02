@@ -6,6 +6,11 @@ struct CardView: View {
     let card: Card
     let isSelected: Bool
     let isBonusActive: Bool
+    /// The card's cost right now, passives and Focus Strain included.
+    /// Falls back to the printed cost outside a battle.
+    var displayCost: Int? = nil
+    /// Extra cost from repeating this card's type this turn.
+    var strain: Int = 0
 
     var body: some View {
         VStack(spacing: 5) {
@@ -66,6 +71,9 @@ struct CardView: View {
             if isBonusActive {
                 BonusBadge()
                     .offset(x: 6, y: -8)
+            } else if strain > 0 {
+                StrainBadge(amount: strain)
+                    .offset(x: 6, y: -8)
             }
         }
         .shadow(
@@ -77,7 +85,8 @@ struct CardView: View {
     }
 
     private var costChip: some View {
-        Text(card.lucidityCost > 0 ? "+\(card.lucidityCost)" : "0")
+        let cost = displayCost ?? card.lucidityCost
+        return Text(cost > 0 ? "+\(cost)" : "0")
             .font(.system(size: 11, weight: .heavy, design: .rounded))
             .monospacedDigit()
             .foregroundStyle(DreamTheme.gold)
@@ -116,6 +125,26 @@ struct CardView: View {
             return effect.value > 0 ? "+\(effect.value)" : "\(effect.value)"
         }
         return "\(effect.value)"
+    }
+}
+
+/// Amber badge warning that this card's type has already been played this
+/// turn, so it costs more Lucidity than printed.
+struct StrainBadge: View {
+    let amount: Int
+
+    var body: some View {
+        HStack(spacing: 2) {
+            Image(systemName: "flame.fill")
+                .font(.system(size: 7, weight: .bold))
+            Text("+\(amount)")
+                .font(.system(size: 9, weight: .heavy, design: .rounded))
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 5)
+        .padding(.vertical, 3)
+        .background(Capsule().fill(DreamTheme.goldDeep.opacity(0.9)))
+        .overlay(Capsule().stroke(.white.opacity(0.25), lineWidth: 1))
     }
 }
 

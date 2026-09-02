@@ -80,7 +80,9 @@ struct HandView: View {
         CardView(
             card: card,
             isSelected: isHighlighted,
-            isBonusActive: viewModel.isBonusActive(for: card)
+            isBonusActive: viewModel.isBonusActive(for: card),
+            displayCost: viewModel.effectiveCost(of: card),
+            strain: viewModel.strain(for: card)
         )
         // Enlarged while held so art and rules text read clearly.
         .scaleEffect(isDragging ? dragScale : 1)

@@ -697,6 +697,8 @@ struct CampaignEngineTests {
         play(CardCatalog.strike, on: viewModel)
         #expect(viewModel.activeTutorialStep?.id == "relax")
         viewModel.advanceTutorial()
+        #expect(viewModel.activeTutorialStep?.id == "strain")
+        viewModel.advanceTutorial()
         #expect(viewModel.activeTutorialStep?.id == "endTurn")
         viewModel.endTurn()
         #expect(viewModel.activeTutorialStep?.id == "zones")
@@ -797,6 +799,76 @@ struct CampaignEngineTests {
         let config = configuration(waves: [WaveSpec(enemies: [foe])], party: [CardCatalog.archimedes, CardCatalog.wart])
         let viewModel = BattleViewModel(configuration: config)
         #expect(viewModel.minimumHandSize == GameRules.minimumHandSize + 1)
+    }
+
+    @Test func repeatingACardTypeCostsMoreThisTurn() {
+        let foe = enemy("Wisp", health: 500, pattern: .scripted(cycle: [.brace(shield: 1)]))
+        let config = configuration(waves: [WaveSpec(enemies: [foe])], party: [CardCatalog.wart])
+        let viewModel = BattleViewModel(configuration: config)
+
+        // First attack is printed cost, each repeat adds one.
+        #expect(viewModel.strain(for: CardCatalog.strike) == 0)
+        #expect(viewModel.effectiveCost(of: CardCatalog.strike) == CardCatalog.strike.lucidityCost)
+
+        play(CardCatalog.strike, on: viewModel)
+        #expect(viewModel.strain(for: CardCatalog.strike) == 1)
+        #expect(viewModel.effectiveCost(of: CardCatalog.strike) == CardCatalog.strike.lucidityCost + 1)
+
+        play(CardCatalog.strike, on: viewModel)
+        #expect(viewModel.effectiveCost(of: CardCatalog.strike) == CardCatalog.strike.lucidityCost + 2)
+
+        // Types strain on their own, so a defensive card is still cheap.
+        #expect(viewModel.strain(for: CardCatalog.shieldWall) == 0)
+    }
+
+    @Test func strainMakesABurstTurnCostMoreThanAVariedOne() {
+        let foe = enemy("Wisp", health: 500, pattern: .scripted(cycle: [.brace(shield: 1)]))
+
+        let burst = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [foe])],
+            party: [CardCatalog.wart],
+            deck: Array(repeating: CardCatalog.strike.id, count: 20)
+        ))
+        for _ in 0..<3 { play(CardCatalog.strike, on: burst) }
+        // 4 + 5 + 6 = 15 rather than a flat 12.
+        #expect(burst.state.player.lucidity == 50 + 15)
+
+        let varied = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [foe])],
+            party: [CardCatalog.wart],
+            // Four cards, so the opening hand is the whole deck and the
+            // draw cannot be unlucky.
+            deck: [CardCatalog.strike.id, CardCatalog.shieldWall.id,
+                   CardCatalog.strike.id, CardCatalog.shieldWall.id]
+        ))
+        play(CardCatalog.strike, on: varied)
+        play(CardCatalog.shieldWall, on: varied)
+        // 4 + 3 = 7, and the strike after a shield is still only strained once.
+        #expect(varied.state.player.lucidity == 50 + 7)
+        #expect(varied.effectiveCost(of: CardCatalog.strike) == CardCatalog.strike.lucidityCost + 1)
+    }
+
+    @Test func strainResetsEachTurn() async {
+        let foe = enemy("Wisp", health: 500, pattern: .scripted(cycle: [.brace(shield: 1)]))
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [foe])],
+            party: [CardCatalog.wart],
+            deck: Array(repeating: CardCatalog.strike.id, count: 20)
+        ))
+        play(CardCatalog.strike, on: viewModel)
+        #expect(viewModel.strain(for: CardCatalog.strike) == 1)
+
+        viewModel.endTurn()
+        try? await Task.sleep(for: .milliseconds(2300))
+        #expect(viewModel.state.phase == .playerMain)
+        #expect(viewModel.strain(for: CardCatalog.strike) == 0)
+    }
+
+    @Test func lancelotStageOpensThePartyLesson() {
+        #expect(CampaignCoordinator.tutorial(forChapter: 0, stage: 0)?.steps.first?.id == "lantern")
+        #expect(CampaignCoordinator.tutorial(forChapter: 0, stage: 5)?.steps.first?.id == "party-intro")
+        #expect(CampaignCoordinator.tutorial(forChapter: 0, stage: 3) == nil)
+        #expect(CampaignCoordinator.tutorial(forChapter: 2, stage: 0) == nil)
     }
 
     @Test func leadHeroIsTheOnlyPassiveThatApplies() {

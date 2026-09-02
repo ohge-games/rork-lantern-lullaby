@@ -213,6 +213,10 @@ final class BattleViewModel {
     /// Tracks whether this is the first card played this turn (for Kay's passive).
     private var isFirstCardThisTurn: Bool = true
 
+    /// How many cards of each type have been played this turn, for Focus
+    /// Strain. Cleared at the start of every player turn.
+    private(set) var cardsPlayedThisTurn: [CardType: Int] = [:]
+
     /// Current turn number, cached for growing passives (Escanor).
     private var currentTurnForPassives: Int { state.turnNumber }
 
@@ -448,8 +452,14 @@ final class BattleViewModel {
     /// Passives that affect cost:
     /// - `cheaperLucidityCosts`: reduces cost while in Drifting zone (Merlin)
     /// - `firstCardDiscount`: reduces cost of first card each turn (Kay)
+    /// Extra Lucidity this card costs because its type has already been
+    /// played this turn. Zero for the first card of a type.
+    func strain(for card: Card) -> Int {
+        (cardsPlayedThisTurn[card.cardType] ?? 0) * GameRules.focusStrainPerRepeat
+    }
+
     func effectiveCost(of card: Card) -> Int {
-        var cost = card.lucidityCost
+        var cost = card.lucidityCost + strain(for: card)
 
         for hero in activeHeroes {
             switch hero.passive.kind {
@@ -765,6 +775,7 @@ final class BattleViewModel {
 
         applyPlayerLucidityDelta(effectiveCost(of: card))
         isFirstCardThisTurn = false
+        cardsPlayedThisTurn[card.cardType, default: 0] += 1
 
         resolvingAllyTarget = allyTarget ?? pendingAllyTarget
         pendingAllyTarget = nil
@@ -804,6 +815,7 @@ final class BattleViewModel {
         isEnemyThinking = false
         actingEnemyID = nil
         isFirstCardThisTurn = true
+        cardsPlayedThisTurn = [:]
         enemyHitTargetID = nil
         playerHitTargetID = nil
         pendingAllyTarget = nil
@@ -1217,6 +1229,7 @@ final class BattleViewModel {
         state.turnNumber += 1
         state.player.shield = 0
         isFirstCardThisTurn = true
+        cardsPlayedThisTurn = [:]
 
         // The lantern's steady pull toward Balanced.
         if configuration.lanternDrift > 0 {
