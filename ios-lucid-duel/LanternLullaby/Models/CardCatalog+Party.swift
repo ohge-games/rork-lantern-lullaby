@@ -1,7 +1,7 @@
 import Foundation
 
 /// Deck building for a campaign party.
-extension CardCatalog {
+nonisolated extension CardCatalog {
 
     /// The Dreamer's own lantern cards ride along in every campaign deck.
     /// They carry the Relax effects that keep the meter from running away,

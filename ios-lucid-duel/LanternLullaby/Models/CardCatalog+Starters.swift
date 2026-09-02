@@ -3,11 +3,11 @@ import Foundation
 /// Starter heroes available before any unlocks: Wart (young Arthur) and
 /// Archimedes (Merlyn's owl). These two carry the player through stages 1-4
 /// until Lancelot unlocks at Chapter 1, Stage 5.
-extension CardCatalog {
+nonisolated extension CardCatalog {
 
     // MARK: - Starter Hero IDs
 
-    enum StarterIDs {
+    nonisolated enum StarterIDs {
         static let wart       = UUID(uuidString: "B0000000-0000-4000-8000-000000000001")!
         static let archimedes = UUID(uuidString: "B0000000-0000-4000-8000-000000000002")!
     }

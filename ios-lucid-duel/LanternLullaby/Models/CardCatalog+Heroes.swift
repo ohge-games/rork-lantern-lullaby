@@ -8,12 +8,12 @@ import Foundation
 /// so class identity comes through in the deck itself. Every card here sets
 /// `heroID`, which is how `pool(for:)` and `starterDeck(for:)` find them
 /// without hardcoding membership lists.
-extension CardCatalog {
+nonisolated extension CardCatalog {
 
     /// Stable hero identities. Fixed UUIDs (see `CardCatalog.stableID` for
     /// the rationale) keep hero→card and save→definition references stable
     /// across launches.
-    enum HeroIDs {
+    nonisolated enum HeroIDs {
         static let wart       = CardCatalog.StarterIDs.wart
         static let archimedes = CardCatalog.StarterIDs.archimedes
         static let lancelot = UUID(uuidString: "B2000000-0000-4000-8000-000000000001")!
