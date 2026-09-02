@@ -209,8 +209,8 @@ struct BattleEngineTests {
     @Test func strikeDealsDamageAndRaisesLucidity() {
         let viewModel = BattleViewModel(initialState: state(hand: [CardCatalog.strike]))
         play(CardCatalog.strike, on: viewModel)
-        #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth - 15)
-        #expect(viewModel.state.player.lucidity == 58)
+        #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth - 12)
+        #expect(viewModel.state.player.lucidity == 54)
         #expect(viewModel.state.player.hand.isEmpty)
         #expect(viewModel.state.player.discardPile.count == 1)
     }
@@ -218,16 +218,16 @@ struct BattleEngineTests {
     @Test func deepBreathRelaxesForFree() {
         let viewModel = BattleViewModel(initialState: state(hand: [CardCatalog.deepBreath]))
         play(CardCatalog.deepBreath, on: viewModel)
-        #expect(viewModel.state.player.lucidity == 40)
+        #expect(viewModel.state.player.lucidity == 38)
         #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth)
     }
 
     @Test func vividZoneBoostsOffensiveDamage() {
         let viewModel = BattleViewModel(initialState: state(hand: [CardCatalog.strike], lucidity: 70))
         play(CardCatalog.strike, on: viewModel)
-        // 15 * 1.2 = 18 damage; lucidity 70 + 8 = 78.
-        #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth - 18)
-        #expect(viewModel.state.player.lucidity == 78)
+        // 12 * 1.2 = 14.4 → 14 damage; lucidity 70 + 4 = 74.
+        #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth - 14)
+        #expect(viewModel.state.player.lucidity == 74)
     }
 
     @Test func driftingZoneBoostsDefensiveShield() {
@@ -240,8 +240,8 @@ struct BattleEngineTests {
     @Test func mentalShiftMovesTowardCenterAfterCost() {
         let viewModel = BattleViewModel(initialState: state(hand: [CardCatalog.mentalShift], lucidity: 70))
         play(CardCatalog.mentalShift, on: viewModel)
-        // 70 + 4 cost = 74, then 5 toward 50 = 69.
-        #expect(viewModel.state.player.lucidity == 69)
+        // 70 + 2 cost = 72, then 8 toward 50 = 64.
+        #expect(viewModel.state.player.lucidity == 64)
     }
 
     @Test func enemyShieldAbsorbsBeforeHealth() {
@@ -250,7 +250,7 @@ struct BattleEngineTests {
         let viewModel = BattleViewModel(initialState: initial)
         play(CardCatalog.strike, on: viewModel)
         #expect(viewModel.state.enemy.shield == 0)
-        #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth - 9)
+        #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth - 6)
     }
 
     @Test func dreamWalkDrawsTwoCards()  {
@@ -283,9 +283,9 @@ struct BattleEngineTests {
     @Test func focusedMindConcentrateDealsDamageAndRaisesLucidity() {
         let viewModel = BattleViewModel(initialState: state(hand: [CardCatalog.focusedMind]))
         play(CardCatalog.focusedMind, on: viewModel, choice: choice("concentrate"))
-        // Cost 0, then +10 lucidity, then 20 damage (utility — never zone-scaled).
-        #expect(viewModel.state.player.lucidity == 60)
-        #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth - 20)
+        // Cost 0, then +12 lucidity, then 16 damage (utility — never zone-scaled).
+        #expect(viewModel.state.player.lucidity == 62)
+        #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth - 16)
         #expect(viewModel.state.player.discardPile.count == 1)
     }
 
@@ -294,8 +294,8 @@ struct BattleEngineTests {
         initial.player.currentHealth = 40
         let viewModel = BattleViewModel(initialState: initial)
         play(CardCatalog.focusedMind, on: viewModel, choice: choice("relax"))
-        #expect(viewModel.state.player.lucidity == 42)
-        #expect(viewModel.state.player.currentHealth == 50)
+        #expect(viewModel.state.player.lucidity == 40)
+        #expect(viewModel.state.player.currentHealth == 52)
         #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth)
     }
 
@@ -309,9 +309,9 @@ struct BattleEngineTests {
     }
 
     @Test func enteringVividFiresZoneNotification() {
-        let viewModel = BattleViewModel(initialState: state(hand: [CardCatalog.strike], lucidity: 60))
+        let viewModel = BattleViewModel(initialState: state(hand: [CardCatalog.strike], lucidity: 62))
         play(CardCatalog.strike, on: viewModel)
-        // 60 + 8 = 68 → Vivid.
+        // 62 + 4 = 66 → Vivid.
         #expect(viewModel.state.player.zone == .vivid)
         #expect(viewModel.zoneNotification?.zone == .vivid)
         #expect(viewModel.zoneNotification?.message.contains("Offensive +20%") == true)
@@ -415,7 +415,7 @@ struct BattleEngineTests {
 
         // Damage lands on the minion (through its shield), not the primary.
         let after = viewModel.enemies.first { $0.id == minion.id }
-        let expected = max(0, minion.health - max(0, 15 - minion.shield))
+        let expected = max(0, minion.health - max(0, 12 - minion.shield))
         #expect(after?.health == expected)
         #expect(viewModel.state.enemy.currentHealth == enemyHealthBefore)
         #expect(viewModel.enemyHitTargetID == minion.id)
@@ -428,16 +428,20 @@ struct BattleEngineTests {
         // Second tap on the already-targeted primary enemy confirms the play.
         viewModel.tapEnemy(CardCatalog.nightmare.id)
         #expect(viewModel.state.player.hand.isEmpty)
-        #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth - 15)
+        #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth - 12)
     }
 
     @Test func deadMinionCannotBeTargeted() {
-        let viewModel = BattleViewModel(initialState: state(hand: [CardCatalog.strike, CardCatalog.strike]))
+        let viewModel = BattleViewModel(
+            initialState: state(hand: [CardCatalog.strike, CardCatalog.strike, CardCatalog.strike])
+        )
         guard let minion = viewModel.enemies.first(where: { $0.name == "Dread Wisp" }) else {
             Issue.record("Missing placeholder minion")
             return
         }
-        // Two strikes fell the 22 HP (+5 shield) wisp: 15−5 shield = 10, then 15.
+        // Three strikes fell the 22 HP (+5 shield) wisp: 12−5 shield = 7, then 12, then 12.
+        viewModel.tapEnemy(minion.id)
+        play(CardCatalog.strike, on: viewModel)
         viewModel.tapEnemy(minion.id)
         play(CardCatalog.strike, on: viewModel)
         viewModel.tapEnemy(minion.id)
@@ -455,8 +459,8 @@ struct BattleEngineTests {
 
     @Test func projectedDamageMatchesZoneBoost() {
         let viewModel = BattleViewModel(initialState: state(hand: [CardCatalog.strike], lucidity: 70))
-        // Vivid zone: 15 * 1.2 = 18.
-        #expect(viewModel.projectedDamage(of: CardCatalog.strike) == 18)
+        // Vivid zone: 12 * 1.2 = 14.4 → 14.
+        #expect(viewModel.projectedDamage(of: CardCatalog.strike) == 14)
         #expect(viewModel.cardDealsDamage(CardCatalog.strike))
         #expect(!viewModel.cardDealsDamage(CardCatalog.meditate))
         #expect(viewModel.cardDealsDamage(CardCatalog.focusedMind))
@@ -499,7 +503,7 @@ struct BattleEngineTests {
         #expect(viewModel.state.phase == .playerMain)
 
         play(CardCatalog.strike, on: viewModel)
-        #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth - 15)
+        #expect(viewModel.state.enemy.currentHealth == CardCatalog.nightmare.maxHealth - 12)
     }
 
     @Test func switchingToSelfOrUnknownIsNoOp() {
@@ -536,5 +540,116 @@ struct BattleEngineTests {
 
         viewModel.startNewDuel()
         #expect(viewModel.activeAllyID == CardCatalog.dreamer.id)
+    }
+}
+
+// MARK: - Campaign engine
+
+struct CampaignEngineTests {
+
+    private func enemy(_ name: String, health: Int, pattern: AttackPattern) -> Enemy {
+        Enemy(
+            id: UUID(),
+            name: name,
+            tier: .minion,
+            maxHealth: health,
+            pattern: pattern,
+            iconName: "pawprint.fill",
+            artName: "forest_wolf_full",
+            fullBodyArtName: "forest_wolf_full",
+            passive: nil
+        )
+    }
+
+    private func configuration(waves: [WaveSpec], party: [Hero] = [CardCatalog.wart, CardCatalog.archimedes]) -> BattleConfiguration {
+        BattleConfiguration(
+            title: "Test",
+            party: party,
+            waves: waves,
+            arenaArtName: "bg_moonlit_forest",
+            lanternDrift: 0,
+            deckCardIDs: Array(repeating: CardCatalog.strike.id, count: 10)
+        )
+    }
+
+    private func play(_ card: Card, on viewModel: BattleViewModel) {
+        guard let instance = viewModel.state.player.hand.first(where: { $0.cardID == card.id }) else {
+            Issue.record("Card \(card.name) not in hand")
+            return
+        }
+        viewModel.toggleSelection(of: instance)
+        viewModel.playSelectedCard()
+    }
+
+    @Test func scriptedBrainCyclesAndWindUpDoublesNextAttack() {
+        var brain = EnemyBrain(
+            pattern: .scripted(cycle: [.buff(.windUp(multiplier: 2)), .attack(10), .brace(shield: 4)]),
+            turn: 1,
+            healthFraction: 1
+        )
+        #expect(brain.intent == .buff("Wind-up ×2"))
+        _ = brain.execute()
+        brain.plan(turn: 2, healthFraction: 1)
+        #expect(brain.intent == .attack(20))
+        #expect(brain.execute() == .attack(20))
+        brain.plan(turn: 3, healthFraction: 1)
+        #expect(brain.intent == .brace(4))
+    }
+
+    @Test func phasedBrainEscalatesBelowThreshold() {
+        let pattern: AttackPattern = .phased(phases: [
+            EnemyPhase(healthThreshold: 1.0, cycle: [.attack(5)]),
+            EnemyPhase(healthThreshold: 0.5, cycle: [.attack(25)]),
+        ])
+        var healthy = EnemyBrain(pattern: pattern, turn: 1, healthFraction: 0.9)
+        #expect(healthy.intent == .attack(5))
+        healthy.plan(turn: 2, healthFraction: 0.4)
+        #expect(healthy.intent == .attack(25))
+    }
+
+    @Test func clearingAWaveSpawnsTheNextOne() {
+        let first = enemy("Wisp", health: 5, pattern: .scripted(cycle: [.attack(1)]))
+        let second = enemy("Knight", health: 40, pattern: .scripted(cycle: [.attack(1)]))
+        let viewModel = BattleViewModel(
+            configuration: configuration(waves: [WaveSpec(enemies: [first]), WaveSpec(enemies: [second])])
+        )
+        #expect(viewModel.waveIndex == 0)
+        #expect(viewModel.enemies.first?.name == "Wisp")
+
+        play(CardCatalog.strike, on: viewModel)
+
+        #expect(viewModel.waveIndex == 1)
+        #expect(viewModel.enemies.count == 1)
+        #expect(viewModel.enemies.first?.name == "Knight")
+        #expect(viewModel.state.outcome == .ongoing)
+        #expect(viewModel.targetedEnemyID == viewModel.enemies.first?.id)
+    }
+
+    @Test func clearingTheLastWaveWins() {
+        let only = enemy("Wisp", health: 5, pattern: .scripted(cycle: [.attack(1)]))
+        let viewModel = BattleViewModel(configuration: configuration(waves: [WaveSpec(enemies: [only])]))
+        play(CardCatalog.strike, on: viewModel)
+        #expect(viewModel.state.outcome == .victory)
+        #expect(viewModel.state.phase == .gameOver)
+    }
+
+    @Test func partyDeckMixesHeroPoolsWithLanternCards() {
+        let ids = CardCatalog.partyDeckCardIDs(for: [CardCatalog.wart, CardCatalog.archimedes])
+        #expect(ids.contains(CardCatalog.deepBreath.id))
+        #expect(ids.contains(CardCatalog.wartSwing.id))
+        #expect(ids.contains(CardCatalog.owlInsight.id))
+        #expect(ids.count == 10 + 10 + 7)
+    }
+
+    @Test func leadHeroIsTheOnlyPassiveThatApplies() {
+        let foe = enemy("Wisp", health: 60, pattern: .scripted(cycle: [.attack(1)]))
+        // Archimedes leads: his bonus draw applies, Wart's nothing.
+        let viewModel = BattleViewModel(
+            configuration: configuration(waves: [WaveSpec(enemies: [foe])], party: [CardCatalog.wart, CardCatalog.archimedes])
+        )
+        #expect(viewModel.allies.first?.isActive == true)
+        viewModel.switchActiveHero(to: CardCatalog.archimedes.id)
+        #expect(viewModel.activeAllyID == CardCatalog.archimedes.id)
+        #expect(viewModel.state.player.currentHealth == CardCatalog.archimedes.maxHealth)
     }
 }
