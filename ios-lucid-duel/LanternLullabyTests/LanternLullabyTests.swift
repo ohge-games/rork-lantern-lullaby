@@ -5,6 +5,7 @@
 //  Created by Rork on August 8, 2026.
 //
 
+import CoreGraphics
 import Testing
 import Foundation
 @testable import LanternLullaby
@@ -950,6 +951,76 @@ struct CampaignEngineTests {
         #expect(ending?.isChapterFinale == true)
         #expect(ending?.nextStageName == nil)
         #expect(ending?.nextChapterTitle == "The Queen of Air and Darkness")
+    }
+
+    @Test func aFallenEnemyStopsBeingADropTargetAndTheSurvivorTakesOver() {
+        let front = enemy("Knight", health: 6, pattern: .scripted(cycle: [.attack(1)]))
+        let back = enemy("Knight", health: 45, pattern: .scripted(cycle: [.attack(1)]))
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [front, back])],
+            party: [CardCatalog.wart]
+        ))
+        let ids = viewModel.enemies.map(\.id)
+        #expect(ids.count == 2)
+        // Two copies of the same definition must still be distinct.
+        #expect(ids[0] != ids[1])
+
+        // Stand them where the battlefield would, overlapping as they do.
+        let frontFrame = CGRect(x: 1200, y: 400, width: 300, height: 400)
+        let backFrame = CGRect(x: 1400, y: 380, width: 300, height: 380)
+        viewModel.reportEnemyFrame(ids[0], frame: frontFrame)
+        viewModel.reportEnemyFrame(ids[1], frame: backFrame)
+
+        // While both live, the overlap belongs to the front enemy.
+        #expect(viewModel.enemyID(at: CGPoint(x: 1450, y: 600)) == ids[0])
+
+        play(CardCatalog.strike, on: viewModel)
+        #expect(viewModel.enemies[0].health == 0)
+        #expect(viewModel.state.outcome == .ongoing)
+
+        // The corpse is out of the way and the survivor inherits the target.
+        #expect(viewModel.targetedEnemyID == ids[1])
+        #expect(viewModel.enemyID(at: CGPoint(x: 1250, y: 600)) == nil)
+        #expect(viewModel.enemyID(at: CGPoint(x: 1450, y: 600)) == ids[1])
+
+        // And it can still be hit.
+        play(CardCatalog.strike, on: viewModel)
+        #expect(viewModel.enemies[1].health < 45)
+    }
+
+    @Test func aNewWaveDoesNotInheritTheLastWavesDropTargets() {
+        let first = enemy("Wisp", health: 5, pattern: .scripted(cycle: [.attack(1)]))
+        let second = enemy("Wolf", health: 40, pattern: .scripted(cycle: [.attack(1)]))
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [first]), WaveSpec(enemies: [second])],
+            party: [CardCatalog.wart]
+        ))
+        let firstID = viewModel.enemies[0].id
+        let frame = CGRect(x: 1200, y: 400, width: 300, height: 400)
+        viewModel.reportEnemyFrame(firstID, frame: frame)
+        #expect(viewModel.enemyID(at: CGPoint(x: 1300, y: 600)) == firstID)
+
+        play(CardCatalog.strike, on: viewModel)
+        #expect(viewModel.waveIndex == 1)
+
+        // The arriving wolf has its own id and has not reported a frame yet,
+        // so nothing is droppable until the view measures it again.
+        #expect(viewModel.enemies[0].id != firstID)
+        #expect(viewModel.enemyID(at: CGPoint(x: 1300, y: 600)) == nil)
+    }
+
+    @Test func everyHeroAndEnemyFacesTheOtherSide() {
+        // All hero art was painted facing left and all heroes stand left.
+        for hero in CardCatalog.playableHeroes {
+            #expect(ArtCatalog.isHeroMirrored(hero))
+        }
+        // The generated enemy art is the mirror case.
+        #expect(ArtCatalog.isEnemyMirrored(EnemyCatalogBook1.waywardKnight))
+        #expect(ArtCatalog.isEnemyMirrored(EnemyCatalogBook1.forestWolf))
+        #expect(ArtCatalog.isEnemyMirrored(EnemyCatalogBook1.mordred))
+        // The two legacy sandbox minions were drawn facing left already.
+        #expect(!ArtCatalog.isEnemyMirrored(BattleConfiguration.nightShade))
+        #expect(!ArtCatalog.isEnemyMirrored(BattleConfiguration.dreadWisp))
     }
 
     @Test func leadHeroIsTheOnlyPassiveThatApplies() {

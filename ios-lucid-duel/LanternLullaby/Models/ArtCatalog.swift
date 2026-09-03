@@ -50,31 +50,26 @@ enum ArtCatalog {
         heroFullBodyNames[hero.id] ?? "child_with_lantern"
     }
 
-    /// Heroes stand on the left and should face right; these paintings
-    /// were drawn facing left, so the battlefield mirrors them.
-    private static let mirroredHeroes: Set<UUID> = [
-        CardCatalog.HeroIDs.archimedes,
-        CardCatalog.HeroIDs.bedivere,
-        CardCatalog.HeroIDs.galahad,
-        CardCatalog.HeroIDs.merlin,
-    ]
+    /// Every hero painting was commissioned facing left, back when the
+    /// party stood on the right of the field. The party stands on the left
+    /// now, so by default every hero is mirrored to face the enemy. Any
+    /// future art drawn facing right belongs in this exception set.
+    private static let heroesFacingRight: Set<UUID> = []
 
-    /// Enemies stand on the right and should face left; these were drawn
-    /// facing right.
-    private static let mirroredEnemyArt: Set<String> = [
-        "enchanted_hound_full",
-        "forest_wolf_full",
-        "giant_boar_full",
-        "sir_ector_full",
-        "shadow_villain_cloak",
+    /// The mirror image of the hero rule: every enemy was painted facing
+    /// right and every enemy stands on the right, so they are all flipped
+    /// to face the party. Art drawn facing left belongs in this set.
+    private static let enemyArtFacingLeft: Set<String> = [
+        "night_shade_fog_creature",
+        "dread_wisp_spirit_2",
     ]
 
     static func isHeroMirrored(_ hero: Hero) -> Bool {
-        mirroredHeroes.contains(hero.id)
+        !heroesFacingRight.contains(hero.id)
     }
 
     static func isEnemyMirrored(_ enemy: Enemy) -> Bool {
-        mirroredEnemyArt.contains(enemy.fullBodyArtName)
+        !enemyArtFacingLeft.contains(enemy.fullBodyArtName)
     }
 
     static func heroPortrait(for hero: Hero) -> String {

@@ -56,6 +56,10 @@ struct BattlefieldCharacterView: View {
         }
         .buttonStyle(PressableButtonStyle())
         .disabled(isDown)
+        // A disabled button still eats touches, and a fallen figure overlaps
+        // the one behind it — which left the survivor untappable once the
+        // front enemy dropped. Take the corpse out of hit testing entirely.
+        .allowsHitTesting(!isDown)
         .opacity(isDown ? 0.38 : 1)
         .saturation(isDown ? 0.15 : 1)
         .overlay(alignment: .top) {

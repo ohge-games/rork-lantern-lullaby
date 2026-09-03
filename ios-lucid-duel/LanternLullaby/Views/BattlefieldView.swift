@@ -7,7 +7,9 @@ import SwiftUI
 /// Every figure is planted on a ground line rather than floated at a
 /// center point, so feet sit on the painted path. The lead hero and the
 /// primary enemy stand nearest the center on the lowest, closest line;
-/// supports stand behind on higher, farther lines and draw smaller.
+/// supports recede toward their own edge of the page, higher up the path
+/// and drawn smaller. The slots are spaced widely enough that the name
+/// plates above them never stack.
 ///
 /// Tapping an enemy targets it (or confirms a selected attack on it);
 /// tapping a hero shows their passive. The party's order is set before
@@ -16,6 +18,22 @@ struct BattlefieldView: View {
     let viewModel: BattleViewModel
 
     @State private var tooltipAllyID: UUID?
+
+    /// Where the enemy row stands, front slot first. The hero side is this
+    /// mirrored across the screen.
+    private static let enemyPositions: [(x: CGFloat, ground: CGFloat, isFront: Bool)] = [
+        (0.655, 0.94, true),
+        (0.81, 0.79, false),
+        (0.925, 0.72, false),
+    ]
+
+    private static let heroBackPositions: [(x: CGFloat, ground: CGFloat)] = [
+        (0.075, 0.72),
+        (0.19, 0.79),
+        (0.305, 0.86),
+    ]
+
+    private static let heroLeadPosition: (x: CGFloat, ground: CGFloat) = (0.345, 0.94)
 
     var body: some View {
         GeometryReader { geo in
@@ -53,14 +71,7 @@ struct BattlefieldView: View {
         let allies = viewModel.allies
         let lead = allies.first { $0.isActive }
         let benched = allies.filter { !$0.isActive }
-
-        // Back row: farther up the path, smaller, staggered so they read.
-        // Three slots, because a guest hero can make the party four strong.
-        let backSlots: [(x: CGFloat, ground: CGFloat)] = [
-            (0.055, 0.74),
-            (0.135, 0.80),
-            (0.215, 0.86),
-        ]
+        let backSlots = Self.heroBackPositions
 
         return ZStack {
             ForEach(Array(benched.enumerated()), id: \.element.id) { index, ally in
@@ -76,8 +87,8 @@ struct BattlefieldView: View {
             if let lead {
                 planted(
                     heroView(lead, bodyHeight: frontHeight, breathDelay: 0),
-                    x: size.width * 0.245,
-                    ground: size.height * 0.92
+                    x: size.width * Self.heroLeadPosition.x,
+                    ground: size.height * Self.heroLeadPosition.ground
                 )
             }
         }
@@ -93,7 +104,7 @@ struct BattlefieldView: View {
             shield: ally.shield,
             healthTint: DreamTheme.healthGreen,
             bodyHeight: bodyHeight,
-            isMirrored: hero.map { ArtCatalog.isHeroMirrored($0) } ?? false,
+            isMirrored: hero.map { ArtCatalog.isHeroMirrored($0) } ?? true,
             targetTint: DreamTheme.gold,
             showsActiveTag: ally.isActive,
             isTargeted: viewModel.hoveredAllyID == ally.id,
@@ -121,46 +132,46 @@ struct BattlefieldView: View {
 
     private func enemySide(size: CGSize, frontHeight: CGFloat, backHeight: CGFloat) -> some View {
         // enemies[0] is the primary — it stands in front, nearest the center.
-        let enemies = viewModel.enemies
-        let slots: [(index: Int, x: CGFloat, ground: CGFloat, height: CGFloat)] = [
-            (2, 0.925, 0.78, backHeight),
-            (1, 0.84, 0.84, backHeight),
-            (0, 0.755, 0.92, frontHeight),
-        ]
+        let positions = Self.enemyPositions
+        let placed = viewModel.enemies.enumerated()
+            .filter { positions.indices.contains($0.offset) }
+        // Drawn back to front so the primary overlaps its supports, and keyed
+        // by combatant id so an arriving wave re-reports its drop targets
+        // instead of inheriting the last wave's stale frames.
+        let backToFront = Array(placed.reversed())
 
         return ZStack {
-            ForEach(slots, id: \.index) { slot in
-                if enemies.indices.contains(slot.index) {
-                    let enemy = enemies[slot.index]
-                    let definition = viewModel.enemyLine.first { $0.id == enemy.id }?.enemy
-                    planted(
-                        BattlefieldCharacterView(
-                            artName: enemy.fullBodyArtName,
-                            name: enemy.name,
-                            health: enemy.health,
-                            maxHealth: enemy.maxHealth,
-                            shield: enemy.shield,
-                            healthTint: DreamTheme.danger,
-                            bodyHeight: slot.height,
-                            intent: enemy.intent,
-                            nextIntent: enemy.nextIntent,
-                            intentTargetName: viewModel.leadHeroName,
-                            isMirrored: definition.map { ArtCatalog.isEnemyMirrored($0) } ?? false,
-                            isTargeted: viewModel.targetedEnemyID == enemy.id,
-                            isTargetable: viewModel.isTargetingActive && enemy.health > 0,
-                            previewDamage: previewDamage(for: enemy),
-                            hit: viewModel.enemyHitTargetID == enemy.id ? viewModel.enemyHit : nil,
-                            breathDelay: Double(slot.index) * 0.55,
-                            onFrameChange: { viewModel.reportEnemyFrame(enemy.id, frame: $0) },
-                            onTap: { viewModel.tapEnemy(enemy.id) }
-                        )
-                        .scaleEffect(viewModel.actingEnemyID == enemy.id ? 1.05 : 1, anchor: .bottom)
-                        .animation(.spring(response: 0.2, dampingFraction: 0.5), value: viewModel.actingEnemyID),
-                        x: size.width * slot.x,
-                        ground: size.height * slot.ground
+            ForEach(backToFront, id: \.element.id) { pair in
+                let enemy = pair.element
+                let slot = positions[pair.offset]
+                let definition = viewModel.enemyLine.first { $0.id == enemy.id }?.enemy
+                planted(
+                    BattlefieldCharacterView(
+                        artName: enemy.fullBodyArtName,
+                        name: enemy.name,
+                        health: enemy.health,
+                        maxHealth: enemy.maxHealth,
+                        shield: enemy.shield,
+                        healthTint: DreamTheme.danger,
+                        bodyHeight: slot.isFront ? frontHeight : backHeight,
+                        intent: enemy.intent,
+                        nextIntent: enemy.nextIntent,
+                        intentTargetName: viewModel.leadHeroName,
+                        isMirrored: definition.map { ArtCatalog.isEnemyMirrored($0) } ?? true,
+                        isTargeted: viewModel.targetedEnemyID == enemy.id,
+                        isTargetable: viewModel.isTargetingActive && enemy.health > 0,
+                        previewDamage: previewDamage(for: enemy),
+                        hit: viewModel.enemyHitTargetID == enemy.id ? viewModel.enemyHit : nil,
+                        breathDelay: Double(pair.offset) * 0.55,
+                        onFrameChange: { viewModel.reportEnemyFrame(enemy.id, frame: $0) },
+                        onTap: { viewModel.tapEnemy(enemy.id) }
                     )
-                    .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .bottom)))
-                }
+                    .scaleEffect(viewModel.actingEnemyID == enemy.id ? 1.05 : 1, anchor: .bottom)
+                    .animation(.spring(response: 0.2, dampingFraction: 0.5), value: viewModel.actingEnemyID),
+                    x: size.width * slot.x,
+                    ground: size.height * slot.ground
+                )
+                .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .bottom)))
             }
         }
         .opacity(viewModel.isEnemyThinking ? 0.92 : 1)

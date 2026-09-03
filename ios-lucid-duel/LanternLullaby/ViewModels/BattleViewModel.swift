@@ -646,7 +646,7 @@ final class BattleViewModel {
     func allyID(at point: CGPoint) -> UUID? {
         for member in party where !member.isDown {
             if let frame = allyFrames[member.id],
-               frame.insetBy(dx: -16, dy: -16).contains(point) {
+               frame.insetBy(dx: -Self.dropSlop, dy: -Self.dropSlop).contains(point) {
                 return member.id
             }
         }
@@ -713,11 +713,15 @@ final class BattleViewModel {
         enemyFrames[id] = frame
     }
 
-    /// The living enemy under a drag location, front-most first.
+    /// How far outside a figure a fingertip still counts as being on it.
+    private static let dropSlop: CGFloat = 28
+
+    /// The living enemy under a drag location, front-most first. Fallen
+    /// figures are skipped, so a corpse never shields the survivor behind it.
     func enemyID(at point: CGPoint) -> UUID? {
         for enemy in enemyLine where !enemy.isDown {
             if let frame = enemyFrames[enemy.id],
-               frame.insetBy(dx: -16, dy: -16).contains(point) {
+               frame.insetBy(dx: -Self.dropSlop, dy: -Self.dropSlop).contains(point) {
                 return enemy.id
             }
         }
@@ -888,6 +892,9 @@ final class BattleViewModel {
         }
 
         enemyLine = line
+        // Frames are keyed by combatant id and every wave mints new ones,
+        // so stale entries would leave the arriving enemies un-droppable.
+        enemyFrames = [:]
         targetedEnemyID = line.first?.id ?? targetedEnemyID
         enemyHitTargetID = nil
         lastEnemyHealthPercent = 100
