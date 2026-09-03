@@ -110,6 +110,7 @@ struct BattleView: View {
         .sensoryFeedback(.selection, trigger: viewModel.targetedEnemyID)
         .sensoryFeedback(.impact(weight: .light), trigger: viewModel.heroSwitchTrigger)
         .sensoryFeedback(.impact(weight: .heavy), trigger: viewModel.waveTrigger)
+        .sensoryFeedback(.impact(weight: .heavy), trigger: viewModel.abilityTrigger)
         .animation(.easeInOut(duration: 0.3), value: viewModel.state.phase)
         .animation(.easeInOut(duration: 0.3), value: viewModel.narrativePhase)
         .animation(.easeInOut(duration: 0.25), value: viewModel.tutorialIndex)
@@ -331,6 +332,36 @@ struct BattleView: View {
             )
             .scaleEffect(0.68, anchor: .bottom)
             .frame(width: 96, height: 158, alignment: .bottom)
+            // Dropping a card here lets it go and calms the flame.
+            .overlay {
+                if viewModel.isDraggingCard {
+                    RoundedRectangle(cornerRadius: 18)
+                        .stroke(
+                            viewModel.isReleaseTargeted ? DreamTheme.gold : .white.opacity(0.35),
+                            style: StrokeStyle(lineWidth: viewModel.isReleaseTargeted ? 2.5 : 1.5, dash: [6, 5])
+                        )
+                        .background(
+                            RoundedRectangle(cornerRadius: 18)
+                                .fill(DreamTheme.gold.opacity(viewModel.isReleaseTargeted ? 0.18 : 0))
+                        )
+                        .overlay(alignment: .top) {
+                            Text(viewModel.isReleaseTargeted ? "LET IT GO" : "RELEASE")
+                                .font(.system(size: 8, weight: .heavy))
+                                .tracking(1)
+                                .foregroundStyle(viewModel.isReleaseTargeted ? DreamTheme.gold : .white.opacity(0.5))
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Capsule().fill(.black.opacity(0.5)))
+                                .offset(y: -10)
+                        }
+                        .transition(.opacity)
+                }
+            }
+            .onGeometryChange(for: CGRect.self) { proxy in
+                proxy.frame(in: .global)
+            } action: { frame in
+                viewModel.reportLanternFrame(frame)
+            }
 
             endTurnButton
         }

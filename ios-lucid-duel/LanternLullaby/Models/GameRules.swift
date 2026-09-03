@@ -24,6 +24,11 @@ nonisolated enum GameRules {
     /// And the hand runs this much deeper while Drifting.
     static let driftingBonusDraw: Int = 1
 
+    /// Letting a card go to the lantern calms the flame by this much. It
+    /// is always available, which is the point: a hand with no Relax card
+    /// in it can still answer a meter that has climbed too high.
+    static let releaseRelief: Int = 5
+
     /// Focus Strain: leaning on one kind of card wears the dream thin.
     /// Each card of a type already played this turn adds this much to the
     /// next one's Lucidity cost, so the second attack in a turn costs +1,

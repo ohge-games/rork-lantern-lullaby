@@ -10,6 +10,9 @@ import SwiftUI
 ///   heroes.
 /// - Dual-direction cards: release on either to open the branch picker.
 /// - Cards that need no target (Relax, draw): just pull up and release.
+/// - Any card at all: drop it on the lantern to let it go — it leaves the
+///   hand and the flame calms, which is the way out of a turn where the
+///   meter is too high and no Relax card came up.
 /// Releasing anywhere else snaps the thread back.
 ///
 /// The whole hand always fans from the center; bigger hands simply pack
@@ -147,7 +150,9 @@ struct HandView: View {
             let enemyUnderFinger = viewModel.enemyID(at: value.location)
             let allyUnderFinger = viewModel.allyID(at: value.location)
 
-            if !card.needsTarget {
+            if viewModel.isOverLantern(value.location) {
+                viewModel.releaseSelectedCard()
+            } else if !card.needsTarget {
                 // No target needed: pulling clear of the hand plays it.
                 if viewModel.isLiftedForGlobalPlay {
                     viewModel.playSelectedCard()
@@ -208,6 +213,9 @@ struct HandView: View {
               let instance = viewModel.state.player.hand.first(where: { $0.id == draggingID }),
               let card = viewModel.card(for: instance) else { return nil }
 
+        if viewModel.isReleaseTargeted {
+            return "Let it go — the lantern dims \(GameRules.releaseRelief)"
+        }
         if viewModel.hasDropTarget {
             return card.choices != nil ? "Release to choose a path" : "Release to play"
         }

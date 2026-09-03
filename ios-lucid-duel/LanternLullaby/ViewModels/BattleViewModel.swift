@@ -217,6 +217,12 @@ final class BattleViewModel {
     /// Strain. Cleared at the start of every player turn.
     private(set) var cardsPlayedThisTurn: [CardType: Int] = [:]
 
+    /// Charge each hero has built toward their active ability, by hero id.
+    /// Playing a card raises its owner's charge whether they are leading or
+    /// waiting, so a deck built around someone pays off from the back row.
+    /// Charge persists across turns and resets when the ability fires.
+    private(set) var resonance: [UUID: Int] = [:]
+
     /// Current turn number, cached for growing passives (Escanor).
     private var currentTurnForPassives: Int { state.turnNumber }
 
@@ -531,6 +537,70 @@ final class BattleViewModel {
     /// True while the lantern is low enough to bend the dream.
     var isDrifting: Bool { state.player.zone.isDrifting }
 
+    // MARK: - Hero abilities
+
+    /// Charge built toward this hero's ability, capped at what it needs.
+    func charge(for heroID: UUID) -> Int {
+        guard let ability = HeroAbilities.ability(forHeroID: heroID) else { return 0 }
+        return min(resonance[heroID] ?? 0, ability.chargeRequired)
+    }
+
+    func ability(for heroID: UUID) -> HeroAbility? {
+        HeroAbilities.ability(forHeroID: heroID)
+    }
+
+    /// True when this hero's ability is charged and the moment allows it.
+    func isAbilityReady(for heroID: UUID) -> Bool {
+        guard let ability = HeroAbilities.ability(forHeroID: heroID),
+              let member = party.first(where: { $0.id == heroID }),
+              !member.isDown,
+              state.phase == .playerMain,
+              state.outcome == .ongoing,
+              !isBattlePausedForDialogue,
+              !isTutorialBlocking else { return false }
+        return (resonance[heroID] ?? 0) >= ability.chargeRequired
+    }
+
+    /// Fires a charged ability. Free in Lucidity — that is the whole point
+    /// of it — and it spends the charge whether or not every effect lands.
+    func fireAbility(for heroID: UUID) {
+        guard isAbilityReady(for: heroID),
+              let ability = HeroAbilities.ability(forHeroID: heroID),
+              let member = party.first(where: { $0.id == heroID }) else { return }
+
+        resonance[heroID] = 0
+        selectedInstanceID = nil
+
+        // Abilities read as offensive so Vivid still rewards a bright dream,
+        // and they act through the hero who fired them, so Galahad's light
+        // mends Galahad even when somebody else is holding the front.
+        resolvingAllyTarget = heroID
+        for effect in ability.effects {
+            resolve(effect, from: Self.abilityCarrier, zoneAtPlay: state.player.zone)
+        }
+        resolvingAllyTarget = nil
+
+        abilityTrigger += 1
+        showNotice("\(member.hero.name) — \(ability.name)")
+        emitSound(ability.name.lowercased())
+        refreshOutcome()
+    }
+
+    /// Increments whenever an ability fires; drives the flash and haptic.
+    private(set) var abilityTrigger: Int = 0
+
+    /// A stand-in card so ability effects run through the same resolver.
+    /// Offensive, zero cost, owned by nobody.
+    private static let abilityCarrier = Card(
+        id: UUID(uuidString: "A9000000-0000-4000-8000-000000000001")!,
+        name: "Ability",
+        text: "",
+        lucidityCost: 0,
+        cardType: .offensive,
+        effects: [],
+        heroID: nil
+    )
+
     /// The enemy row of the current wave: primary first.
     var enemies: [EnemyMember] {
         let foresight = isDrifting
@@ -642,17 +712,6 @@ final class BattleViewModel {
         allyFrames[id] = frame
     }
 
-    /// The living hero under a drag location.
-    func allyID(at point: CGPoint) -> UUID? {
-        for member in party where !member.isDown {
-            if let frame = allyFrames[member.id],
-               frame.insetBy(dx: -Self.dropSlop, dy: -Self.dropSlop).contains(point) {
-                return member.id
-            }
-        }
-        return nil
-    }
-
     /// True while the dragged card can be dropped on one of your heroes:
     /// support cards always, dual-direction cards too.
     var isAllyTargetingActive: Bool {
@@ -676,6 +735,11 @@ final class BattleViewModel {
         dragAnchor = anchor
         dragPoint = point
 
+        guard !isOverLantern(point) else {
+            hoveredAllyID = nil
+            return
+        }
+
         guard card.needsTarget else {
             hoveredAllyID = nil
             return
@@ -692,9 +756,16 @@ final class BattleViewModel {
         }
     }
 
+    /// True while the dragged card is held over the lantern.
+    var isReleaseTargeted: Bool {
+        guard isDraggingCard, let point = dragPoint else { return false }
+        return isOverLantern(point)
+    }
+
     /// True when releasing now would play the card.
     var hasDropTarget: Bool {
         guard isDraggingCard, let card = selectedCard, let point = dragPoint else { return false }
+        if isOverLantern(point) { return true }
         guard card.needsTarget else { return isLiftedForGlobalPlay }
         if cardDealsDamage(card), enemyID(at: point) != nil { return true }
         if card.choices != nil || !cardDealsDamage(card), allyID(at: point) != nil { return true }
@@ -703,6 +774,42 @@ final class BattleViewModel {
 
     func setPendingAllyTarget(_ id: UUID?) {
         pendingAllyTarget = id
+    }
+
+    // MARK: - Letting a card go
+
+    /// Where the lantern sits on screen, so a card can be dropped into it.
+    @ObservationIgnored private var lanternFrame: CGRect = .zero
+
+    func reportLanternFrame(_ frame: CGRect) {
+        lanternFrame = frame
+    }
+
+    /// True while the dragged card is held over the lantern.
+    func isOverLantern(_ point: CGPoint) -> Bool {
+        lanternFrame.insetBy(dx: -Self.dropSlop, dy: -Self.dropSlop).contains(point)
+    }
+
+    /// Feeds the selected card to the flame: it goes to the discard pile
+    /// and the lantern dims. No card effect resolves and no Focus Strain
+    /// accrues — you are spending the card itself, not playing it.
+    ///
+    /// This is the release valve for a hand with no Relax card in it, which
+    /// is otherwise a dead end once the meter is near Awakening.
+    func releaseSelectedCard() {
+        guard !isBattlePausedForDialogue, !isTutorialBlocking else { return }
+        guard state.phase == .playerMain,
+              state.outcome == .ongoing,
+              let instance = selectedInstance else { return }
+
+        state.player.hand.removeAll { $0.id == instance.id }
+        state.player.discardPile.append(instance)
+        selectedInstanceID = nil
+        pendingAllyTarget = nil
+
+        applyPlayerLucidityDelta(-GameRules.releaseRelief)
+        emitSound("let it go")
+        refreshOutcome()
     }
 
     /// Battlefield frames reported by enemy figures (global space), used
@@ -716,16 +823,57 @@ final class BattleViewModel {
     /// How far outside a figure a fingertip still counts as being on it.
     private static let dropSlop: CGFloat = 28
 
-    /// The living enemy under a drag location, front-most first. Fallen
-    /// figures are skipped, so a corpse never shields the survivor behind it.
+    /// How far from the *edge* of a figure the aim still snaps to it.
+    /// Asking a player to land a fingertip inside a painted silhouette is a
+    /// losing game on a phone, and it left survivors untargetable when a
+    /// fallen enemy overlapped them, so aim snaps to the nearest living
+    /// figure instead. Measured to the nearest point on the frame rather
+    /// than its centre, because these figures are tall and narrow and a
+    /// centre-distance would favour whoever happens to be shortest.
+    private static let snapRadius: CGFloat = 200
+
+    /// The living enemy a drag is aiming at: the front-most figure under
+    /// the finger, or failing that the nearest one within reach.
     func enemyID(at point: CGPoint) -> UUID? {
-        for enemy in enemyLine where !enemy.isDown {
-            if let frame = enemyFrames[enemy.id],
-               frame.insetBy(dx: -Self.dropSlop, dy: -Self.dropSlop).contains(point) {
-                return enemy.id
+        Self.target(at: point, among: enemyLine.filter { !$0.isDown }.map(\.id), frames: enemyFrames)
+    }
+
+    /// The living hero a drag is aiming at, by the same rule.
+    func allyID(at point: CGPoint) -> UUID? {
+        Self.target(at: point, among: party.filter { !$0.isDown }.map(\.id), frames: allyFrames)
+    }
+
+    /// Containment first, so an unambiguous drop always wins; then the
+    /// nearest frame centre within `snapRadius`.
+    private static func target(
+        at point: CGPoint,
+        among ids: [UUID],
+        frames: [UUID: CGRect]
+    ) -> UUID? {
+        for id in ids {
+            if let frame = frames[id],
+               frame.insetBy(dx: -dropSlop, dy: -dropSlop).contains(point) {
+                return id
             }
         }
-        return nil
+
+        var best: (id: UUID, distance: CGFloat)?
+        for id in ids {
+            guard let frame = frames[id] else { continue }
+            let distance = Self.distance(from: point, to: frame)
+            guard distance <= snapRadius else { continue }
+            if best == nil || distance < best!.distance {
+                best = (id, distance)
+            }
+        }
+        return best?.id
+    }
+
+    /// Shortest distance from a point to a rectangle; zero when inside.
+    private static func distance(from point: CGPoint, to rect: CGRect) -> CGFloat {
+        let dx = max(rect.minX - point.x, 0, point.x - rect.maxX)
+        let dy = max(rect.minY - point.y, 0, point.y - rect.maxY)
+        return hypot(dx, dy)
     }
 
     /// Lifts a card out of the fan: it becomes the selected card so zone
@@ -803,6 +951,11 @@ final class BattleViewModel {
         }
         resolvingAllyTarget = nil
 
+        // The card's owner resonates, wherever they are standing.
+        if let owner = card.heroID, party.contains(where: { $0.id == owner }) {
+            resonance[owner, default: 0] += 1
+        }
+
         playImpactTrigger += 1
         emitSound("card played")
         tutorialEvent(.cardPlayed)
@@ -835,6 +988,7 @@ final class BattleViewModel {
         actingEnemyID = nil
         isFirstCardThisTurn = true
         cardsPlayedThisTurn = [:]
+        resonance = [:]
         enemyHitTargetID = nil
         playerHitTargetID = nil
         pendingAllyTarget = nil
@@ -1123,8 +1277,11 @@ final class BattleViewModel {
         return reduced
     }
 
+    /// Heals whoever the card or ability is acting through: the hero it was
+    /// dropped on when there is one, otherwise the lead.
     private func healLead(_ amount: Int) {
-        guard let index = party.firstIndex(where: { $0.id == activeAllyID }) else { return }
+        let targetID = resolvingAllyTarget ?? activeAllyID
+        guard let index = party.firstIndex(where: { $0.id == targetID }) else { return }
         let maxHealth = party[index].hero.maxHealth
         party[index].health = min(maxHealth, party[index].health + amount)
         syncLeadMirror()

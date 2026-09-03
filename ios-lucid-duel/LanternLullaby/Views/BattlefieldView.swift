@@ -55,6 +55,7 @@ struct BattlefieldView: View {
             .animation(.spring(response: 0.3, dampingFraction: 0.8), value: tooltipAllyID)
             .animation(.spring(response: 0.38, dampingFraction: 0.72), value: viewModel.activeAllyID)
             .animation(.easeInOut(duration: 0.35), value: viewModel.waveIndex)
+            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: viewModel.abilityTrigger)
         }
     }
 
@@ -109,6 +110,10 @@ struct BattlefieldView: View {
             showsActiveTag: ally.isActive,
             isTargeted: viewModel.hoveredAllyID == ally.id,
             isTargetable: viewModel.isAllyTargetingActive && ally.health > 0,
+            ability: viewModel.ability(for: ally.id),
+            abilityCharge: viewModel.charge(for: ally.id),
+            isAbilityReady: viewModel.isAbilityReady(for: ally.id),
+            onFireAbility: { viewModel.fireAbility(for: ally.id) },
             hit: viewModel.playerHitTargetID == ally.id ? viewModel.playerHit : nil,
             breathDelay: breathDelay,
             onFrameChange: { viewModel.reportAllyFrame(ally.id, frame: $0) },
@@ -203,6 +208,16 @@ struct BattlefieldView: View {
                     .font(.system(size: 10))
                     .foregroundStyle(.white.opacity(0.75))
                     .fixedSize(horizontal: false, vertical: true)
+                if let ability = viewModel.ability(for: ally.id) {
+                    Text("\(ability.name) · \(viewModel.charge(for: ally.id))/\(ability.chargeRequired)")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(DreamTheme.gold)
+                        .padding(.top, 2)
+                    Text(ability.text)
+                        .font(.system(size: 10))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 if !ally.isActive {
                     Text("Passive is active only while leading.")
                         .font(.system(size: 9))

@@ -30,6 +30,11 @@ struct BattlefieldCharacterView: View {
     /// Reticle and preview colour: danger red for enemies, gold for heroes.
     var targetTint: Color = DreamTheme.danger
     var showsActiveTag: Bool = false
+    /// This hero's ability and how charged it is, when they have one.
+    var ability: HeroAbility? = nil
+    var abilityCharge: Int = 0
+    var isAbilityReady: Bool = false
+    var onFireAbility: (() -> Void)? = nil
     var isTargeted: Bool = false
     var isTargetable: Bool = false
     var previewDamage: Int? = nil
@@ -42,6 +47,7 @@ struct BattlefieldCharacterView: View {
 
     @State private var breathe = false
     @State private var reticleAngle: Double = 0
+    @State private var readyPulse = false
 
     private var isDown: Bool { health <= 0 }
 
@@ -140,11 +146,68 @@ struct BattlefieldCharacterView: View {
                     .monospacedDigit()
                     .foregroundStyle(.white.opacity(0.8))
             }
+
+            if let ability, !isDown {
+                abilityRow(ability)
+            }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 5)
         .background(RoundedRectangle(cornerRadius: 10).fill(.black.opacity(0.42)))
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: shield)
+    }
+
+    /// Charge pips while the ability builds, and a tappable gold capsule
+    /// the moment it is ready. One pip per card of this hero's you play.
+    @ViewBuilder
+    private func abilityRow(_ ability: HeroAbility) -> some View {
+        if isAbilityReady {
+            Button {
+                onFireAbility?()
+            } label: {
+                HStack(spacing: 3) {
+                    Image(systemName: "sparkle")
+                        .font(.system(size: 8, weight: .bold))
+                    Text(ability.name.uppercased())
+                        .font(.system(size: 8, weight: .heavy))
+                        .tracking(0.8)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                .foregroundStyle(.black)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(
+                    Capsule().fill(
+                        LinearGradient(
+                            colors: [DreamTheme.gold, DreamTheme.goldDeep],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                )
+                .shadow(color: DreamTheme.gold.opacity(readyPulse ? 0.9 : 0.35), radius: readyPulse ? 10 : 4)
+                .scaleEffect(readyPulse ? 1.05 : 1)
+            }
+            .buttonStyle(PressableButtonStyle())
+            .frame(maxWidth: barWidth + 40)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true)) {
+                    readyPulse = true
+                }
+            }
+            .onDisappear { readyPulse = false }
+        } else {
+            HStack(spacing: 2) {
+                ForEach(0..<ability.chargeRequired, id: \.self) { index in
+                    Capsule()
+                        .fill(index < abilityCharge ? DreamTheme.gold.opacity(0.85) : .white.opacity(0.16))
+                        .frame(height: 3)
+                }
+            }
+            .frame(width: barWidth)
+            .animation(.easeOut(duration: 0.25), value: abilityCharge)
+        }
     }
 
     // MARK: - Figure

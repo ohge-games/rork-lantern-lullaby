@@ -60,6 +60,13 @@ nonisolated struct TutorialScript: Hashable, Codable, Sendable {
             advance: .tap
         ),
         TutorialStep(
+            id: "party-ability",
+            title: "Abilities charge as you play",
+            text: "Under each hero's health bar is a row of pips. Playing one of that hero's cards fills a pip, wherever they are standing. Fill them all and a gold badge appears above them — tap it to fire their ability for free, no Lucidity at all.",
+            anchor: .hero,
+            advance: .tap
+        ),
+        TutorialStep(
             id: "party-order",
             title: "Choose before you sleep",
             text: "Set your party and its order on the book page, before the dream begins. In battle, only a card like Step Forward can change who leads.",
@@ -110,6 +117,13 @@ nonisolated struct TutorialScript: Hashable, Codable, Sendable {
             title: "Relax to dim the flame",
             text: "Cards like Deep Breath and Mental Shift lower Lucidity. Balance attacks with rest and the lantern stays steady.",
             anchor: .hand,
+            advance: .tap
+        ),
+        TutorialStep(
+            id: "release",
+            title: "When nothing helps, let one go",
+            text: "Drop any card onto the lantern instead of playing it. You lose the card and the flame dims 5. It is always there, so a hand of nothing but attacks can never trap you against Awakening.",
+            anchor: .lantern,
             advance: .tap
         ),
         TutorialStep(

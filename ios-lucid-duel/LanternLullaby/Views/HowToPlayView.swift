@@ -37,6 +37,18 @@ struct HowToPlayView: View {
             body: "Leaning on one kind of card wears the dream thin. The second card of a type you play in a turn costs +1 Lucidity, the third +2, and so on — attacks, defense and utility each strain on their own. The card shows its real cost, so a varied turn is always cheaper than a mono turn."
         ),
         RuleSection(
+            id: "release",
+            icon: "wind",
+            title: "Letting a card go",
+            body: "Drop any card onto the lantern instead of playing it. The card is spent and the flame dims 5. It is always available, so a hand full of attacks is never a dead end when the meter has climbed too close to Awakening."
+        ),
+        RuleSection(
+            id: "abilities",
+            icon: "sparkle",
+            title: "Hero abilities",
+            body: "Every hero has one active ability that charges as you play cards belonging to them — from the back row as well as the front. The pips under their health bar show the progress. When it fills, a gold badge appears above them: tap it to fire. Abilities cost no Lucidity, which makes them the answer to a turn where the lantern is too bright to play anything else."
+        ),
+        RuleSection(
             id: "party",
             icon: "person.3.fill",
             title: "Your party",

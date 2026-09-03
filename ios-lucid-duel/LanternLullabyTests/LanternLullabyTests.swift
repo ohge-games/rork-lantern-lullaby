@@ -706,10 +706,8 @@ struct CampaignEngineTests {
         #expect(viewModel.activeTutorialStep?.id == "play")
 
         play(CardCatalog.strike, on: viewModel)
-        #expect(viewModel.activeTutorialStep?.id == "relax")
-        viewModel.advanceTutorial()
-        #expect(viewModel.activeTutorialStep?.id == "strain")
-        viewModel.advanceTutorial()
+        // Any number of explanation steps may sit between the two actions.
+        while viewModel.isTutorialBlocking { viewModel.advanceTutorial() }
         #expect(viewModel.activeTutorialStep?.id == "endTurn")
         viewModel.endTurn()
         #expect(viewModel.activeTutorialStep?.id == "zones")
@@ -979,8 +977,10 @@ struct CampaignEngineTests {
         #expect(viewModel.state.outcome == .ongoing)
 
         // The corpse is out of the way and the survivor inherits the target.
+        // Aim over the fallen figure now snaps past it to the one still
+        // standing, rather than resolving to nothing at all.
         #expect(viewModel.targetedEnemyID == ids[1])
-        #expect(viewModel.enemyID(at: CGPoint(x: 1250, y: 600)) == nil)
+        #expect(viewModel.enemyID(at: CGPoint(x: 1250, y: 600)) == ids[1])
         #expect(viewModel.enemyID(at: CGPoint(x: 1450, y: 600)) == ids[1])
 
         // And it can still be hit.
@@ -1021,6 +1021,199 @@ struct CampaignEngineTests {
         // The two legacy sandbox minions were drawn facing left already.
         #expect(!ArtCatalog.isEnemyMirrored(BattleConfiguration.nightShade))
         #expect(!ArtCatalog.isEnemyMirrored(BattleConfiguration.dreadWisp))
+    }
+
+    // MARK: - Hero abilities
+
+    @Test func playingAHerosCardsChargesTheirAbilityFromAnyPosition() {
+        let foe = enemy("Wisp", health: 400, pattern: .scripted(cycle: [.brace(shield: 1)]))
+        // Wart leads; Archimedes waits at the back.
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [foe])],
+            party: [CardCatalog.wart, CardCatalog.archimedes],
+            deck: [CardCatalog.owlInsight.id, CardCatalog.owlFeathers.id,
+                   CardCatalog.owlForesight.id, CardCatalog.owlWisdom.id]
+        ))
+        let owl = CardCatalog.HeroIDs.archimedes
+        #expect(viewModel.activeAllyID == CardCatalog.HeroIDs.wart)
+        #expect(viewModel.charge(for: owl) == 0)
+        #expect(viewModel.ability(for: owl)?.chargeRequired == 4)
+
+        // Four of the owl's cards, played while he is on the bench.
+        play(CardCatalog.owlInsight, on: viewModel)
+        #expect(viewModel.charge(for: owl) == 1)
+        play(CardCatalog.owlFeathers, on: viewModel)
+        play(CardCatalog.owlForesight, on: viewModel)
+        #expect(!viewModel.isAbilityReady(for: owl))
+        play(CardCatalog.owlWisdom, on: viewModel)
+
+        #expect(viewModel.charge(for: owl) == 4)
+        #expect(viewModel.isAbilityReady(for: owl))
+        // Wart's own ability is untouched by another hero's cards.
+        #expect(viewModel.charge(for: CardCatalog.HeroIDs.wart) == 0)
+    }
+
+    @Test func firingAnAbilityIsFreeAndSpendsTheCharge() {
+        let foe = enemy("Knight", health: 200, pattern: .scripted(cycle: [.brace(shield: 1)]))
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [foe])],
+            party: [CardCatalog.lancelot],
+            // Steel Guard is Lancelot's cheapest card, so five of them charge
+            // the ability without driving the lantern into Awakening.
+            deck: Array(repeating: CardCatalog.steelGuard.id, count: 20)
+        ))
+        let lancelot = CardCatalog.HeroIDs.lancelot
+        guard let ability = viewModel.ability(for: lancelot) else {
+            Issue.record("Lancelot has no ability")
+            return
+        }
+        #expect(ability.chargeRequired == 5)
+
+        for _ in 0..<ability.chargeRequired {
+            play(CardCatalog.steelGuard, on: viewModel)
+        }
+        #expect(viewModel.state.outcome == .ongoing)
+        #expect(viewModel.isAbilityReady(for: lancelot))
+
+        let lucidityBefore = viewModel.state.player.lucidity
+        let healthBefore = viewModel.enemies[0].health
+        viewModel.fireAbility(for: lancelot)
+
+        // Free in Lucidity, and the enemy felt it.
+        #expect(viewModel.state.player.lucidity == lucidityBefore)
+        #expect(viewModel.enemies[0].health < healthBefore)
+        // The charge is spent.
+        #expect(viewModel.charge(for: lancelot) == 0)
+        #expect(!viewModel.isAbilityReady(for: lancelot))
+    }
+
+    @Test func anAbilityCannotFireBeforeItIsCharged() {
+        let foe = enemy("Knight", health: 200, pattern: .scripted(cycle: [.brace(shield: 1)]))
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [foe])],
+            party: [CardCatalog.lancelot],
+            deck: Array(repeating: CardCatalog.steelGuard.id, count: 20)
+        ))
+        let lancelot = CardCatalog.HeroIDs.lancelot
+        let healthBefore = viewModel.enemies[0].health
+        viewModel.fireAbility(for: lancelot)
+        #expect(viewModel.enemies[0].health == healthBefore)
+    }
+
+    @Test func healingAbilitiesMendTheHeroWhoFiredThem() {
+        let foe = enemy("Wisp", health: 400, pattern: .scripted(cycle: [.brace(shield: 1)]))
+        // Galahad waits at the back while Wart leads and takes the hits.
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [foe])],
+            party: [CardCatalog.wart, CardCatalog.galahad],
+            deck: Array(repeating: CardCatalog.holyStrike.id, count: 20)
+        ))
+        let galahad = CardCatalog.HeroIDs.galahad
+        guard let ability = viewModel.ability(for: galahad) else {
+            Issue.record("Galahad has no ability")
+            return
+        }
+        for _ in 0..<ability.chargeRequired {
+            play(CardCatalog.holyStrike, on: viewModel)
+        }
+        #expect(viewModel.isAbilityReady(for: galahad))
+
+        let lucidityBefore = viewModel.state.player.lucidity
+        viewModel.fireAbility(for: galahad)
+        // Grail's Light also calms the flame, which is its real job.
+        #expect(viewModel.state.player.lucidity == lucidityBefore - 8)
+        // Wart still leads afterwards.
+        #expect(viewModel.activeAllyID == CardCatalog.HeroIDs.wart)
+    }
+
+    @Test func everyPlayableHeroHasAnAbility() {
+        for hero in CardCatalog.playableHeroes {
+            #expect(HeroAbilities.ability(for: hero) != nil)
+        }
+    }
+
+    // MARK: - Letting a card go
+
+    @Test func droppingACardOnTheLanternDimsItWithoutPlayingIt() {
+        let foe = enemy("Knight", health: 400, pattern: .scripted(cycle: [.brace(shield: 1)]))
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [foe])],
+            party: [CardCatalog.wart],
+            deck: Array(repeating: CardCatalog.strike.id, count: 20)
+        ))
+        // Climb toward the danger band the way a real turn would.
+        play(CardCatalog.strike, on: viewModel)
+        play(CardCatalog.strike, on: viewModel)
+        let lucidityBefore = viewModel.state.player.lucidity
+        let enemyHealthBefore = viewModel.enemies[0].health
+        let handBefore = viewModel.state.player.hand.count
+        let discardBefore = viewModel.state.player.discardPile.count
+
+        guard let instance = viewModel.state.player.hand.first else {
+            Issue.record("Empty hand")
+            return
+        }
+        viewModel.toggleSelection(of: instance)
+        viewModel.releaseSelectedCard()
+
+        #expect(viewModel.state.player.lucidity == lucidityBefore - GameRules.releaseRelief)
+        // The card was spent, not played: no damage, no strain.
+        #expect(viewModel.enemies[0].health == enemyHealthBefore)
+        #expect(viewModel.state.player.hand.count == handBefore - 1)
+        #expect(viewModel.state.player.discardPile.count == discardBefore + 1)
+        #expect(viewModel.strain(for: CardCatalog.strike) == 2)
+    }
+
+    @Test func theLanternIsADropTargetForAnyCard() {
+        let foe = enemy("Knight", health: 400, pattern: .scripted(cycle: [.brace(shield: 1)]))
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [foe])],
+            party: [CardCatalog.wart]
+        ))
+        let lantern = CGRect(x: 1800, y: 600, width: 100, height: 160)
+        viewModel.reportLanternFrame(lantern)
+        #expect(viewModel.isOverLantern(CGPoint(x: 1850, y: 680)))
+        #expect(!viewModel.isOverLantern(CGPoint(x: 900, y: 300)))
+    }
+
+    // MARK: - Aim
+
+    @Test func aimSnapsToTheNearestLivingEnemy() {
+        let front = enemy("Knight", health: 40, pattern: .scripted(cycle: [.attack(1)]))
+        let back = enemy("Wisp", health: 30, pattern: .scripted(cycle: [.attack(1)]))
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [front, back])],
+            party: [CardCatalog.wart]
+        ))
+        let ids = viewModel.enemies.map(\.id)
+        viewModel.reportEnemyFrame(ids[0], frame: CGRect(x: 1200, y: 400, width: 200, height: 400))
+        viewModel.reportEnemyFrame(ids[1], frame: CGRect(x: 1500, y: 380, width: 200, height: 380))
+
+        // A drop that lands on neither figure still finds the closer one.
+        #expect(viewModel.enemyID(at: CGPoint(x: 1460, y: 300)) == ids[1])
+        #expect(viewModel.enemyID(at: CGPoint(x: 1150, y: 300)) == ids[0])
+        // Far away is still nothing at all.
+        #expect(viewModel.enemyID(at: CGPoint(x: 100, y: 100)) == nil)
+    }
+
+    @Test func aimNeverSnapsToTheFallen() {
+        let front = enemy("Knight", health: 6, pattern: .scripted(cycle: [.attack(1)]))
+        let back = enemy("Wisp", health: 40, pattern: .scripted(cycle: [.attack(1)]))
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [front, back])],
+            party: [CardCatalog.wart]
+        ))
+        let ids = viewModel.enemies.map(\.id)
+        let frontFrame = CGRect(x: 1200, y: 400, width: 200, height: 400)
+        viewModel.reportEnemyFrame(ids[0], frame: frontFrame)
+        viewModel.reportEnemyFrame(ids[1], frame: CGRect(x: 1500, y: 380, width: 200, height: 380))
+
+        play(CardCatalog.strike, on: viewModel)
+        #expect(viewModel.enemies[0].health == 0)
+
+        // Dead centre of the corpse now resolves to the survivor behind it.
+        #expect(viewModel.enemyID(at: CGPoint(x: 1300, y: 600)) == ids[1])
+        #expect(viewModel.targetedEnemyID == ids[1])
     }
 
     @Test func leadHeroIsTheOnlyPassiveThatApplies() {
