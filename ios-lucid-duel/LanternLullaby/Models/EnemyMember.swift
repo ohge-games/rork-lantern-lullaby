@@ -17,5 +17,8 @@ nonisolated struct EnemyMember: Identifiable, Hashable, Sendable {
     var health: Int
     var shield: Int
     var intent: EnemyIntent
+    /// The move after next, shown only while the player is Drifting and
+    /// only when the pattern makes it knowable.
+    var nextIntent: EnemyIntent?
     let isPrimary: Bool
 }

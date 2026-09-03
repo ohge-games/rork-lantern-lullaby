@@ -20,6 +20,8 @@ struct BattlefieldCharacterView: View {
     let healthTint: Color
     let bodyHeight: CGFloat
     var intent: EnemyIntent? = nil
+    /// The move after next, revealed while the player is Drifting.
+    var nextIntent: EnemyIntent? = nil
     /// Who an attack intent is aimed at ("→ Wart").
     var intentTargetName: String? = nil
     /// Paintings drawn facing the wrong way are mirrored so both sides
@@ -102,7 +104,16 @@ struct BattlefieldCharacterView: View {
                     .background(Capsule().fill(DreamTheme.gold))
                     .shadow(color: DreamTheme.gold.opacity(0.6), radius: 6)
             } else if let intent, !isDown {
-                IntentChip(intent: intent, targetName: intentTargetName)
+                HStack(spacing: 4) {
+                    if let nextIntent {
+                        IntentChip(intent: nextIntent, isPreview: true)
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 7, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.35))
+                    }
+                    IntentChip(intent: intent, targetName: intentTargetName)
+                }
+                .transition(.opacity)
             }
 
             HStack(spacing: 4) {

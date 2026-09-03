@@ -13,6 +13,8 @@ enum BattleExit: Equatable {
 /// watch in the bottom-right corner.
 struct BattleView: View {
     let viewModel: BattleViewModel
+    /// Where this stage sits in the book, for the victory card.
+    var summary: VictorySummary? = nil
     let onExit: (BattleExit) -> Void
 
     @State private var confirmLeave = false
@@ -55,7 +57,7 @@ struct BattleView: View {
             if viewModel.state.phase == .gameOver, viewModel.narrativePhase == .none {
                 GameOverOverlayView(
                     outcome: viewModel.state.outcome,
-                    finalLucidity: viewModel.state.player.lucidity,
+                    summary: summary,
                     victorySubtitle: "\(viewModel.configuration.title) — the page turns.",
                     onRestart: { viewModel.startNewDuel() },
                     onContinue: {

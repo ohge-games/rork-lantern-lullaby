@@ -48,11 +48,17 @@ struct EffectResolutionTests {
         #expect(strike.resolvedValue(cardType: .defensive, zone: .vivid) == 10)
     }
 
-    @Test func driftingBoostsDefensiveShield() {
+    @Test func onlyVividScalesAnything() {
         let ward = Effect(type: .shield, value: 5)
-        #expect(ward.resolvedValue(cardType: .defensive, zone: .drifting) == 6)
+        // Drifting pays out in cost and draw now, not in bigger numbers.
+        #expect(ward.resolvedValue(cardType: .defensive, zone: .drifting) == 5)
         #expect(ward.resolvedValue(cardType: .defensive, zone: .balanced) == 5)
-        #expect(ward.resolvedValue(cardType: .offensive, zone: .drifting) == 5)
+        #expect(ward.resolvedValue(cardType: .defensive, zone: .vivid) == 5)
+
+        let blow = Effect(type: .damage, value: 10)
+        #expect(blow.resolvedValue(cardType: .offensive, zone: .vivid) == 12)
+        #expect(blow.resolvedValue(cardType: .offensive, zone: .drifting) == 10)
+        #expect(blow.resolvedValue(cardType: .offensive, zone: .balanced) == 10)
     }
 
     @Test func meterAndDrawEffectsAreNeverScaled() {
@@ -60,6 +66,7 @@ struct EffectResolutionTests {
         let draw = Effect(type: .drawCards, value: 2)
         let center = Effect(type: .lucidityCenter, value: 5)
         #expect(relax.resolvedValue(cardType: .defensive, zone: .drifting) == -8)
+        #expect(relax.resolvedValue(cardType: .defensive, zone: .vivid) == -8)
         #expect(draw.resolvedValue(cardType: .offensive, zone: .vivid) == 2)
         #expect(center.resolvedValue(cardType: .utility, zone: .vivid) == 5)
     }
@@ -230,11 +237,14 @@ struct BattleEngineTests {
         #expect(viewModel.state.player.lucidity == 74)
     }
 
-    @Test func driftingZoneBoostsDefensiveShield() {
+    @Test func driftingMakesCardsCheaperInsteadOfBigger() {
         let viewModel = BattleViewModel(initialState: state(hand: [CardCatalog.shieldWall], lucidity: 20))
+        // Cost 3 less the Drifting discount of 2, so the meter moves 1.
+        #expect(viewModel.effectiveCost(of: CardCatalog.shieldWall) == 1)
         play(CardCatalog.shieldWall, on: viewModel)
-        // 10 * 1.2 = 12 shield.
-        #expect(viewModel.state.player.shield == 12)
+        // The shield itself is unscaled.
+        #expect(viewModel.state.player.shield == 10)
+        #expect(viewModel.state.player.lucidity == 21)
     }
 
     @Test func mentalShiftMovesTowardCenterAfterCost() {
@@ -314,7 +324,7 @@ struct BattleEngineTests {
         // 62 + 4 = 66 → Vivid.
         #expect(viewModel.state.player.zone == .vivid)
         #expect(viewModel.zoneNotification?.zone == .vivid)
-        #expect(viewModel.zoneNotification?.message.contains("Offensive +20%") == true)
+        #expect(viewModel.zoneNotification?.message.contains("Attacks +20%") == true)
     }
 
     @Test func lucidityMovementFiresDirectionalPulse() {
@@ -869,6 +879,77 @@ struct CampaignEngineTests {
         #expect(CampaignCoordinator.tutorial(forChapter: 0, stage: 5)?.steps.first?.id == "party-intro")
         #expect(CampaignCoordinator.tutorial(forChapter: 0, stage: 3) == nil)
         #expect(CampaignCoordinator.tutorial(forChapter: 2, stage: 0) == nil)
+    }
+
+    @Test func driftingDeepensTheHandAndSeesFurther() async {
+        // A scripted enemy is knowable one step ahead; a skirmisher is not,
+        // except on its telegraphed heavy turn.
+        let scripted = enemy("Sprite", health: 400, pattern: .scripted(cycle: [.attack(3), .brace(shield: 6)]))
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [scripted])],
+            party: [CardCatalog.wart],
+            deck: Array(repeating: CardCatalog.deepBreath.id, count: 24)
+        ))
+
+        // Balanced: one intent only, and the ordinary minimum hand.
+        #expect(!viewModel.isDrifting)
+        #expect(viewModel.enemies.first?.nextIntent == nil)
+        #expect(viewModel.minimumHandSize == GameRules.minimumHandSize)
+
+        // Deep Breath is free and drops the meter 12 a card; two dives in.
+        play(CardCatalog.deepBreath, on: viewModel)
+        play(CardCatalog.deepBreath, on: viewModel)
+        #expect(viewModel.isDrifting)
+        #expect(viewModel.state.player.zone == .drifting)
+        #expect(viewModel.enemies.first?.nextIntent != nil)
+        #expect(viewModel.minimumHandSize == GameRules.minimumHandSize + GameRules.driftingBonusDraw)
+    }
+
+    @Test func driftingDiscountFloorsAtZero() {
+        let foe = enemy("Wisp", health: 400, pattern: .scripted(cycle: [.brace(shield: 1)]))
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [foe])],
+            party: [CardCatalog.wart],
+            deck: Array(repeating: CardCatalog.deepBreath.id, count: 24)
+        ))
+        play(CardCatalog.deepBreath, on: viewModel)
+        play(CardCatalog.deepBreath, on: viewModel)
+        #expect(viewModel.isDrifting)
+
+        // Mental Shift costs 2, exactly the discount, and cannot refund.
+        #expect(viewModel.effectiveCost(of: CardCatalog.mentalShift) == 0)
+        // Deep Breath is free already, and two copies of strain cannot
+        // push it below zero either.
+        #expect(viewModel.effectiveCost(of: CardCatalog.deepBreath) == 0)
+    }
+
+    @Test func victorySummaryNamesThePageAndTheHeroAboutToJoin() {
+        let coordinator = CampaignCoordinator()
+        guard let chapter = coordinator.chapters.first,
+              let stageFive = chapter.stages.first(where: { $0.index == 4 }),
+              let stageOne = chapter.stages.first(where: { $0.index == 0 }),
+              let finale = chapter.stages.last else {
+            Issue.record("Missing Chapter 1 stages")
+            return
+        }
+
+        let opening = coordinator.victorySummary(for: stageOne)
+        #expect(opening?.pageNumber == 1)
+        #expect(opening?.pageCount == 10)
+        #expect(opening?.chapterTitle == "The Sword in the Stone")
+        #expect(opening?.nextStageName == "Merlyn's Cottage")
+        #expect(opening?.unlockedHeroes.isEmpty == true)
+        #expect(opening?.isChapterFinale == false)
+
+        // Clearing page 5 is what brings Lancelot in.
+        let lancelotPage = coordinator.victorySummary(for: stageFive)
+        #expect(lancelotPage?.unlockedHeroes.map(\.name) == ["Lancelot"])
+
+        // The last page of a chapter points at the next chapter, not a page.
+        let ending = coordinator.victorySummary(for: finale)
+        #expect(ending?.isChapterFinale == true)
+        #expect(ending?.nextStageName == nil)
+        #expect(ending?.nextChapterTitle == "The Queen of Air and Darkness")
     }
 
     @Test func leadHeroIsTheOnlyPassiveThatApplies() {

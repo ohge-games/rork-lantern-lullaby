@@ -48,6 +48,46 @@ nonisolated struct EnemyBrain: Hashable, Sendable {
         }
     }
 
+    /// What this enemy will do the turn *after* the planned one, when that
+    /// is knowable. Scripted and phased patterns march through a fixed
+    /// cycle, so they can always be read one step further; a skirmisher's
+    /// ordinary swing is a dice roll, and only its telegraphed heavy blow
+    /// can be seen coming.
+    func previewNextIntent(turn: Int, healthFraction: Double) -> EnemyIntent? {
+        // Buffs land before the following move, so fold them in.
+        var lookaheadEnrage = enrage
+        var lookaheadMultiplier = pendingMultiplier
+        if case .buff(let buff) = plannedMove {
+            switch buff {
+            case .enrage(let amount): lookaheadEnrage += amount
+            case .windUp(let multiplier): lookaheadMultiplier = max(1, multiplier)
+            }
+        } else if case .attack = plannedMove {
+            lookaheadMultiplier = 1
+        }
+
+        switch pattern {
+        case .skirmish(_, let heavyEvery, let heavyDamage):
+            guard heavyEvery > 0, (turn + 1) % heavyEvery == 0 else { return nil }
+            return .attack(Self.resolvedDamage(heavyDamage, enrage: lookaheadEnrage, multiplier: lookaheadMultiplier))
+        case .scripted, .phased:
+            let move = Self.rawMove(
+                for: pattern,
+                actionsTaken: actionsTaken + 1,
+                turn: turn + 1,
+                healthFraction: healthFraction
+            )
+            switch move {
+            case .attack(let base):
+                return .attack(Self.resolvedDamage(base, enrage: lookaheadEnrage, multiplier: lookaheadMultiplier))
+            case .brace(let shield):
+                return .brace(shield)
+            case .buff(let buff):
+                return .buff(Self.label(for: buff))
+            }
+        }
+    }
+
     /// Consumes the planned move and returns the resolved move to execute.
     /// Attack damage comes back with enrage and wind-up already applied.
     mutating func execute() -> EnemyMove {

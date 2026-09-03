@@ -4,6 +4,9 @@ import SwiftUI
 struct IntentChip: View {
     let intent: EnemyIntent
     var targetName: String? = nil
+    /// A foresight chip: the move after next, seen from the Drifting zone.
+    /// Drawn quieter so it never competes with the imminent one.
+    var isPreview: Bool = false
 
     var body: some View {
         HStack(spacing: 4) {
@@ -33,7 +36,14 @@ struct IntentChip: View {
         }
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
-        .background(Capsule().fill(.black.opacity(0.35)))
-        .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 1))
+        .background(Capsule().fill(.black.opacity(isPreview ? 0.25 : 0.35)))
+        .overlay(
+            Capsule().stroke(
+                isPreview ? DreamTheme.shieldBlue.opacity(0.35) : .white.opacity(0.12),
+                lineWidth: 1
+            )
+        )
+        .opacity(isPreview ? 0.65 : 1)
+        .scaleEffect(isPreview ? 0.85 : 1)
     }
 }

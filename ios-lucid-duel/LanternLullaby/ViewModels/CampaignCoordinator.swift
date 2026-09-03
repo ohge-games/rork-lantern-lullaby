@@ -308,6 +308,34 @@ final class CampaignCoordinator {
         }
     }
 
+    /// What the victory card should say about clearing this stage.
+    ///
+    /// Called before `recordVictory`, so the hero unlocks it names are the
+    /// ones the win is about to grant.
+    func victorySummary(for stage: Stage) -> VictorySummary? {
+        guard let chapter = chapter(containing: stage) else { return nil }
+
+        let next = chapter.stages.first { $0.index == stage.index + 1 }
+        let nextChapter = next == nil
+            ? chapters.first { $0.index == chapter.index + 1 }
+            : nil
+
+        let pendingIDs = HeroUnlocks
+            .heroesUnlockedAt(chapter: chapter.index, stage: stage.index)
+            .filter { !progress.unlockedHeroIDs.contains($0) }
+        let heroes = CardCatalog.playableHeroes.filter { pendingIDs.contains($0.id) }
+
+        return VictorySummary(
+            stageName: stage.name,
+            chapterTitle: chapter.title,
+            pageNumber: stage.index + 1,
+            pageCount: chapter.stages.count,
+            nextStageName: next?.name,
+            nextChapterTitle: nextChapter?.title,
+            unlockedHeroes: heroes
+        )
+    }
+
     // MARK: - Recording results
 
     /// Marks the stage cleared, unlocks heroes, seats new heroes in an open

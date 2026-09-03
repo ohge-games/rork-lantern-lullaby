@@ -32,8 +32,8 @@ nonisolated struct Effect: Codable, Hashable, Sendable {
 
     /// The effect's value after zone bonuses are applied.
     ///
-    /// - Vivid zone: offensive cards get +20% effect.
-    /// - Drifting zone: defensive cards get +20% effect.
+    /// - Vivid zone: offensive cards get +20% effect. It is the only zone
+    ///   that scales anything; Drifting pays out in cost and draw instead.
     /// - `lucidityModify` and `drawCards` are never scaled — scaling meter
     ///   movement or draw counts would make zone bonuses self-referential.
     func resolvedValue(cardType: CardType, zone: LucidityZone) -> Int {
@@ -44,8 +44,7 @@ nonisolated struct Effect: Codable, Hashable, Sendable {
             let multiplier: Double
             switch cardType {
             case .offensive: multiplier = zone.offensiveMultiplier
-            case .defensive: multiplier = zone.defensiveMultiplier
-            case .utility: multiplier = 1.0
+            case .defensive, .utility: multiplier = 1.0
             }
             return Int((Double(value) * multiplier).rounded())
         }

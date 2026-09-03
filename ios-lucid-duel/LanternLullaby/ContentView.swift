@@ -34,6 +34,9 @@ struct ContentView: View {
     @State private var curtain: Double = 0
     /// The stage being fought, so victory can be written back.
     @State private var activeStage: Stage?
+    /// Where that stage sits in the book, captured before the win is
+    /// recorded so the victory card can name the heroes about to join.
+    @State private var activeSummary: VictorySummary?
 
     var body: some View {
         ZStack {
@@ -63,7 +66,7 @@ struct ContentView: View {
 
             case .battle:
                 if let viewModel = battleViewModel {
-                    BattleView(viewModel: viewModel) { result in
+                    BattleView(viewModel: viewModel, summary: activeSummary) { result in
                         finishBattle(result)
                     }
                     .transition(.opacity)
@@ -97,6 +100,7 @@ struct ContentView: View {
     private func beginStage(_ stage: Stage) {
         guard screen == .campaign else { return }
         activeStage = stage
+        activeSummary = coordinator.victorySummary(for: stage)
         battleViewModel = coordinator.makeBattle(for: stage)
         Task { await runSleepSequence() }
     }
@@ -106,6 +110,7 @@ struct ContentView: View {
             coordinator.recordVictory(stageID: stage.id)
         }
         activeStage = nil
+        activeSummary = nil
         withAnimation(.easeInOut(duration: 0.6)) {
             screen = .campaign
         }

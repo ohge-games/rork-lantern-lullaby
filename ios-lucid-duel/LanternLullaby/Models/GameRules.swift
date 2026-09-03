@@ -17,6 +17,13 @@ nonisolated enum GameRules {
     /// while the enemy keeps swinging. Draw passives raise it.
     static let minimumHandSize: Int = 4
 
+    /// Drifting is the tempo zone: down in the deep dream the story bends
+    /// more easily, so every card costs this much less Lucidity.
+    static let driftingCostReduction: Int = 2
+
+    /// And the hand runs this much deeper while Drifting.
+    static let driftingBonusDraw: Int = 1
+
     /// Focus Strain: leaning on one kind of card wears the dream thin.
     /// Each card of a type already played this turn adds this much to the
     /// next one's Lucidity cost, so the second attack in a turn costs +1,

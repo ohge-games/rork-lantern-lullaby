@@ -5,7 +5,8 @@ import SwiftUI
 /// into darkness for Deep Sleep, and a plain defeat card for health loss.
 struct GameOverOverlayView: View {
     let outcome: GameOutcome
-    let finalLucidity: Int
+    /// Where the book stands after this win; `nil` outside the campaign.
+    var summary: VictorySummary? = nil
     var victorySubtitle: String = "The Nightmare dissolves into morning light."
     let onRestart: () -> Void
     let onContinue: () -> Void
@@ -13,7 +14,7 @@ struct GameOverOverlayView: View {
     var body: some View {
         switch outcome {
         case .victory:
-            VictoryOverlayView(finalLucidity: finalLucidity, subtitle: victorySubtitle, onContinue: onContinue)
+            VictoryOverlayView(summary: summary, subtitle: victorySubtitle, onContinue: onContinue)
         case .lostToLucidity(let zone):
             if zone == .awakening {
                 AwakeningOverlayView(onRetry: onRestart)

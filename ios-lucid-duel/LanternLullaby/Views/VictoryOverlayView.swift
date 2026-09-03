@@ -1,17 +1,18 @@
 import SwiftUI
 
 /// Victory: "Dream Conquered" — celebratory but dreamy. Golden motes drift
-/// upward through a soft glow while the final Lucidity position is shown.
+/// upward through a soft glow.
+///
+/// The card answers the three things a player actually wants after a win:
+/// what page they just turned, who joined them, and what waits next. The
+/// old Final Lucidity readout lived here and told them nothing, since the
+/// number was whatever the killing blow happened to cost.
 struct VictoryOverlayView: View {
-    let finalLucidity: Int
+    var summary: VictorySummary?
     var subtitle: String = "The Nightmare dissolves into morning light."
     let onContinue: () -> Void
 
     @State private var appeared = false
-
-    private var finalZone: LucidityZone {
-        LucidityZone.zone(for: finalLucidity)
-    }
 
     var body: some View {
         ZStack {
@@ -19,7 +20,7 @@ struct VictoryOverlayView: View {
                 .ignoresSafeArea()
 
             // The painted final page: the child holding the lantern high
-            // as the Nightmare dissolves into golden motes.
+            // as the dream settles into golden motes.
             Color.clear
                 .overlay {
                     Image("child_lantern_moonlit_dream")
@@ -29,11 +30,11 @@ struct VictoryOverlayView: View {
                 }
                 .clipped()
                 .ignoresSafeArea()
-                .opacity(appeared ? 0.55 : 0)
+                .opacity(appeared ? 0.5 : 0)
 
             // Readability scrim over the painting.
             LinearGradient(
-                colors: [.black.opacity(0.25), .black.opacity(0.72)],
+                colors: [.black.opacity(0.3), .black.opacity(0.78)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -50,51 +51,9 @@ struct VictoryOverlayView: View {
 
             particles
 
-            VStack(spacing: 16) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 44))
-                    .foregroundStyle(DreamTheme.gold)
-                    .shadow(color: DreamTheme.gold.opacity(0.8), radius: 12)
-                    .symbolEffect(.bounce, options: .nonRepeating, value: appeared)
-
-                Text("Dream Conquered")
-                    .font(.system(size: 34, weight: .bold))
-                    .fontDesign(.serif)
-                    .foregroundStyle(.white)
-
-                Text(subtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.65))
-                    .multilineTextAlignment(.center)
-
-                luciditySummary
-                    .padding(.top, 4)
-
-                Button {
-                    onContinue()
-                } label: {
-                    Text("Continue")
-                        .font(.headline)
-                        .foregroundStyle(.black)
-                        .padding(.horizontal, 40)
-                        .padding(.vertical, 12)
-                        .background(
-                            Capsule().fill(
-                                LinearGradient(
-                                    colors: [DreamTheme.gold, DreamTheme.goldDeep],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                        )
-                        .shadow(color: DreamTheme.gold.opacity(0.5), radius: 14)
-                }
-                .buttonStyle(PressableButtonStyle())
-                .padding(.top, 10)
-            }
-            .padding(.horizontal, 36)
-            .scaleEffect(appeared ? 1 : 0.92)
-            .opacity(appeared ? 1 : 0)
+            content
+                .scaleEffect(appeared ? 1 : 0.92)
+                .opacity(appeared ? 1 : 0)
         }
         .onAppear {
             withAnimation(.easeOut(duration: 0.9)) {
@@ -103,53 +62,145 @@ struct VictoryOverlayView: View {
         }
     }
 
-    /// Where the meter ended: number, zone chip, and a mini spectrum.
-    private var luciditySummary: some View {
-        VStack(spacing: 8) {
-            Text("FINAL LUCIDITY")
-                .font(.system(size: 9, weight: .bold))
-                .tracking(2)
-                .foregroundStyle(.white.opacity(0.45))
+    private var content: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 34))
+                .foregroundStyle(DreamTheme.gold)
+                .shadow(color: DreamTheme.gold.opacity(0.8), radius: 12)
+                .symbolEffect(.bounce, options: .nonRepeating, value: appeared)
 
-            HStack(spacing: 8) {
-                Text("\(finalLucidity)")
-                    .font(.system(size: 26, weight: .heavy, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(.white)
-                Text(finalZone.displayName)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(finalZone.color)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Capsule().fill(finalZone.color.opacity(0.16)))
+            Text(summary?.isChapterFinale == true ? "Chapter Complete" : "Dream Conquered")
+                .font(.system(size: 32, weight: .bold))
+                .fontDesign(.serif)
+                .foregroundStyle(.white)
+
+            Text(headline)
+                .font(.subheadline)
+                .foregroundStyle(.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+
+            if let summary {
+                progressPanel(summary)
+                    .padding(.top, 2)
+
+                if let hero = summary.unlockedHeroes.first {
+                    unlockRow(hero)
+                }
+
+                if let next = nextLine(summary) {
+                    Text(next)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(DreamTheme.gold.opacity(0.85))
+                        .multilineTextAlignment(.center)
+                }
             }
 
-            miniSpectrum
-                .frame(width: 180, height: 8)
+            Button {
+                onContinue()
+            } label: {
+                Text("Continue")
+                    .font(.headline)
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 40)
+                    .padding(.vertical, 12)
+                    .background(
+                        Capsule().fill(
+                            LinearGradient(
+                                colors: [DreamTheme.gold, DreamTheme.goldDeep],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                    )
+                    .shadow(color: DreamTheme.gold.opacity(0.5), radius: 14)
+            }
+            .buttonStyle(PressableButtonStyle())
+            .padding(.top, 4)
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 24)
-        .background(RoundedRectangle(cornerRadius: 16).fill(.white.opacity(0.06)))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white.opacity(0.12), lineWidth: 1))
+        .padding(.horizontal, 36)
     }
 
-    private var miniSpectrum: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                HStack(spacing: 2) {
-                    ForEach(LucidityZone.allCases, id: \.self) { segment in
-                        Capsule()
-                            .fill(segment.color.opacity(segment == finalZone ? 0.95 : 0.3))
-                            .frame(width: (geo.size.width - 8) * CGFloat(segment.range.count) / 101)
-                    }
+    private var headline: String {
+        guard let summary else { return subtitle }
+        return "\(summary.stageName) — the page turns."
+    }
+
+    private func nextLine(_ summary: VictorySummary) -> String? {
+        if let next = summary.nextStageName {
+            return "Next: \(next)"
+        }
+        if let chapter = summary.nextChapterTitle {
+            return "A new chapter opens: \(chapter)"
+        }
+        return nil
+    }
+
+    // MARK: - Progress
+
+    /// Chapter, page count, and a row of pips so the shape of the chapter
+    /// is visible at a glance.
+    private func progressPanel(_ summary: VictorySummary) -> some View {
+        VStack(spacing: 8) {
+            Text("CHAPTER \(VictorySummary.numeral(pageChapterIndex(summary))) · \(summary.chapterTitle.uppercased())")
+                .font(.system(size: 9, weight: .heavy))
+                .tracking(2)
+                .foregroundStyle(.white.opacity(0.5))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            Text("Page \(summary.pageNumber) of \(summary.pageCount)")
+                .font(.system(size: 17, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(.white)
+
+            HStack(spacing: 4) {
+                ForEach(1...max(1, summary.pageCount), id: \.self) { page in
+                    Capsule()
+                        .fill(
+                            page < summary.pageNumber ? DreamTheme.gold.opacity(0.5)
+                                : page == summary.pageNumber ? DreamTheme.gold
+                                : Color.white.opacity(0.18)
+                        )
+                        .frame(width: page == summary.pageNumber ? 18 : 12, height: 4)
                 }
-                Circle()
-                    .fill(.white)
-                    .frame(width: 8, height: 8)
-                    .shadow(color: finalZone.color, radius: 4)
-                    .offset(x: (geo.size.width - 8) * CGFloat(finalLucidity) / 100)
             }
         }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 26)
+        .background(RoundedRectangle(cornerRadius: 16).fill(.white.opacity(0.07)))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white.opacity(0.14), lineWidth: 1))
+    }
+
+    /// The chapter's own index is not carried on the summary, so derive the
+    /// numeral position from the title's place in the book at build time.
+    private func pageChapterIndex(_ summary: VictorySummary) -> Int {
+        CampaignCatalogBook1.allChapters.firstIndex { $0.title == summary.chapterTitle } ?? 0
+    }
+
+    private func unlockRow(_ hero: Hero) -> some View {
+        HStack(spacing: 10) {
+            Image(ArtCatalog.heroPortrait(for: hero))
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 44, height: 44)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(DreamTheme.gold, lineWidth: 2))
+                .shadow(color: DreamTheme.gold.opacity(0.6), radius: 10)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("\(hero.name) joins your party")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.white)
+                Text(hero.title)
+                    .font(.system(size: 10))
+                    .foregroundStyle(DreamTheme.gold.opacity(0.85))
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(Capsule().fill(DreamTheme.gold.opacity(0.14)))
+        .overlay(Capsule().stroke(DreamTheme.gold.opacity(0.45), lineWidth: 1))
     }
 
     /// Slow golden motes rising through the dark — the dream celebrating.

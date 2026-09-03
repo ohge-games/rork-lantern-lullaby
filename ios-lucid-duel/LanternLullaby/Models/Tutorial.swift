@@ -129,7 +129,7 @@ nonisolated struct TutorialScript: Hashable, Codable, Sendable {
         TutorialStep(
             id: "zones",
             title: "Ride the edge",
-            text: "A bright flame (Vivid, 66–85) makes attacks 20% stronger. A dim one (Drifting, 16–35) makes shields and heals 20% stronger. Balanced is safe but plain.",
+            text: "A bright flame (Vivid, 66–85) makes your attacks 20% stronger. A dim one (Drifting, 16–35) does the opposite job: every card costs 2 less, you draw an extra card, and you can see one move further ahead. Balanced is safe but plain.",
             anchor: .lantern,
             advance: .enemyTurnDone
         ),

@@ -22,7 +22,7 @@ struct HowToPlayView: View {
             id: "zones",
             icon: "circle.lefthalf.filled",
             title: "Zones",
-            body: "Vivid (66–85): attacks deal 20% more. Drifting (16–35): shields and heals are 20% stronger. Balanced (36–65) is safe but plain. Relax cards (Deep Breath, Mental Shift) dim the flame; most other cards brighten it. Each turn the lantern drifts 2 toward the middle."
+            body: "The two ends of the meter do different jobs. Vivid (66–85) is power: your attacks deal 20% more. Drifting (16–35) is tempo: every card costs 2 less Lucidity, you draw an extra card each turn, and enemies telegraph one move further ahead. Balanced (36–65) is safe but plain. Relax cards dim the flame, most others brighten it, and each turn the lantern drifts 2 toward the middle. Diving low to load up a big turn, then riding the climb into Vivid to land it, is the heart of the game."
         ),
         RuleSection(
             id: "cards",

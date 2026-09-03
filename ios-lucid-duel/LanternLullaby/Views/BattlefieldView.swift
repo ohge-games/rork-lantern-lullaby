@@ -143,6 +143,7 @@ struct BattlefieldView: View {
                             healthTint: DreamTheme.danger,
                             bodyHeight: slot.height,
                             intent: enemy.intent,
+                            nextIntent: enemy.nextIntent,
                             intentTargetName: viewModel.leadHeroName,
                             isMirrored: definition.map { ArtCatalog.isEnemyMirrored($0) } ?? false,
                             isTargeted: viewModel.targetedEnemyID == enemy.id,
@@ -164,6 +165,7 @@ struct BattlefieldView: View {
         }
         .opacity(viewModel.isEnemyThinking ? 0.92 : 1)
         .animation(.easeInOut(duration: 0.4), value: viewModel.isEnemyThinking)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.isDrifting)
     }
 
     // MARK: - Shared pieces

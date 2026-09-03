@@ -461,6 +461,11 @@ final class BattleViewModel {
     func effectiveCost(of card: Card) -> Int {
         var cost = card.lucidityCost + strain(for: card)
 
+        // Drifting is the tempo zone: everything is cheaper down here.
+        if state.player.zone.isDrifting {
+            cost -= GameRules.driftingCostReduction
+        }
+
         for hero in activeHeroes {
             switch hero.passive.kind {
             case .cheaperLucidityCosts(let amount):
@@ -523,9 +528,13 @@ final class BattleViewModel {
         }
     }
 
+    /// True while the lantern is low enough to bend the dream.
+    var isDrifting: Bool { state.player.zone.isDrifting }
+
     /// The enemy row of the current wave: primary first.
     var enemies: [EnemyMember] {
-        enemyLine.map { combatant in
+        let foresight = isDrifting
+        return enemyLine.map { combatant in
             EnemyMember(
                 id: combatant.id,
                 name: combatant.enemy.name,
@@ -536,6 +545,12 @@ final class BattleViewModel {
                 health: combatant.health,
                 shield: combatant.shield,
                 intent: combatant.brain.intent,
+                nextIntent: foresight && !combatant.isDown
+                    ? combatant.brain.previewNextIntent(
+                        turn: state.turnNumber,
+                        healthFraction: combatant.healthFraction
+                    )
+                    : nil,
                 isPrimary: combatant.isPrimary
             )
         }
@@ -990,8 +1005,8 @@ final class BattleViewModel {
 
         let message: String
         switch zone {
-        case .drifting: message = "Entering Drifting Zone — Defensive +20%"
-        case .vivid: message = "Entering Vivid Zone — Offensive +20%"
+        case .drifting: message = "Entering Drifting Zone — Cards cost 2 less · Draw 1 more · You see further"
+        case .vivid: message = "Entering Vivid Zone — Attacks +20%"
         case .balanced: message = "Entering Balanced Zone — Steady"
         case .deepSleep, .awakening: return
         }
@@ -1240,6 +1255,9 @@ final class BattleViewModel {
         dialogueManager.checkTurnNumber(state.turnNumber)
 
         drawPlayerCards(GameRules.cardsDrawnPerTurn)
+        if state.player.zone.isDrifting {
+            drawPlayerCards(GameRules.driftingBonusDraw)
+        }
         applyBonusCardDrawPassives()
         topUpHand()
         emitSound("card drawn")
@@ -1285,6 +1303,9 @@ final class BattleViewModel {
     /// plus any draw passive the lead carries.
     var minimumHandSize: Int {
         var minimum = GameRules.minimumHandSize
+        if state.player.zone.isDrifting {
+            minimum += GameRules.driftingBonusDraw
+        }
         for hero in activeHeroes {
             if case .bonusCardDraw(let amount) = hero.passive.kind {
                 minimum += amount

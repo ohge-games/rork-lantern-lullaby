@@ -36,13 +36,20 @@ nonisolated enum LucidityZone: String, Codable, CaseIterable, Sendable {
     }
 
     /// Multiplier applied to offensive card effects while in this zone.
+    ///
+    /// Vivid is the *power* zone: a sharp dream hits harder. Drifting is
+    /// the *tempo* zone and scales nothing — instead it makes cards cheaper
+    /// and hands bigger (see `GameRules.driftingCostReduction` and
+    /// `driftingBonusDraw`), so the two ends of the meter offer genuinely
+    /// different plans rather than the same bonus pointed two ways.
     var offensiveMultiplier: Double {
         self == .vivid ? 1.2 : 1.0
     }
 
-    /// Multiplier applied to defensive card effects while in this zone.
-    var defensiveMultiplier: Double {
-        self == .drifting ? 1.2 : 1.0
+    /// True while the dream is loose enough to shape: cards cost less, the
+    /// hand runs deeper, and enemies telegraph one move further ahead.
+    var isDrifting: Bool {
+        self == .drifting
     }
 
     var displayName: String {
