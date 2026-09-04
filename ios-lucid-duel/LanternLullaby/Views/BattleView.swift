@@ -74,6 +74,7 @@ struct BattleView: View {
                     outcome: viewModel.state.outcome,
                     summary: summary,
                     victorySubtitle: "\(viewModel.configuration.title) — the page turns.",
+                    stageName: viewModel.configuration.title,
                     onRestart: { viewModel.startNewDuel() },
                     onContinue: {
                         onExit(viewModel.state.outcome == .victory ? .victory : .retreat)

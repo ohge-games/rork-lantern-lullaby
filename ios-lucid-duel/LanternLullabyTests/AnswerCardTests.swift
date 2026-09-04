@@ -403,6 +403,35 @@ struct AnswerCardTests {
         #expect(coordinator.resumeLine?.contains("Page 2") == true)
     }
 
+    // MARK: - Losing says something
+
+    @Test func everyLosingEndingCarriesAStoryLineAndOneThingToTry() {
+        let endings: [GameOutcome] = [
+            .lostToLucidity(zone: .awakening),
+            .lostToLucidity(zone: .deepSleep),
+            .defeated,
+        ]
+        for outcome in endings {
+            guard let note = DefeatNote.note(for: outcome, stageName: "The Ant Fortress") else {
+                Issue.record("No note for \(outcome)")
+                continue
+            }
+            #expect(!note.title.isEmpty)
+            #expect(note.line.contains("The Ant Fortress"))
+            #expect(note.advice.count > 40)
+        }
+    }
+
+    @Test func winningAndFightingOnCarryNoDefeatNote() {
+        #expect(DefeatNote.note(for: .victory, stageName: "Anywhere") == nil)
+        #expect(DefeatNote.note(for: .ongoing, stageName: "Anywhere") == nil)
+    }
+
+    @Test func aLossWithoutAPageNameStillReads() {
+        let note = DefeatNote.note(for: .defeated, stageName: nil)
+        #expect(note?.line.contains("still open") == true)
+    }
+
     // MARK: - Helpers
 
     private func enemy(_ name: String, health: Int, pattern: AttackPattern) -> Enemy {

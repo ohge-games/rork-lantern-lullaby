@@ -6,7 +6,11 @@ import SwiftUI
 /// Dreams" surfaces late and softly, motes sink downward, and everything
 /// moves like it's underwater. The opposite of Awakening in every way.
 struct DeepSleepOverlayView: View {
+    /// What just happened, and the one thing to try next time.
+    var note: DefeatNote? = nil
     let onRetry: () -> Void
+    /// Back to the book. Losing must never be a room with one door.
+    var onLeave: (() -> Void)? = nil
 
     @State private var sunk = false
     @State private var surfaced = false
@@ -55,7 +59,9 @@ struct DeepSleepOverlayView: View {
                     .italic()
                     .foregroundStyle(.white.opacity(0.85))
 
-                Text("You slipped too deep to return")
+                Text(note?.line ?? "You slipped too deep to return")
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 420)
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.45))
 
@@ -76,6 +82,21 @@ struct DeepSleepOverlayView: View {
                 }
                 .buttonStyle(PressableButtonStyle())
                 .padding(.top, 16)
+
+                if let advice = note?.advice {
+                    DefeatAdviceView(advice: advice, tint: LucidityZone.deepSleep.color)
+                        .padding(.top, 4)
+                }
+
+                if let onLeave {
+                    Button(action: onLeave) {
+                        Text("Close the book")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.white.opacity(0.5))
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                    .padding(.top, 2)
+                }
             }
             .opacity(surfaced ? 1 : 0)
             .offset(y: surfaced ? 0 : -16)

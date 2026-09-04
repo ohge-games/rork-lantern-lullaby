@@ -8,8 +8,14 @@ struct GameOverOverlayView: View {
     /// Where the book stands after this win; `nil` outside the campaign.
     var summary: VictorySummary? = nil
     var victorySubtitle: String = "The Nightmare dissolves into morning light."
+    /// The page this was, so a loss reads as a place in the book.
+    var stageName: String? = nil
     let onRestart: () -> Void
     let onContinue: () -> Void
+
+    private var note: DefeatNote? {
+        DefeatNote.note(for: outcome, stageName: stageName)
+    }
 
     var body: some View {
         switch outcome {
@@ -17,9 +23,9 @@ struct GameOverOverlayView: View {
             VictoryOverlayView(summary: summary, subtitle: victorySubtitle, onContinue: onContinue)
         case .lostToLucidity(let zone):
             if zone == .awakening {
-                AwakeningOverlayView(onRetry: onRestart)
+                AwakeningOverlayView(note: note, onRetry: onRestart, onLeave: onContinue)
             } else {
-                DeepSleepOverlayView(onRetry: onRestart)
+                DeepSleepOverlayView(note: note, onRetry: onRestart, onLeave: onContinue)
             }
         case .defeated:
             defeatedCard
@@ -39,14 +45,20 @@ struct GameOverOverlayView: View {
                     .font(.system(size: 44))
                     .foregroundStyle(DreamTheme.danger)
 
-                Text("Defeated")
+                Text(note?.title ?? "Defeated")
                     .font(.largeTitle.bold())
                     .fontDesign(.serif)
                     .foregroundStyle(.white)
 
-                Text("The dream overwhelmed your party.")
+                Text(note?.line ?? "The dream overwhelmed your party.")
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.65))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 420)
+
+                if let advice = note?.advice {
+                    DefeatAdviceView(advice: advice)
+                }
 
                 Button {
                     onRestart()
@@ -78,7 +90,7 @@ struct GameOverOverlayView: View {
                 }
                 .buttonStyle(PressableButtonStyle())
             }
-            .padding(28)
+            .padding(24)
             .background(
                 RoundedRectangle(cornerRadius: 24)
                     .fill(Color(red: 0.10, green: 0.09, blue: 0.20))

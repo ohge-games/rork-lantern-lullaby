@@ -7,7 +7,11 @@ import SwiftUI
 /// text on a bright background inverts the game's entire palette — the
 /// dream is gone.
 struct AwakeningOverlayView: View {
+    /// What just happened, and the one thing to try next time.
+    var note: DefeatNote? = nil
     let onRetry: () -> Void
+    /// Back to the book. Losing must never be a room with one door.
+    var onLeave: (() -> Void)? = nil
 
     @State private var flashFaded = false
     @State private var slammed = false
@@ -84,7 +88,9 @@ struct AwakeningOverlayView: View {
                         }
                     }
 
-                Text("The dream shattered before victory")
+                Text(note?.line ?? "The dream shattered before victory")
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 420)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Color(red: 0.35, green: 0.25, blue: 0.12))
 
@@ -111,6 +117,21 @@ struct AwakeningOverlayView: View {
                 }
                 .buttonStyle(PressableButtonStyle())
                 .padding(.top, 14)
+
+                if let advice = note?.advice {
+                    DefeatAdviceView(advice: advice, tint: Color(red: 0.55, green: 0.30, blue: 0.12))
+                        .padding(.top, 4)
+                }
+
+                if let onLeave {
+                    Button(action: onLeave) {
+                        Text("Close the book")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(Color(red: 0.35, green: 0.25, blue: 0.12).opacity(0.75))
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                    .padding(.top, 2)
+                }
             }
 
             // The jolt itself: a full-screen white flash that burns off fast.

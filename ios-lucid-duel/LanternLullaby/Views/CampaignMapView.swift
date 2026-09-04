@@ -293,10 +293,81 @@ struct CampaignMapView: View {
                 }
             }
 
+            stagePreview
+
             beginButton
         }
         .padding(12)
         .dreamPanel()
+    }
+
+    /// What the selected page holds, before you commit a night to it:
+    /// who is waiting, how many waves, and whether you have been here.
+    @ViewBuilder
+    private var stagePreview: some View {
+        if let stage = coordinator.selectedStage {
+            let waves = coordinator.enemies(for: stage)
+            let cleared = coordinator.isStageCleared(stage)
+            HStack(spacing: 10) {
+                ForEach(Array(previewEnemies(in: waves).enumerated()), id: \.offset) { _, enemy in
+                    VStack(spacing: 2) {
+                        Image(enemy.fullBodyArtName)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 34, height: 34)
+                            .scaleEffect(x: ArtCatalog.isEnemyMirrored(enemy) ? -1 : 1, y: 1)
+                        Text("\(enemy.maxHealth)")
+                            .font(.system(size: 8, weight: .bold))
+                            .monospacedDigit()
+                            .foregroundStyle(DreamTheme.danger.opacity(0.9))
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(stage.name)
+                        .font(.system(size: 12, weight: .bold))
+                        .fontDesign(.serif)
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Text(previewLine(stage: stage, waves: waves, cleared: cleared))
+                        .font(.system(size: 9))
+                        .foregroundStyle(.white.opacity(0.55))
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 12).fill(.black.opacity(0.28)))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.10), lineWidth: 1))
+            .transition(.opacity)
+        }
+    }
+
+    /// Up to four distinct faces from the whole fight, in the order met.
+    private func previewEnemies(in waves: [[Enemy]]) -> [Enemy] {
+        var seen: [Enemy] = []
+        for wave in waves {
+            for enemy in wave where !seen.contains(where: { $0.id == enemy.id }) {
+                seen.append(enemy)
+            }
+        }
+        return Array(seen.prefix(4))
+    }
+
+    private func previewLine(stage: Stage, waves: [[Enemy]], cleared: Bool) -> String {
+        var parts: [String] = []
+        parts.append(waves.count > 1 ? "\(waves.count) waves" : "one wave")
+        if stage.isBoss { parts.append("boss") }
+        if let elite = previewEnemies(in: waves).first(where: { $0.tier == .elite }), !stage.isBoss {
+            parts.append("\(elite.name) leads")
+        }
+        parts.append(cleared ? "already read" : "new page")
+        return parts.joined(separator: " · ")
     }
 
     private func stageRow(_ stage: Stage) -> some View {
