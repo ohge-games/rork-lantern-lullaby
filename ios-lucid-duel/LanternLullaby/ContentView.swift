@@ -24,6 +24,8 @@ struct ContentView: View {
         case campaign
         case sleeping
         case battle
+        /// The waking world, once a chapter's last page has been turned.
+        case interlude
     }
 
     @State private var coordinator = CampaignCoordinator()
@@ -37,12 +39,18 @@ struct ContentView: View {
     /// Where that stage sits in the book, captured before the win is
     /// recorded so the victory card can name the heroes about to join.
     @State private var activeSummary: VictorySummary?
+    /// The morning-after scenes waiting to be read, if any.
+    @State private var interludeScenes: [StoryScene] = []
 
     var body: some View {
         ZStack {
             switch screen {
             case .title:
-                StartScreenView(phase: .none, buttonTitle: "Open the Book") {
+                StartScreenView(
+                    phase: .none,
+                    buttonTitle: coordinator.hasStartedReading ? "Continue the Book" : "Open the Book",
+                    resumeLine: coordinator.hasStartedReading ? coordinator.resumeLine : nil
+                ) {
                     openBook()
                 }
                 .transition(.opacity)
@@ -57,6 +65,13 @@ struct ContentView: View {
             case .campaign:
                 CampaignMapView(coordinator: coordinator) { stage in
                     beginStage(stage)
+                }
+                .transition(.opacity)
+
+            case .interlude:
+                PrologueView(scenes: interludeScenes) {
+                    interludeScenes = []
+                    withAnimation(.easeInOut(duration: 0.6)) { screen = .campaign }
                 }
                 .transition(.opacity)
 
@@ -106,13 +121,21 @@ struct ContentView: View {
     }
 
     private func finishBattle(_ result: BattleExit) {
+        // A chapter that just closed gets its waking-world scene before the
+        // map comes back — the breath between books-within-the-book.
+        var nextScreen = Screen.campaign
         if result == .victory, let stage = activeStage {
+            if let scenes = coordinator.pendingInterlude(after: stage) {
+                interludeScenes = scenes
+                coordinator.markInterludeSeen(afterStage: stage)
+                nextScreen = .interlude
+            }
             coordinator.recordVictory(stageID: stage.id)
         }
         activeStage = nil
         activeSummary = nil
         withAnimation(.easeInOut(duration: 0.6)) {
-            screen = .campaign
+            screen = nextScreen
         }
         battleViewModel = nil
     }

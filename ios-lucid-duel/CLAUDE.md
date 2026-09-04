@@ -41,7 +41,14 @@ MVVM with a strict separation between a pure, serializable rules layer and an ob
 
 - **`ViewModels/BattleViewModel.swift`** — the entire battle engine and the only place that mutates state. It is `@Observable` and owns `state: GameState`. All rule enforcement (card play order, cost application, zone bonuses, turn flow, enemy AI) lives here. If you're changing *how the game behaves*, it's almost always this file. Async turn pacing (enemy "thinking" beats, auto-clearing banners/pulses/sound cues) is done with detached `Task { … Task.sleep … }` blocks that guard on identity before clearing, so overlapping events don't stomp each other.
 
-- **`Views/`** — SwiftUI, read-only against the view model; they call intent methods and never mutate `GameState` directly. `ContentView` runs the bedroom→sleep→battle intro sequence on a single hand-tuned clock. `BattleView` composes the duel screen; `BattlefieldView`, `HandView`, `CardView`, `LanternView`, and the various `*OverlayView`s are the pieces.
+- **`Views/`** — SwiftUI, read-only against the view model; they call intent methods and never mutate `GameState` directly. `ContentView` owns the whole flow — title → prologue → campaign map → sleep → battle → **interlude** → map — and runs the bedroom→sleep→battle intro sequence on a single hand-tuned clock. `BattleView` composes the duel screen; `BattlefieldView`, `HandView`, `CardView`, `LanternView`, and the various `*OverlayView`s are the pieces.
+
+### Screens and how the player moves between them
+
+- **Title** (`StartScreenView`) reads the save: `coordinator.hasStartedReading` swaps "Open the Book" for "Continue the Book", and `resumeLine` prints the exact page under it, so Continue is never a mystery box.
+- **Campaign map** (`CampaignMapView`) is the hub. The chapter title opens `ChapterShelfView` (all five covers with progress and seals — the arrows still step one at a time); "The story so far" opens `JournalView`; the party strip opens `PartySelectView`; "How to play" opens `HowToPlayView`.
+- **Journal** (`JournalView`) is the re-readable record: the prologue, each cleared page's opening and victory narrative, and each chapter's interlude once read. Unplayed pages show as a locked line and never leak their text — this is a game played twenty minutes at a time, and "who is Kay again?" needs an answer that is not "start over".
+- **Interludes** (`Models/NarrativeCatalog+Interludes.swift`) are the waking world between chapters: the child wakes, carries something back, the shop is still on the corner. `CampaignCoordinator.pendingInterlude(after:)` returns them when a chapter's last page falls and `progress.seenInterludeChapters` has not recorded it; `ContentView.finishBattle` routes to `.interlude` (played by `PrologueView`, which already handles a scene list and a Skip) before the map. They play once and live in the journal afterwards. Keep them three to six lines, in the bedroom or the bookshop.
 
 ### Key mechanics to preserve when editing the engine
 

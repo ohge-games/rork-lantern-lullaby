@@ -10,6 +10,8 @@ struct CampaignMapView: View {
 
     @State private var showParty = false
     @State private var showHelp = false
+    @State private var showShelf = false
+    @State private var showJournal = false
     @State private var confirmReset = false
 
     private var chapter: Chapter { coordinator.selectedChapter }
@@ -52,6 +54,26 @@ struct CampaignMapView: View {
                 .zIndex(55)
             }
 
+            if showShelf {
+                ChapterShelfView(coordinator: coordinator) { index in
+                    coordinator.selectedChapterIndex = index
+                    coordinator.selectedStageID = firstUnfinishedStage(inChapterAt: index)
+                    showShelf = false
+                } onDone: {
+                    showShelf = false
+                }
+                .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                .zIndex(52)
+            }
+
+            if showJournal {
+                JournalView(coordinator: coordinator) {
+                    showJournal = false
+                }
+                .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                .zIndex(54)
+            }
+
             if let hero = coordinator.recentlyUnlockedHeroes.first, !showParty {
                 unlockBanner(for: hero)
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
@@ -60,6 +82,8 @@ struct CampaignMapView: View {
         }
         .animation(.easeInOut(duration: 0.3), value: showParty)
         .animation(.easeInOut(duration: 0.3), value: showHelp)
+        .animation(.easeInOut(duration: 0.3), value: showShelf)
+        .animation(.easeInOut(duration: 0.3), value: showJournal)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: coordinator.recentlyUnlockedHeroes.count)
         .animation(.easeInOut(duration: 0.4), value: coordinator.selectedChapterIndex)
         .confirmationDialog("Start the book over?", isPresented: $confirmReset, titleVisibility: .visible) {
@@ -79,18 +103,29 @@ struct CampaignMapView: View {
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 chapterArrow(direction: -1)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Chapter \(Self.numerals[min(chapter.index, 9)])")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.55))
-                    Text(chapter.title)
-                        .font(.system(size: 22, weight: .bold))
-                        .fontDesign(.serif)
-                        .foregroundStyle(.white)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.7)
+                Button {
+                    showShelf = true
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 5) {
+                            Text("Chapter \(Self.numerals[min(chapter.index, 9)])")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.55))
+                            Image(systemName: "square.grid.2x2.fill")
+                                .font(.system(size: 8))
+                                .foregroundStyle(DreamTheme.gold.opacity(0.7))
+                        }
+                        Text(chapter.title)
+                            .font(.system(size: 22, weight: .bold))
+                            .fontDesign(.serif)
+                            .foregroundStyle(.white)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.7)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .buttonStyle(PressableButtonStyle())
+                .accessibilityLabel("Chapter \(Self.numerals[min(chapter.index, 9)]), \(chapter.title). Opens the shelf.")
                 chapterArrow(direction: 1)
             }
 
@@ -112,15 +147,9 @@ struct CampaignMapView: View {
 
             partyStrip
 
-            HStack {
-                Button {
-                    showHelp = true
-                } label: {
-                    Label("How to play", systemImage: "questionmark.circle")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(DreamTheme.gold.opacity(0.85))
-                }
-                .buttonStyle(PressableButtonStyle())
+            HStack(spacing: 10) {
+                mapLink("The story so far", icon: "book.closed.fill") { showJournal = true }
+                mapLink("How to play", icon: "questionmark.circle") { showHelp = true }
                 Spacer()
                 Button {
                     confirmReset = true
@@ -134,6 +163,24 @@ struct CampaignMapView: View {
         }
         .padding(16)
         .dreamPanel()
+    }
+
+    private func mapLink(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(DreamTheme.gold.opacity(0.85))
+                .lineLimit(1)
+        }
+        .buttonStyle(PressableButtonStyle())
+    }
+
+    /// The page the reader should land on when they pick a chapter off the
+    /// shelf: the first one they have not cleared, or the last if they have.
+    private func firstUnfinishedStage(inChapterAt index: Int) -> Stage.ID? {
+        guard coordinator.chapters.indices.contains(index) else { return nil }
+        let stages = coordinator.chapters[index].stages
+        return (stages.first { !coordinator.isStageCleared($0) } ?? stages.last)?.id
     }
 
     private func chapterArrow(direction: Int) -> some View {

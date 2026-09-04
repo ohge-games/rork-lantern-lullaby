@@ -352,6 +352,57 @@ struct AnswerCardTests {
         #expect(decoded.selectedHeroIDs.isEmpty)
     }
 
+    // MARK: - The waking world between chapters
+
+    @Test func theInterludeWaitsForTheChaptersLastPageAndPlaysOnce() {
+        let coordinator = CampaignCoordinator()
+        // Progress persists between runs, so start from a fresh book.
+        coordinator.resetProgress()
+        let chapter = coordinator.chapters[0]
+        guard let midStage = chapter.stages.first(where: { $0.index == 4 }),
+              let lastStage = chapter.stages.last else {
+            Issue.record("Chapter 1 has no pages")
+            return
+        }
+
+        // A page in the middle of the chapter is not a morning after.
+        #expect(coordinator.pendingInterlude(after: midStage) == nil)
+
+        let scenes = coordinator.pendingInterlude(after: lastStage)
+        #expect(scenes?.isEmpty == false)
+
+        coordinator.markInterludeSeen(afterStage: lastStage)
+        #expect(coordinator.pendingInterlude(after: lastStage) == nil)
+        #expect(coordinator.hasReadInterlude(afterChapter: 0))
+    }
+
+    @Test func everyChapterOfBookOneHasAWakingWorldScene() {
+        for index in 0..<5 {
+            let scenes = NarrativeCatalogInterludes.interlude(afterChapter: index)
+            #expect(scenes?.isEmpty == false, "Chapter \(index + 1) has no interlude")
+            for line in scenes?.flatMap(\.lines) ?? [] {
+                #expect(line.text.count <= 170, "Interlude line too long: \(line.text)")
+            }
+        }
+        #expect(NarrativeCatalogInterludes.interlude(afterChapter: 5) == nil)
+    }
+
+    @Test func theTitleScreenKnowsWhereTheReaderLeftOff() {
+        let coordinator = CampaignCoordinator()
+        coordinator.resetProgress()
+        // A fresh book has a cursor on page one either way.
+        #expect(coordinator.resumeLine?.contains("Page 1") == true)
+        #expect(coordinator.resumeLine?.contains("Chapter I") == true)
+
+        guard let first = coordinator.chapters[0].stages.first else {
+            Issue.record("No first page")
+            return
+        }
+        coordinator.recordVictory(stageID: first.id)
+        #expect(coordinator.hasStartedReading)
+        #expect(coordinator.resumeLine?.contains("Page 2") == true)
+    }
+
     // MARK: - Helpers
 
     private func enemy(_ name: String, health: Int, pattern: AttackPattern) -> Enemy {

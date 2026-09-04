@@ -19,6 +19,12 @@ struct StartScreenView: View {
     var buttonTitle: String = "Drift to Sleep"
     /// Hidden while the scene is only being used for the sleep transition.
     var showsChrome: Bool = true
+    /// Where the reader left off ("Chapter II · Page 3 — The Castle Gate"),
+    /// shown under the button so "Continue" is never a mystery box.
+    var resumeLine: String? = nil
+    /// Where the reader left off ("Chapter II · Page 3 — The Castle Gate"),
+    /// shown under the button so "Continue" is never a mystery box.
+    var resumeLine: String? = nil
     let onBegin: () -> Void
 
     @State private var breathe = false
@@ -96,6 +102,26 @@ struct StartScreenView: View {
                     .buttonStyle(PressableButtonStyle())
                     .disabled(phase != .none)
                     .opacity(chromeOpacity)
+
+                    if let resumeLine {
+                        Label(resumeLine, systemImage: "bookmark.fill")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(DreamTheme.gold.opacity(0.85))
+                            .lineLimit(2)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 12)
+                            .opacity(chromeOpacity)
+                    }
+
+                    if let resumeLine {
+                        Label(resumeLine, systemImage: "bookmark.fill")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(DreamTheme.gold.opacity(0.85))
+                            .lineLimit(2)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 12)
+                            .opacity(chromeOpacity)
+                    }
 
                     Text("Enter the book — but never let the flame\nburn out, nor flare into waking.")
                         .font(.caption)

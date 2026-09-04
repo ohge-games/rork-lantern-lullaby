@@ -110,19 +110,24 @@ nonisolated struct CampaignProgress: Codable, Sendable {
     var currentStageID: Stage.ID
     var clearedStageIDs: Set<Stage.ID>
     var unlockedHeroIDs: Set<Hero.ID>  // Heroes unlocked through progression
+    /// Chapters whose waking-world interlude has already been read, so it
+    /// plays once and is afterwards only in the journal.
+    var seenInterludeChapters: Set<Int>
 
     init(
         selectedHeroIDs: [Hero.ID],
         currentChapterID: Chapter.ID,
         currentStageID: Stage.ID,
         clearedStageIDs: Set<Stage.ID>,
-        unlockedHeroIDs: Set<Hero.ID>
+        unlockedHeroIDs: Set<Hero.ID>,
+        seenInterludeChapters: Set<Int> = []
     ) {
         self.selectedHeroIDs = selectedHeroIDs
         self.currentChapterID = currentChapterID
         self.currentStageID = currentStageID
         self.clearedStageIDs = clearedStageIDs
         self.unlockedHeroIDs = unlockedHeroIDs
+        self.seenInterludeChapters = seenInterludeChapters
     }
 
     /// Decoded field by field with defaults, so adding a field to this
@@ -135,6 +140,7 @@ nonisolated struct CampaignProgress: Codable, Sendable {
         currentStageID = try container.decodeIfPresent(Stage.ID.self, forKey: .currentStageID) ?? UUID()
         clearedStageIDs = try container.decodeIfPresent(Set<Stage.ID>.self, forKey: .clearedStageIDs) ?? []
         unlockedHeroIDs = try container.decodeIfPresent(Set<Hero.ID>.self, forKey: .unlockedHeroIDs) ?? []
+        seenInterludeChapters = try container.decodeIfPresent(Set<Int>.self, forKey: .seenInterludeChapters) ?? []
     }
 
     /// A stage is playable if it's the first in its chapter or the previous

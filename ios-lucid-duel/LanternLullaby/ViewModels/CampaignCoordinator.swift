@@ -344,6 +344,45 @@ final class CampaignCoordinator {
         )
     }
 
+    // MARK: - The waking world between chapters
+
+    /// The scenes to play now that `stage` has fallen — the chapter's
+    /// waking-world interlude, once, when its last page is turned.
+    func pendingInterlude(after stage: Stage) -> [StoryScene]? {
+        guard let chapter = chapter(containing: stage),
+              chapter.stages.allSatisfy({ $0.index <= stage.index }),
+              !progress.seenInterludeChapters.contains(chapter.index),
+              let scenes = NarrativeCatalogInterludes.interlude(afterChapter: chapter.index),
+              !scenes.isEmpty else { return nil }
+        return scenes
+    }
+
+    /// Marks a chapter's interlude read. It stays available in the journal.
+    func markInterludeSeen(afterStage stage: Stage) {
+        guard let chapter = chapter(containing: stage) else { return }
+        progress.seenInterludeChapters.insert(chapter.index)
+        save()
+    }
+
+    /// Every interlude the player has actually read, for the journal.
+    func hasReadInterlude(afterChapter index: Int) -> Bool {
+        progress.seenInterludeChapters.contains(index)
+    }
+
+    // MARK: - Where the reader left off
+
+    /// True once the player has cleared anything — the difference between
+    /// "open the book" and "carry on where you were".
+    var hasStartedReading: Bool {
+        !progress.clearedStageIDs.isEmpty || hasSeenPrologue
+    }
+
+    /// One line naming the page the reader is on, for the title screen.
+    var resumeLine: String? {
+        guard let stage = currentStage, let chapter = chapter(containing: stage) else { return nil }
+        return "Chapter \(VictorySummary.numeral(chapter.index)) · Page \(stage.index + 1) — \(stage.name)"
+    }
+
     // MARK: - Recording results
 
     /// Marks the stage cleared, unlocks heroes, seats new heroes in an open
