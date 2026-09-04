@@ -721,7 +721,7 @@ struct CampaignEngineTests {
         #expect(viewModel.state.player.hand.count == 7)
     }
 
-    @Test func turnStartTopsTheHandUpToTheMinimum() async {
+    @Test func turnStartTopsTheHandUpToTheMinimum() {
         let foe = enemy("Wisp", health: 500, pattern: .scripted(cycle: [.brace(shield: 1)]))
         let config = configuration(
             waves: [WaveSpec(enemies: [foe])],
@@ -738,8 +738,8 @@ struct CampaignEngineTests {
         #expect(viewModel.state.player.hand.count < GameRules.minimumHandSize)
         #expect(viewModel.minimumHandSize == GameRules.minimumHandSize)
 
+        viewModel.instantEnemyTurns = true
         viewModel.endTurn()
-        try? await Task.sleep(for: .milliseconds(2300))
         #expect(viewModel.state.phase == .playerMain)
         #expect(viewModel.state.player.hand.count >= GameRules.minimumHandSize)
     }
@@ -857,7 +857,7 @@ struct CampaignEngineTests {
         #expect(varied.effectiveCost(of: CardCatalog.strike) == CardCatalog.strike.lucidityCost + 1)
     }
 
-    @Test func strainResetsEachTurn() async {
+    @Test func strainResetsEachTurn() {
         let foe = enemy("Wisp", health: 500, pattern: .scripted(cycle: [.brace(shield: 1)]))
         let viewModel = BattleViewModel(configuration: configuration(
             waves: [WaveSpec(enemies: [foe])],
@@ -867,8 +867,8 @@ struct CampaignEngineTests {
         play(CardCatalog.strike, on: viewModel)
         #expect(viewModel.strain(for: CardCatalog.strike) == 1)
 
+        viewModel.instantEnemyTurns = true
         viewModel.endTurn()
-        try? await Task.sleep(for: .milliseconds(2300))
         #expect(viewModel.state.phase == .playerMain)
         #expect(viewModel.strain(for: CardCatalog.strike) == 0)
     }
@@ -1157,10 +1157,12 @@ struct CampaignEngineTests {
         viewModel.releaseSelectedCard()
 
         #expect(viewModel.state.player.lucidity == lucidityBefore - GameRules.releaseRelief)
-        // The card was spent, not played: no damage, no strain.
+        // The card was spent, not played: no damage, no strain — and it
+        // burned rather than going to the discard pile.
         #expect(viewModel.enemies[0].health == enemyHealthBefore)
         #expect(viewModel.state.player.hand.count == handBefore - 1)
-        #expect(viewModel.state.player.discardPile.count == discardBefore + 1)
+        #expect(viewModel.state.player.discardPile.count == discardBefore)
+        #expect(viewModel.burnedCards.count == 1)
         #expect(viewModel.strain(for: CardCatalog.strike) == 2)
     }
 

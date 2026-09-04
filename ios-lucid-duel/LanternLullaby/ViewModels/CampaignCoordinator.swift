@@ -66,7 +66,14 @@ final class CampaignCoordinator {
 
     private static func loadProgress() -> CampaignProgress? {
         guard let data = UserDefaults.standard.data(forKey: progressKey) else { return nil }
-        return try? JSONDecoder().decode(CampaignProgress.self, from: data)
+        do {
+            return try JSONDecoder().decode(CampaignProgress.self, from: data)
+        } catch {
+            // Keep the unreadable save rather than starting a fresh book
+            // over the top of it — it is the only copy the player has.
+            UserDefaults.standard.set(data, forKey: progressKey + ".corrupt")
+            return nil
+        }
     }
 
     private func save() {
@@ -80,6 +87,7 @@ final class CampaignCoordinator {
         progress = Self.freshProgress()
         hasSeenPrologue = false
         UserDefaults.standard.removeObject(forKey: Self.prologueKey)
+        DialogueManager.clearPersistedKeys()
         selectedChapterIndex = 0
         selectedStageID = progress.currentStageID
         recentlyUnlockedHeroes = []

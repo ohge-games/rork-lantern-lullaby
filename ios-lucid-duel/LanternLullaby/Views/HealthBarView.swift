@@ -27,7 +27,6 @@ struct HealthBarView: View {
                     .frame(width: max(0, geo.size.width * fraction))
             }
         }
-        .frame(height: 10)
         .animation(.spring(response: 0.45, dampingFraction: 0.8), value: current)
     }
 }

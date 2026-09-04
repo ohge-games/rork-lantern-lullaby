@@ -22,6 +22,7 @@ struct BattleView: View {
     var body: some View {
         ZStack {
             DreamBackground(zone: viewModel.state.player.zone, artName: viewModel.arenaArtName)
+                .dynamicTypeSize(...DynamicTypeSize.large)
 
             BattlefieldView(viewModel: viewModel)
 
@@ -86,7 +87,7 @@ struct BattleView: View {
                viewModel.narrativePhase == .showingDialogue {
                 DialogueOverlayView(
                     dialogue: dialogue,
-                    onDismiss: { viewModel.dismissDialogue() }
+                    onDismiss: { viewModel.dismissDialogue(dialogue.id) }
                 )
                 .id(dialogue.id)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -273,6 +274,9 @@ struct BattleView: View {
                 .overlay(Circle().stroke(.white.opacity(0.14), lineWidth: 1))
         }
         .buttonStyle(PressableButtonStyle())
+        // Restarting mid-beat would strand the enemy turn or a story line.
+        .disabled(viewModel.state.phase == .enemyTurn || viewModel.narrativePhase != .none)
+        .opacity(viewModel.state.phase == .enemyTurn || viewModel.narrativePhase != .none ? 0.4 : 1)
         .accessibilityLabel("Restart duel")
     }
 

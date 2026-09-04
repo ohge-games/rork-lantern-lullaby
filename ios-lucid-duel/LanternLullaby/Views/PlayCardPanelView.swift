@@ -33,7 +33,7 @@ struct PlayCardPanelView: View {
                 cardHeader
                 effectLines
 
-                if viewModel.cardDealsDamage(card) {
+                if viewModel.cardTargetsEnemy(card) {
                     targetLine
                 }
 
@@ -245,6 +245,10 @@ struct PlayCardPanelView: View {
         case .lucidityCenter: return "Center \(resolved)"
         case .drawCards: return "Draw \(resolved)"
         case .swapLead: return "Change lead"
+        case .stun: return resolved == 1 ? "Skips a turn" : "Skips \(resolved) turns"
+        case .weaken: return "Next hit −\(resolved)"
+        case .shieldBreak: return "Breaks shield"
+        case .calm: return "Cancels wind-up"
         }
     }
 }

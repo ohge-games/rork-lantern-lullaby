@@ -16,13 +16,13 @@ struct HowToPlayView: View {
             id: "lantern",
             icon: "flame.fill",
             title: "The lantern is your Lucidity",
-            body: "The flame runs from 0 to 100 and starts at 50. Playing a card brightens it by the +number on the card. If it reaches 100 you jolt awake; if it gutters to 0 you sink into Deep Sleep. Both end the dream — even on the killing blow."
+            body: "The flame runs from 0 to 100 and starts at 50. Playing a card brightens it by the +number on the card. If it reaches 100 you jolt awake; if it burns out to 0 you sink into Deep Sleep. Both end the dream — even on the killing blow."
         ),
         RuleSection(
             id: "zones",
             icon: "circle.lefthalf.filled",
             title: "Zones",
-            body: "The two ends of the meter do different jobs. Vivid (66–85) is power: your attacks deal 20% more. Drifting (16–35) is tempo: every card costs 2 less Lucidity, you draw an extra card each turn, and enemies telegraph one move further ahead. Balanced (36–65) is safe but plain. Relax cards dim the flame, most others brighten it, and each turn the lantern drifts 2 toward the middle. Diving low to load up a big turn, then riding the climb into Vivid to land it, is the heart of the game."
+            body: "Vivid (66–85): your attacks hit 20% harder. Drifting (16–35): every card costs 2 less, you draw an extra card, and you can see the enemy's next two moves. Balanced (36–65) is safe but plain. Relax cards dim the flame; most others brighten it; each turn it drifts 2 toward the middle. Dip low to build a big hand, then climb into Vivid to spend it."
         ),
         RuleSection(
             id: "cards",
@@ -34,13 +34,13 @@ struct HowToPlayView: View {
             id: "strain",
             icon: "flame.fill",
             title: "Focus Strain",
-            body: "Leaning on one kind of card wears the dream thin. The second card of a type you play in a turn costs +1 Lucidity, the third +2, and so on — attacks, defense and utility each strain on their own. The card shows its real cost, so a varied turn is always cheaper than a mono turn."
+            body: "Leaning on one kind of card wears the dream thin. The second card of a type you play in a turn costs +1 Lucidity, the third +2, and so on — attacks, defense and the rest each count separately. The card always shows its real cost, so mixing card types is cheaper than repeating one."
         ),
         RuleSection(
             id: "release",
             icon: "wind",
             title: "Letting a card go",
-            body: "Drop any card onto the lantern instead of playing it. The card is spent and the flame dims 5. It is always available, so a hand full of attacks is never a dead end when the meter has climbed too close to Awakening."
+            body: "Drop any card onto the lantern instead of playing it. Let it go: the card is gone for this battle, the flame dims 5 — never below Drifting. It is always available, so a hand full of attacks is never a dead end when the meter has climbed too close to Awakening."
         ),
         RuleSection(
             id: "abilities",
@@ -52,13 +52,19 @@ struct HowToPlayView: View {
             id: "party",
             icon: "person.3.fill",
             title: "Your party",
-            body: "You open with 7 cards and never start a turn with fewer than 4. Up to three heroes fight together with one shared hand and shield. Seat 1 leads: enemies aim at the lead and only the lead's passive is active. Set the order before each dream; in battle only a card like Step Forward can change it. If the lead falls, the next hero steps up. You lose when nobody is standing."
+            body: "You open with 7 cards and never start a turn with fewer than 4. Up to three heroes fight together with one shared hand and shield. Seat 1 leads: enemies aim at the lead and only the lead's passive is active. Set the order before each dream; in battle only a card like Step Forward can change it. If the lead falls, the next hero steps up. You lose when nobody is standing. Sometimes the story sends a hero to fight beside you for one battle. They join at the back and take no seat."
         ),
         RuleSection(
             id: "enemies",
             icon: "eye.fill",
             title: "Reading enemies",
             body: "The chip above an enemy shows exactly what it will do on its turn: a red number is damage, a blue number is shield, gold is a buff. Every living enemy acts. Some stages come in waves — clear one and the next arrives."
+        ),
+        RuleSection(
+            id: "answers",
+            icon: "hand.raised.fill",
+            title: "Answering the enemy",
+            body: "Some cards answer what the enemy plans. Hush makes them skip a turn. Snuffed Wick blows out a wind-up. Cut the Straps breaks a shield. Read the intent, then pick your answer."
         ),
         RuleSection(
             id: "book",

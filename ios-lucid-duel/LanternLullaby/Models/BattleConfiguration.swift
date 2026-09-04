@@ -70,7 +70,10 @@ nonisolated struct BattleConfiguration: Sendable {
     ) {
         self.title = title
         self.party = party.isEmpty ? [CardCatalog.dreamer] : party
-        self.waves = waves.isEmpty ? [WaveSpec(enemies: [Self.nightmareEnemy])] : waves
+        // A wave with nobody in it would trap the fight (or index past the
+        // end of an empty line), so empty waves are dropped here.
+        let filled = waves.filter { !$0.enemies.isEmpty }
+        self.waves = filled.isEmpty ? [WaveSpec(enemies: [Self.nightmareEnemy])] : filled
         self.arenaArtName = arenaArtName
         self.lanternDrift = lanternDrift
         self.deckCardIDs = deckCardIDs

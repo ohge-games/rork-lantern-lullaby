@@ -20,7 +20,7 @@ enum EnemyCatalogBook1 {
         maxHealth: 35,
         pattern: .skirmish(range: 6...10, heavyEvery: 4, heavyDamage: 14),
         iconName: "pawprint.fill",
-        artName: "forest_wolf_portrait",
+        artName: "forest_wolf_full",
         fullBodyArtName: "forest_wolf_full",
         passive: nil
     )
@@ -34,7 +34,7 @@ enum EnemyCatalogBook1 {
         maxHealth: 45,
         pattern: .skirmish(range: 7...12, heavyEvery: 3, heavyDamage: 16),
         iconName: "shield.slash.fill",
-        artName: "wayward_knight_portrait",
+        artName: "wayward_knight_full",
         fullBodyArtName: "wayward_knight_full",
         passive: nil
     )
@@ -52,7 +52,7 @@ enum EnemyCatalogBook1 {
             .attack(10),
         ]),
         iconName: "sparkles",
-        artName: "forest_sprite_portrait",
+        artName: "forest_sprite_full",
         fullBodyArtName: "forest_sprite_full",
         passive: nil
     )
@@ -63,15 +63,15 @@ enum EnemyCatalogBook1 {
         id: enemyID("C1-E01"),
         name: "Giant Boar",
         tier: .elite,
-        maxHealth: 70,
+        maxHealth: 90,
         pattern: .scripted(cycle: [
+            .attack(12),
+            .brace(shield: 10),
             .buff(.windUp(multiplier: 2)),
             .attack(20),  // Wind-up delivers double
-            .brace(shield: 10),
-            .attack(12),
         ]),
         iconName: "hare.fill",
-        artName: "giant_boar_portrait",
+        artName: "giant_boar_full",
         fullBodyArtName: "giant_boar_full",
         passive: nil
     )
@@ -83,11 +83,11 @@ enum EnemyCatalogBook1 {
         id: enemyID("C1-B01"),
         name: "Sir Ector",
         tier: .boss,
-        maxHealth: 100,
+        maxHealth: 80,
         pattern: .phased(phases: [
             EnemyPhase(healthThreshold: 1.0, cycle: [
                 .attack(10),
-                .brace(shield: 12),
+                .brace(shield: 8),
             ]),
             EnemyPhase(healthThreshold: 0.5, cycle: [
                 .attack(14),
@@ -96,7 +96,7 @@ enum EnemyCatalogBook1 {
             ]),
         ]),
         iconName: "person.fill",
-        artName: "sir_ector_portrait",
+        artName: "sir_ector_full",
         fullBodyArtName: "sir_ector_full",
         passive: PassiveAbility(
             name: "Training Master",
@@ -119,11 +119,12 @@ enum EnemyCatalogBook1 {
         maxHealth: 30,
         pattern: .scripted(cycle: [
             .attack(9),
+            .lucidityPush(-5),  // A whisper: the flame dims
             .attack(7),
             .brace(shield: 8),
         ]),
         iconName: "smoke.fill",
-        artName: "shadow_wisp_portrait",
+        artName: "shadow_wisp_full",
         fullBodyArtName: "shadow_wisp_full",
         passive: nil
     )
@@ -137,7 +138,7 @@ enum EnemyCatalogBook1 {
         maxHealth: 50,
         pattern: .skirmish(range: 8...12, heavyEvery: 3, heavyDamage: 18),
         iconName: "figure.stand",
-        artName: "orkney_guard_portrait",
+        artName: "orkney_guard_full",
         fullBodyArtName: "orkney_guard_full",
         passive: nil
     )
@@ -148,15 +149,15 @@ enum EnemyCatalogBook1 {
         id: enemyID("C2-E01"),
         name: "Enchanted Hound",
         tier: .elite,
-        maxHealth: 65,
+        maxHealth: 85,
         pattern: .scripted(cycle: [
+            .buff(.enrage(amount: 3)),
             .attack(14),
             .attack(10),
-            .buff(.enrage(amount: 3)),
             .attack(12),
         ]),
         iconName: "dog.fill",
-        artName: "enchanted_hound_portrait",
+        artName: "enchanted_hound_full",
         fullBodyArtName: "enchanted_hound_full",
         passive: nil
     )
@@ -167,10 +168,11 @@ enum EnemyCatalogBook1 {
         id: enemyID("C2-B01"),
         name: "Queen Morgause",
         tier: .boss,
-        maxHealth: 140,
+        maxHealth: 120,
         pattern: .phased(phases: [
             EnemyPhase(healthThreshold: 1.0, cycle: [
                 .attack(12),
+                .lucidityPush(10),  // Glamour: the dream sharpens
                 .brace(shield: 15),
                 .attack(14),
             ]),
@@ -180,14 +182,15 @@ enum EnemyCatalogBook1 {
                 .attack(14),
                 .brace(shield: 10),
             ]),
-            EnemyPhase(healthThreshold: 0.3, cycle: [
+            EnemyPhase(healthThreshold: 0.4, cycle: [
+                .lucidityPush(-10),  // A lullaby: the flame gutters
                 .attack(20),
                 .attack(18),
                 .attack(16),
             ]),
         ]),
         iconName: "crown.fill",
-        artName: "queen_morgause_portrait",
+        artName: "queen_morgause_full",
         fullBodyArtName: "queen_morgause_full",
         passive: PassiveAbility(
             name: "Dark Enchantment",
@@ -210,7 +213,7 @@ enum EnemyCatalogBook1 {
         maxHealth: 35,
         pattern: .skirmish(range: 6...10, heavyEvery: 4, heavyDamage: 14),
         iconName: "person.crop.square",
-        artName: "tournament_squire_portrait",
+        artName: "tournament_squire_full",
         fullBodyArtName: "tournament_squire_full",
         passive: nil
     )
@@ -229,7 +232,7 @@ enum EnemyCatalogBook1 {
             .attack(9),
         ]),
         iconName: "figure.fencing",
-        artName: "rival_knight_portrait",
+        artName: "rival_knight_full",
         fullBodyArtName: "rival_knight_full",
         passive: nil
     )
@@ -248,7 +251,7 @@ enum EnemyCatalogBook1 {
             .brace(shield: 12),
         ]),
         iconName: "bolt.shield.fill",
-        artName: "sir_turquine_portrait",
+        artName: "sir_turquine_full",
         fullBodyArtName: "sir_turquine_full",
         passive: nil
     )
@@ -274,7 +277,7 @@ enum EnemyCatalogBook1 {
             ]),
         ]),
         iconName: "theatermasks.fill",
-        artName: "sir_meliagrance_portrait",
+        artName: "sir_meliagrance_full",
         fullBodyArtName: "sir_meliagrance_full",
         passive: PassiveAbility(
             name: "Treacherous Strike",
@@ -297,7 +300,7 @@ enum EnemyCatalogBook1 {
         maxHealth: 45,
         pattern: .skirmish(range: 9...13, heavyEvery: 3, heavyDamage: 18),
         iconName: "figure.stand.line.dotted.figure.stand",
-        artName: "mordred_soldier_portrait",
+        artName: "mordred_soldier_full",
         fullBodyArtName: "mordred_soldier_full",
         passive: nil
     )
@@ -316,7 +319,7 @@ enum EnemyCatalogBook1 {
             .attack(14),
         ]),
         iconName: "person.fill.xmark",
-        artName: "fallen_knight_portrait",
+        artName: "fallen_knight_full",
         fullBodyArtName: "fallen_knight_full",
         passive: nil
     )
@@ -336,7 +339,7 @@ enum EnemyCatalogBook1 {
             .brace(shield: 8),
         ]),
         iconName: "eye.fill",
-        artName: "sir_agravaine_portrait",
+        artName: "sir_agravaine_full",
         fullBodyArtName: "sir_agravaine_full",
         passive: nil
     )
@@ -369,7 +372,7 @@ enum EnemyCatalogBook1 {
             ]),
         ]),
         iconName: "crown.fill",
-        artName: "mordred_portrait",
+        artName: "mordred_full",
         fullBodyArtName: "mordred_full",
         passive: PassiveAbility(
             name: "Fate's Burden",
@@ -392,7 +395,7 @@ enum EnemyCatalogBook1 {
         maxHealth: 40,
         pattern: .skirmish(range: 8...12, heavyEvery: 3, heavyDamage: 16),
         iconName: "brain.head.profile",
-        artName: "memory_fragment_portrait",
+        artName: "memory_fragment_full",
         fullBodyArtName: "memory_fragment_full",
         passive: nil
     )
@@ -412,7 +415,7 @@ enum EnemyCatalogBook1 {
             .attack(16),
         ]),
         iconName: "person.fill.questionmark",
-        artName: "dreamers_doubt_portrait",
+        artName: "dreamers_doubt_full",
         fullBodyArtName: "dreamers_doubt_full",
         passive: nil
     )
@@ -449,7 +452,7 @@ enum EnemyCatalogBook1 {
             ]),
         ]),
         iconName: "sun.max.fill",
-        artName: "the_awakening_portrait",
+        artName: "the_awakening_full",
         fullBodyArtName: "the_awakening_full",
         passive: PassiveAbility(
             name: "Inevitable Dawn",
@@ -496,6 +499,6 @@ enum EnemyCatalogBook1 {
         memoryFragment, dreamerDoubt, theAwakening,
     ]
 
-    static let allEnemies: [Enemy] = 
+    static let allEnemies: [Enemy] =
         chapter1Enemies + chapter2Enemies + chapter3Enemies + chapter4Enemies + chapter5Enemies
 }

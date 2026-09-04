@@ -111,11 +111,11 @@ struct TutorialCalloutView: View {
     /// enemies right.
     private func placement(in size: CGSize) -> Placement {
         switch step.anchor {
-        case .lantern: return Placement(x: 0.76, y: 0.36, pointer: .down)
-        case .endTurn: return Placement(x: 0.72, y: 0.52, pointer: .right)
-        case .hand: return Placement(x: 0.5, y: 0.34, pointer: .down)
-        case .enemy: return Placement(x: 0.56, y: 0.22, pointer: .right)
-        case .hero: return Placement(x: 0.44, y: 0.22, pointer: .left)
+        case .lantern: return Placement(x: 0.74, y: 0.38, pointer: .down)
+        case .endTurn: return Placement(x: 0.60, y: 0.80, pointer: .right)
+        case .hand: return Placement(x: 0.5, y: 0.36, pointer: .down)
+        case .enemy: return Placement(x: 0.54, y: 0.24, pointer: .right)
+        case .hero: return Placement(x: 0.46, y: 0.24, pointer: .left)
         case .center: return Placement(x: 0.5, y: 0.42, pointer: .none)
         }
     }

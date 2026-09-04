@@ -97,7 +97,7 @@ struct StartScreenView: View {
                     .disabled(phase != .none)
                     .opacity(chromeOpacity)
 
-                    Text("Defeat The Nightmare — but never let the flame\ngutter out, nor flare into waking.")
+                    Text("Enter the book — but never let the flame\nburn out, nor flare into waking.")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.4))
                         .multilineTextAlignment(.center)

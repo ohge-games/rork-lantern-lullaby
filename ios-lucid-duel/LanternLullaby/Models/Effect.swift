@@ -17,6 +17,15 @@ nonisolated enum EffectType: String, Codable, CaseIterable, Sendable {
     case drawCards
     /// The targeted ally steps to the front of the party and leads.
     case swapLead
+    /// The targeted enemy skips its next `value` actions. Its telegraphed
+    /// move stays queued, so a stun buys time rather than erasing a threat.
+    case stun
+    /// The targeted enemy's next attack deals `value` less.
+    case weaken
+    /// The targeted enemy loses all of its shield.
+    case shieldBreak
+    /// The targeted enemy's wind-up and enrage are cancelled.
+    case calm
 }
 
 /// A single atomic card effect: what happens and by how much.
@@ -38,7 +47,8 @@ nonisolated struct Effect: Codable, Hashable, Sendable {
     ///   movement or draw counts would make zone bonuses self-referential.
     func resolvedValue(cardType: CardType, zone: LucidityZone) -> Int {
         switch type {
-        case .lucidityModify, .lucidityCenter, .drawCards, .swapLead:
+        case .lucidityModify, .lucidityCenter, .drawCards, .swapLead,
+             .stun, .weaken, .shieldBreak, .calm:
             return value
         case .damage, .heal, .shield:
             let multiplier: Double

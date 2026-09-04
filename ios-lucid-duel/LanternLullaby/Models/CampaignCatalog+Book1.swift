@@ -148,13 +148,13 @@ enum CampaignCatalogBook1 {
                             encounter: Encounter(
                                 id: encounterID(1, 4, 1),
                                 primaryEnemyID: EnemyCatalogBook1.forestWolf.id,
-                                supportEnemyIDs: [EnemyCatalogBook1.forestWolf.id]
+                                supportEnemyIDs: [EnemyCatalogBook1.forestSprite.id]
                             ),
                             introText: "The dream shifts—you're small, so small, and the wolves are everywhere.",
                             outroText: nil
                         ),
                     ],
-                    openingNarrative: "Merlyn turns you into a fish to learn humility. But dreams don't follow the same rules...",
+                    openingNarrative: "Merlyn's lesson tonight was the moat: be small, be quick, be humble. The wolves did not get the lesson.",
                     victoryNarrative: "You gasp awake on the shore. The lesson learned, but at what cost?",
                     heroDialogue: nil
                 ),
@@ -178,7 +178,7 @@ enum CampaignCatalogBook1 {
                                 supportEnemyIDs: []
                             ),
                             introText: "A bandit captain blocks the road. But you're not alone...",
-                            outroText: "A knight in silver-blue armor rides from the treeline!"
+                            outroText: "Hoofbeats. Someone is coming fast."
                         ),
                         BattleWave(
                             id: waveID(1, 5, 2),
@@ -187,13 +187,13 @@ enum CampaignCatalogBook1 {
                                 primaryEnemyID: EnemyCatalogBook1.forestWolf.id,
                                 supportEnemyIDs: [EnemyCatalogBook1.forestWolf.id]
                             ),
-                            introText: "The captain's wolves break cover — and a knight in silver-blue armor rides in beside you. 'Stand back, young one. I am Lancelot du Lac.'",
+                            introText: "A knight in silver-blue armor reins in beside you. 'Stand back, young one. These are mine.'",
                             outroText: nil,
                             allyReinforcementID: CardCatalog.HeroIDs.lancelot
                         ),
                     ],
-                    openingNarrative: "EVERYTHING NOT FORBIDDEN IS COMPULSORY. The ants taught you about war. But this is different.",
-                    victoryNarrative: "'You fight with heart,' Lancelot says. 'Perhaps we'll meet again, in waking or in dreams.'",
+                    openingNarrative: "The ants' fortress is behind you. The road ahead has bandits — and, somewhere, a knight.",
+                    victoryNarrative: "The last wolf bolts. The knight lowers his blade and looks at you for a long moment.",
                     heroDialogue: [
                         CardCatalog.HeroIDs.lancelot: "Lancelot smiles grimly. 'I know this road. I've walked it in sorrow.'"
                     ]
@@ -221,7 +221,7 @@ enum CampaignCatalogBook1 {
                             outroText: nil
                         ),
                     ],
-                    openingNarrative: "Borders are imaginary lines drawn by the frightened. You fly above them all.",
+                    openingNarrative: "The geese taught Wart that borders are only lines. The fey drawing lines around you tonight disagree.",
                     victoryNarrative: "The geese taught you that nations are just stories. But stories have power in dreams.",
                     heroDialogue: nil
                 ),
@@ -248,7 +248,7 @@ enum CampaignCatalogBook1 {
                             outroText: nil
                         ),
                     ],
-                    openingNarrative: "The badger speaks of why humans make war. You wish you could forget.",
+                    openingNarrative: "The badger asked Wart why men make war. Something in the sett below has an answer of its own.",
                     victoryNarrative: "The boar was just a dream within a dream. But the lesson was real.",
                     heroDialogue: nil
                 ),
@@ -269,9 +269,9 @@ enum CampaignCatalogBook1 {
                             encounter: Encounter(
                                 id: encounterID(1, 8, 1),
                                 primaryEnemyID: EnemyCatalogBook1.giantBoar.id,
-                                supportEnemyIDs: [EnemyCatalogBook1.forestWolf.id]
+                                supportEnemyIDs: [EnemyCatalogBook1.forestSprite.id]
                             ),
-                            introText: "King Pellinore has hunted this beast his whole life. But tonight, it hunts you.",
+                            introText: "Something big crashes through the bracken — and it isn't alone.",
                             outroText: "From the mist, a gruff voice: 'Need a hand, little brother?'"
                         ),
                         BattleWave(
@@ -286,7 +286,7 @@ enum CampaignCatalogBook1 {
                             allyReinforcementID: CardCatalog.HeroIDs.kay
                         ),
                     ],
-                    openingNarrative: "The Beast has the head of a snake, the body of a leopard, the haunches of a lion. It is impossible. It is real.",
+                    openingNarrative: "King Pellinore chases the Questing Beast through these woods. Tonight its hunting-hounds found you first.",
                     victoryNarrative: "'Not bad,' Kay admits reluctantly. 'For a dreamer.'",
                     heroDialogue: [
                         CardCatalog.HeroIDs.kay: "Kay snorts. 'This is nothing. Remember when we faced those three outlaws?'"
@@ -309,9 +309,9 @@ enum CampaignCatalogBook1 {
                             encounter: Encounter(
                                 id: encounterID(1, 9, 1),
                                 primaryEnemyID: EnemyCatalogBook1.waywardKnight.id,
-                                supportEnemyIDs: [EnemyCatalogBook1.waywardKnight.id]
+                                supportEnemyIDs: [EnemyCatalogBook1.forestSprite.id, EnemyCatalogBook1.forestSprite.id]
                             ),
-                            introText: "Knights drunk on ambition block your path to the tournament grounds.",
+                            introText: "Knights hungry for glory block your path to the tournament grounds.",
                             outroText: nil
                         ),
                     ],
@@ -336,7 +336,7 @@ enum CampaignCatalogBook1 {
                             encounter: Encounter(
                                 id: encounterID(1, 10, 1),
                                 primaryEnemyID: EnemyCatalogBook1.waywardKnight.id,
-                                supportEnemyIDs: [EnemyCatalogBook1.waywardKnight.id]
+                                supportEnemyIDs: [EnemyCatalogBook1.forestSprite.id]
                             ),
                             introText: "Those who would stop you from reaching the stone attack!",
                             outroText: "You break through—and there it is. The sword."
@@ -348,15 +348,15 @@ enum CampaignCatalogBook1 {
                                 primaryEnemyID: EnemyCatalogBook1.sirEctorChallenge.id,
                                 supportEnemyIDs: []
                             ),
-                            introText: "'Before you draw that blade,' Sir Ector says quietly, 'you must prove you're worthy.'",
+                            introText: "The dream wears Sir Ector's face. But the eyes are wrong.",
                             outroText: nil
                         ),
                     ],
-                    openingNarrative: "WHOSO PULLETH OUT THIS SWORD OF THIS STONE AND ANVIL IS RIGHTWISE KING BORN OF ALL ENGLAND.",
-                    victoryNarrative: "The sword slides free like it was waiting for you. Like it was always yours.\n\nYou wake.\n\nThe book is warm in your hands.",
+                    openingNarrative: nil,
+                    victoryNarrative: nil,
                     heroDialogue: [
-                        CardCatalog.HeroIDs.lancelot: "Lancelot kneels. 'My king. I will serve you—in dreams and in waking.'",
-                        CardCatalog.HeroIDs.kay: "Kay laughs. 'I always knew. Even when I was terrible to you. I always knew.'"
+                        CardCatalog.HeroIDs.lancelot: "Lancelot's hand is on his sword. 'Whatever waits at that stone, we face it together.'",
+                        CardCatalog.HeroIDs.kay: "Kay scowls. 'Just get Wart to the stone. I'll handle the rest.'"
                     ]
                 ),
                 isBoss: true
@@ -379,7 +379,7 @@ enum CampaignCatalogBook1 {
                 waves: [
                     BattleWave(
                         id: waveID(2, 1, 1),
-                        encounter: Encounter(id: encounterID(2, 1, 1), primaryEnemyID: EnemyCatalogBook1.shadowWisp.id, supportEnemyIDs: []),
+                        encounter: Encounter(id: encounterID(2, 1, 1), primaryEnemyID: EnemyCatalogBook1.shadowWisp.id, supportEnemyIDs: [EnemyCatalogBook1.shadowWisp.id]),
                         introText: "The northern road grows cold. Shadows move wrong.",
                         outroText: nil
                     ),
@@ -421,15 +421,22 @@ enum CampaignCatalogBook1 {
                 waves: [
                     BattleWave(
                         id: waveID(2, 3, 1),
-                        encounter: Encounter(id: encounterID(2, 3, 1), primaryEnemyID: EnemyCatalogBook1.orkneyGuard.id, supportEnemyIDs: [EnemyCatalogBook1.orkneyGuard.id]),
+                        encounter: Encounter(id: encounterID(2, 3, 1), primaryEnemyID: EnemyCatalogBook1.orkneyGuard.id, supportEnemyIDs: []),
                         introText: "The gate guards cross their spears.",
-                        outroText: "A one-armed knight steps from the shadows. 'I'll vouch for this one.'"
+                        outroText: nil
+                    ),
+                    BattleWave(
+                        id: waveID(2, 3, 2),
+                        encounter: Encounter(id: encounterID(2, 3, 2), primaryEnemyID: EnemyCatalogBook1.orkneyGuard.id, supportEnemyIDs: []),
+                        introText: "A one-armed knight plants himself beside you. 'Hold. I'll vouch for this one.'",
+                        outroText: nil,
+                        allyReinforcementID: CardCatalog.HeroIDs.bedivere
                     ),
                 ],
                 openingNarrative: "Morgause's castle is beautiful and terrible. Like its queen.",
-                victoryNarrative: "'I am Bedivere,' the knight says. 'I serve the true king. As will you.'",
+                victoryNarrative: "The gate falls silent. A one-armed knight steps from the shadows and lowers his shield.",
                 heroDialogue: [
-                    CardCatalog.HeroIDs.lancelot: "Lancelot nods at Bedivere. 'Old friend. It's been too long.'"
+                    CardCatalog.HeroIDs.lancelot: "Lancelot studies the walls. 'I know this gate. Someone I trusted once held it.'"
                 ]
             ),
             isBoss: false
@@ -486,13 +493,13 @@ enum CampaignCatalogBook1 {
                 waves: [
                     BattleWave(
                         id: waveID(2, 6, 1),
-                        encounter: Encounter(id: encounterID(2, 6, 1), primaryEnemyID: EnemyCatalogBook1.orkneyGuard.id, supportEnemyIDs: [EnemyCatalogBook1.orkneyGuard.id]),
-                        introText: "Gawaine, Agravaine, Gaheris, Gareth. Morgause's sons block your path.",
+                        encounter: Encounter(id: encounterID(2, 6, 1), primaryEnemyID: EnemyCatalogBook1.orkneyGuard.id, supportEnemyIDs: [EnemyCatalogBook1.orkneyGuard.id, EnemyCatalogBook1.shadowWisp.id]),
+                        introText: "Morgause's sons watch from the wall. They send their guards instead.",
                         outroText: nil
                     ),
                 ],
                 openingNarrative: "They are not evil. Not yet. But their mother's shadow lies heavy on them.",
-                victoryNarrative: "'We're not your enemies,' Gawaine says. 'But we cannot let you pass.'",
+                victoryNarrative: "'We're not your enemies,' Gawaine calls down. 'Not yet. Go, before Mother sees.'",
                 heroDialogue: nil
             ),
             isBoss: false
@@ -528,15 +535,15 @@ enum CampaignCatalogBook1 {
                 waves: [
                     BattleWave(
                         id: waveID(2, 8, 1),
-                        encounter: Encounter(id: encounterID(2, 8, 1), primaryEnemyID: EnemyCatalogBook1.enchantedHound.id, supportEnemyIDs: [EnemyCatalogBook1.shadowWisp.id]),
+                        encounter: Encounter(id: encounterID(2, 8, 1), primaryEnemyID: EnemyCatalogBook1.enchantedHound.id, supportEnemyIDs: [EnemyCatalogBook1.shadowWisp.id, EnemyCatalogBook1.shadowWisp.id]),
                         introText: "Morgause's mirror shows terrible truths.",
-                        outroText: "A woman's voice from the shadows: 'Impressive. For a child.'"
+                        outroText: nil
                     ),
                 ],
                 openingNarrative: "The mirror shows you older. Crowned. Alone.",
-                victoryNarrative: "Morgana le Fay steps from the darkness. Sister to Arthur. Enemy? Ally? Both.",
+                victoryNarrative: "The mirror cracks. From the dark, a woman's voice: 'Impressive. For a child.'",
                 heroDialogue: [
-                    CardCatalog.HeroIDs.lancelot: "Lancelot's hand goes to his sword. 'Morgana. What game is this?'"
+                    CardCatalog.HeroIDs.lancelot: "Lancelot shields his eyes from the mirror. 'Don't look too long, dreamer.'"
                 ]
             ),
             isBoss: false
@@ -572,7 +579,7 @@ enum CampaignCatalogBook1 {
                 waves: [
                     BattleWave(
                         id: waveID(2, 10, 1),
-                        encounter: Encounter(id: encounterID(2, 10, 1), primaryEnemyID: EnemyCatalogBook1.enchantedHound.id, supportEnemyIDs: [EnemyCatalogBook1.enchantedHound.id]),
+                        encounter: Encounter(id: encounterID(2, 10, 1), primaryEnemyID: EnemyCatalogBook1.enchantedHound.id, supportEnemyIDs: [EnemyCatalogBook1.shadowWisp.id]),
                         introText: "Her hounds attack first. She watches, amused.",
                         outroText: "'Enough,' Morgause says. 'Face me yourself, little dreamer.'"
                     ),
@@ -583,8 +590,8 @@ enum CampaignCatalogBook1 {
                         outroText: nil
                     ),
                 ],
-                openingNarrative: "She is beautiful. She is terrible. She knows things about Arthur's birth that could break the kingdom.",
-                victoryNarrative: "'You win nothing,' she whispers as she fades. 'The doom is already set. Mordred will come.'\n\nYou wake, cold with sweat.\n\nThe book's pages rustle in a wind that isn't there.",
+                openingNarrative: nil,
+                victoryNarrative: nil,
                 heroDialogue: [
                     CardCatalog.HeroIDs.morgana: "Morgana faces her sister. 'This ends, Morgause. Here.'",
                     CardCatalog.HeroIDs.bedivere: "Bedivere raises his shield. 'For the king. For Camelot.'"
@@ -632,11 +639,11 @@ enum CampaignCatalogBook1 {
                     BattleWave(
                         id: waveID(3, 2, 1),
                         encounter: Encounter(id: encounterID(3, 2, 1), primaryEnemyID: EnemyCatalogBook1.rivalKnight.id, supportEnemyIDs: []),
-                        introText: "A knight in green challenges you.",
+                        introText: "A rival knight rides out, lance lowered.",
                         outroText: nil
                     ),
                 ],
-                openingNarrative: "The crowd roars. The Green Knight salutes.",
+                openingNarrative: "The crowd roars. Your first challenger salutes.",
                 victoryNarrative: "'Well struck!' the knight laughs, offering his hand.",
                 heroDialogue: nil
             ),
@@ -706,7 +713,7 @@ enum CampaignCatalogBook1 {
                     ),
                 ],
                 openingNarrative: "Turquine hates Lancelot above all others. He takes his fury out on everyone.",
-                victoryNarrative: "The prisoners stumble into the light. Among them: Escanor, Pride of the Noonday Sun.",
+                victoryNarrative: "The prisoners stumble into the light. Among them: Escanor, called the Noonday Pride.",
                 heroDialogue: [
                     CardCatalog.HeroIDs.lancelot: "Lancelot's eyes harden. 'Turquine. At last.'"
                 ]
@@ -729,7 +736,7 @@ enum CampaignCatalogBook1 {
                     ),
                 ],
                 openingNarrative: "The Sword Bridge cuts like a razor. Only true knights dare cross.",
-                victoryNarrative: "Your hands bleed, but you cross. Nothing will stop you.",
+                victoryNarrative: "Your hands are raw, but you cross. Nothing will stop you.",
                 heroDialogue: nil
             ),
             isBoss: false
@@ -768,14 +775,14 @@ enum CampaignCatalogBook1 {
                     BattleWave(
                         id: waveID(3, 8, 1),
                         encounter: Encounter(id: encounterID(3, 8, 1), primaryEnemyID: EnemyCatalogBook1.sirTurquine.id, supportEnemyIDs: []),
-                        introText: "A guardian blocks the path to holiness.",
-                        outroText: "Light fills the hall. A young knight steps forward."
+                        introText: "A shadow shaped like Turquine guards the way — the dream remembers your fears.",
+                        outroText: nil
                     ),
                 ],
-                openingNarrative: "Corbenic. The Grail Castle. Where only the pure may enter.",
-                victoryNarrative: "'I am Galahad,' says the knight. 'Son of Lancelot. The Grail is my quest.'",
+                openingNarrative: nil,
+                victoryNarrative: "The guardian fades. Light fills the hall — and a young knight steps out of it.",
                 heroDialogue: [
-                    CardCatalog.HeroIDs.lancelot: "Lancelot falls to his knees. 'My son. My sin made holy.'"
+                    CardCatalog.HeroIDs.lancelot: "Lancelot hesitates at the threshold. 'I am not sure the pure will have me.'"
                 ]
             ),
             isBoss: false
@@ -823,7 +830,7 @@ enum CampaignCatalogBook1 {
                     ),
                 ],
                 openingNarrative: "Meliagrance took the Queen. Now he pays.",
-                victoryNarrative: "Justice is served. But at what cost?\n\nYou wake with tears on your cheeks.\n\nThe book feels heavier now.",
+                victoryNarrative: nil,
                 heroDialogue: [
                     CardCatalog.HeroIDs.galahad: "Galahad prays. 'Father, your sins are not mine. I forgive you.'",
                     CardCatalog.HeroIDs.escanor: "Escanor blazes with fury. 'This villain DARES touch the Queen?'"
@@ -851,11 +858,11 @@ enum CampaignCatalogBook1 {
                         id: waveID(4, 1, 1),
                         encounter: Encounter(id: encounterID(4, 1, 1), primaryEnemyID: EnemyCatalogBook1.mordredSoldier.id, supportEnemyIDs: [EnemyCatalogBook1.mordredSoldier.id]),
                         introText: "Mordred's scouts. The war has begun.",
-                        outroText: "A wizard appears in a flash of light. 'I have been expecting you.'"
+                        outroText: nil
                     ),
                 ],
-                openingNarrative: "Arthur sails for France. Mordred seizes his chance.",
-                victoryNarrative: "Merlin stands before you at last. 'I live backwards through time. I have seen how this ends.'",
+                openingNarrative: nil,
+                victoryNarrative: "The scouts scatter. In the silence, an old man steps through a tear in the air itself.",
                 heroDialogue: nil
             ),
             isBoss: false
@@ -878,7 +885,7 @@ enum CampaignCatalogBook1 {
                 openingNarrative: "Knights who once served Arthur now serve his son. His destroyer.",
                 victoryNarrative: "Every victory feels like defeat. These were your brothers.",
                 heroDialogue: [
-                    CardCatalog.HeroIDs.merlin: "Merlin sighs. 'I told him. I told him about Mordred. He wouldn't listen.'"
+                    CardCatalog.HeroIDs.merlin: "Merlyn sighs. 'I told him. I told him about Mordred. He wouldn't listen.'"
                 ]
             ),
             isBoss: false
@@ -920,7 +927,7 @@ enum CampaignCatalogBook1 {
                     ),
                 ],
                 openingNarrative: "Agravaine exposed Lancelot and the Queen. Now he pays the price.",
-                victoryNarrative: "Agravaine falls. But his damage is done.",
+                victoryNarrative: "Agravaine flees into the dark. But his damage is done.",
                 heroDialogue: [
                     CardCatalog.HeroIDs.kay: "Kay spits. 'Agravaine was always rotten. Even as a boy.'"
                 ]
@@ -1026,12 +1033,12 @@ enum CampaignCatalogBook1 {
                     BattleWave(
                         id: waveID(4, 9, 1),
                         encounter: Encounter(id: encounterID(4, 9, 1), primaryEnemyID: EnemyCatalogBook1.sirAgravaine.id, supportEnemyIDs: [EnemyCatalogBook1.mordredSoldier.id, EnemyCatalogBook1.mordredSoldier.id]),
-                        introText: "Chaos. Blood. The end of an age.",
+                        introText: "Chaos. Smoke. The end of an age.",
                         outroText: nil
                     ),
                 ],
                 openingNarrative: "A hundred thousand fall. The flower of chivalry, destroyed.",
-                victoryNarrative: "Through the carnage, you see Mordred. And Arthur.",
+                victoryNarrative: "Through the smoke, you see Mordred. And Arthur.",
                 heroDialogue: nil
             ),
             isBoss: false
@@ -1057,11 +1064,11 @@ enum CampaignCatalogBook1 {
                         outroText: nil
                     ),
                 ],
-                openingNarrative: "'In my end is my beginning.' Arthur faces his fate.",
-                victoryNarrative: "Mordred falls. But Arthur...\n\n'Take me to the lake,' he whispers.\n\nYou wake screaming.\n\nThe book is cold in your hands. But not finished. One chapter remains.",
+                openingNarrative: nil,
+                victoryNarrative: nil,
                 heroDialogue: [
-                    CardCatalog.HeroIDs.bedivere: "Bedivere weeps. 'The sword. He asked me to return Excalibur to the lake.'",
-                    CardCatalog.HeroIDs.merlin: "Merlin is silent. He already knows what comes next."
+                    CardCatalog.HeroIDs.bedivere: "Bedivere grips his shield. 'Whatever the king asks of me today, I will do.'",
+                    CardCatalog.HeroIDs.merlin: "Merlyn is silent. He already knows what comes next."
                 ]
             ),
             isBoss: true
@@ -1089,8 +1096,8 @@ enum CampaignCatalogBook1 {
                         outroText: nil
                     ),
                 ],
-                openingNarrative: "The final chapter. Merlin waits on the shore of Avalon.",
-                victoryNarrative: "'You've come far,' Merlin says. 'But the hardest lesson remains.'",
+                openingNarrative: "The final chapter. Merlyn waits on the shore of Avalon.",
+                victoryNarrative: "'You've come far,' Merlyn says. 'But the hardest lesson remains.'",
                 heroDialogue: nil
             ),
             isBoss: false
@@ -1111,7 +1118,7 @@ enum CampaignCatalogBook1 {
                     ),
                 ],
                 openingNarrative: "War is what happens when we forget we're all the same species.",
-                victoryNarrative: "'Good,' Merlin nods. 'You remember.'",
+                victoryNarrative: "'Good,' Merlyn nods. 'You remember.'",
                 heroDialogue: nil
             ),
             isBoss: false
@@ -1132,7 +1139,7 @@ enum CampaignCatalogBook1 {
                     ),
                 ],
                 openingNarrative: "From above, there are no nations. Only one world.",
-                victoryNarrative: "'We forget,' Merlin says, 'that we made the things that divide us.'",
+                victoryNarrative: "'We forget,' Merlyn says, 'that we made the things that divide us.'",
                 heroDialogue: nil
             ),
             isBoss: false
@@ -1152,8 +1159,8 @@ enum CampaignCatalogBook1 {
                         outroText: nil
                     ),
                 ],
-                openingNarrative: "Other animals fight. Only humans slaughter wholesale.",
-                victoryNarrative: "'Because we can imagine,' Merlin says. 'And imagination can be poison.'",
+                openingNarrative: "Other animals fight. Only humans make war on purpose.",
+                victoryNarrative: "'Because we can imagine,' Merlyn says. 'And imagination can be poison.'",
                 heroDialogue: nil
             ),
             isBoss: false
@@ -1218,7 +1225,7 @@ enum CampaignCatalogBook1 {
                     ),
                 ],
                 openingNarrative: "The deepest fear: being trapped forever in a dream of your own making.",
-                victoryNarrative: "'Dreams end,' Merlin says gently. 'That's what makes them precious.'",
+                victoryNarrative: "'Dreams end,' Merlyn says gently. 'That's what makes them precious.'",
                 heroDialogue: nil
             ),
             isBoss: false
@@ -1234,12 +1241,12 @@ enum CampaignCatalogBook1 {
                     BattleWave(
                         id: waveID(5, 8, 1),
                         encounter: Encounter(id: encounterID(5, 8, 1), primaryEnemyID: EnemyCatalogBook1.dreamerDoubt.id, supportEnemyIDs: [EnemyCatalogBook1.dreamerDoubt.id]),
-                        introText: "Rex Quondam, Rexque Futurus.",
+                        introText: "Rex Quondam, Rexque Futurus. The Once and Future King.",
                         outroText: nil
                     ),
                 ],
                 openingNarrative: "Arthur sleeps in Avalon. He will return when Britain needs him most.",
-                victoryNarrative: "'And so will you,' Merlin smiles. 'You're part of that story now.'",
+                victoryNarrative: "'And so will you,' Merlyn smiles. 'You're part of that story now.'",
                 heroDialogue: nil
             ),
             isBoss: false
@@ -1259,7 +1266,7 @@ enum CampaignCatalogBook1 {
                         outroText: nil
                     ),
                 ],
-                openingNarrative: "'The best thing for sadness,' Merlin says, 'is to learn something.'",
+                openingNarrative: "'The best thing for sadness,' Merlyn says, 'is to learn something.'",
                 victoryNarrative: "You have learned so much. You are ready.",
                 heroDialogue: nil
             ),
@@ -1286,14 +1293,9 @@ enum CampaignCatalogBook1 {
                         outroText: nil
                     ),
                 ],
-                openingNarrative: "The lantern flickers. Dawn approaches. You must choose: wake, or sleep forever.",
-                victoryNarrative: "'Well done,' Merlin whispers. 'The dream is part of you now. Forever.'\n\nThe lantern glows steady.\n\nYou open your eyes.\n\nSunlight streams through your window. The book rests on your pillow, closed.\n\nOn the cover, new words have appeared:\n\nTHE END\n...\nAND THE BEGINNING\n\nYou smile.\n\nThere are more books on the shelf.",
-                heroDialogue: [
-                    CardCatalog.HeroIDs.merlin: "Merlin bows. 'Until we meet again, young dreamer. In another story.'",
-                    CardCatalog.HeroIDs.lancelot: "Lancelot salutes. 'You gave us another chance. We won't forget.'",
-                    CardCatalog.HeroIDs.bedivere: "Bedivere smiles. 'The king would be proud.'",
-                    CardCatalog.HeroIDs.galahad: "Galahad glows with inner light. 'The Grail's blessing goes with you.'"
-                ]
+                openingNarrative: nil,
+                victoryNarrative: nil,
+                heroDialogue: nil
             ),
             isBoss: true
         ),

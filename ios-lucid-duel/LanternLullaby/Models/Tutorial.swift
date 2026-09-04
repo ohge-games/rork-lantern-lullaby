@@ -48,21 +48,28 @@ nonisolated struct TutorialScript: Hashable, Codable, Sendable {
         TutorialStep(
             id: "party-lead",
             title: "The lead takes the blows",
-            text: "The hero standing in front is the lead. Every enemy aims at them, and if they fall the next hero steps up. You only lose when nobody is left standing.",
+            text: "The hero in front is the lead. Enemies aim at them; if they fall, the next hero steps up. You only lose when nobody is left standing.",
             anchor: .hero,
             advance: .tap
         ),
         TutorialStep(
             id: "party-passive",
             title: "Only the lead's passive counts",
-            text: "Every hero has a passive. Lancelot's Peerless Blade adds 3 damage to attacks while the lantern burns Vivid — but only while he leads. Tap any hero to read theirs.",
+            text: "Only the lead's passive counts. Lancelot's Peerless Blade adds 3 damage while Vivid. Make Lancelot lead on the book page and you'll feel it.",
             anchor: .hero,
             advance: .tap
         ),
         TutorialStep(
             id: "party-ability",
             title: "Abilities charge as you play",
-            text: "Under each hero's health bar is a row of pips. Playing one of that hero's cards fills a pip, wherever they are standing. Fill them all and a gold badge appears above them — tap it to fire their ability for free, no Lucidity at all.",
+            text: "Under each hero's health bar is a row of pips. Playing one of that hero's cards fills a pip — wherever they stand.",
+            anchor: .hero,
+            advance: .tap
+        ),
+        TutorialStep(
+            id: "party-ability-fire",
+            title: "Then they fire for free",
+            text: "Fill them all and a gold badge appears above the hero. Tap it: the ability fires for free. No Lucidity at all.",
             anchor: .hero,
             advance: .tap
         ),
@@ -87,7 +94,7 @@ nonisolated struct TutorialScript: Hashable, Codable, Sendable {
         TutorialStep(
             id: "cost",
             title: "Every card brightens the flame",
-            text: "The +number on a card is how much it raises Lucidity. Reach 100 and you jolt awake. Let it gutter to 0 and you sink into Deep Sleep. Either one ends the dream.",
+            text: "A card's +number is how much it raises Lucidity. Hit 100 and you jolt awake. Burn out to 0 and you sink into Deep Sleep. Both end the dream.",
             anchor: .lantern,
             advance: .tap
         ),
@@ -108,7 +115,7 @@ nonisolated struct TutorialScript: Hashable, Codable, Sendable {
         TutorialStep(
             id: "play",
             title: "Play a card",
-            text: "Touch a card and drag the thread to a target. Attacks go to an enemy; shields and heals go to one of your heroes. Cards that need no target — Relax and draw — just pull up. Try it now.",
+            text: "Drag a card's thread to a target. Attacks go to an enemy; shields and heals go to a hero. Relax and draw cards just pull up. Try it now.",
             anchor: .hand,
             advance: .cardPlayed
         ),
@@ -122,14 +129,14 @@ nonisolated struct TutorialScript: Hashable, Codable, Sendable {
         TutorialStep(
             id: "release",
             title: "When nothing helps, let one go",
-            text: "Drop any card onto the lantern instead of playing it. You lose the card and the flame dims 5. It is always there, so a hand of nothing but attacks can never trap you against Awakening.",
+            text: "Drop any card onto the lantern instead of playing it. Let it go: the card is gone for this battle, the flame dims 5 — never below Drifting.",
             anchor: .lantern,
             advance: .tap
         ),
         TutorialStep(
             id: "strain",
             title: "Vary what you play",
-            text: "Leaning on one kind of card wears the dream thin. Each repeat of a type in the same turn costs +1 more Lucidity, shown on the card. Mixing attack, defense and rest keeps the flame low.",
+            text: "Each repeat of a card type in the same turn costs +1 more Lucidity, shown on the card. Mixing attack, defense and rest keeps the cost low.",
             anchor: .hand,
             advance: .tap
         ),
@@ -143,9 +150,16 @@ nonisolated struct TutorialScript: Hashable, Codable, Sendable {
         TutorialStep(
             id: "zones",
             title: "Ride the edge",
-            text: "A bright flame (Vivid, 66–85) makes your attacks 20% stronger. A dim one (Drifting, 16–35) does the opposite job: every card costs 2 less, you draw an extra card, and you can see one move further ahead. Balanced is safe but plain.",
+            text: "A bright flame (Vivid, 66–85) makes your attacks 20% stronger.",
             anchor: .lantern,
-            advance: .enemyTurnDone
+            advance: .tap
+        ),
+        TutorialStep(
+            id: "zones-drifting",
+            title: "Or sink into the dark",
+            text: "A dim flame (Drifting, 16–35) makes every card cost 2 less, draws you an extra card, and shows the enemy's next two moves.",
+            anchor: .lantern,
+            advance: .tap
         ),
         TutorialStep(
             id: "go",

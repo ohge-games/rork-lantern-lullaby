@@ -257,18 +257,22 @@ struct LanternView: View {
             .contentTransition(.interpolate)
     }
 
-    @ViewBuilder
+    /// The warning line keeps its height even when silent, so the lantern
+    /// above it never hops when the flame crosses into danger.
     private func warningLabel(time: TimeInterval) -> some View {
-        if let warning = warningText {
-            // Pulsing danger warning — a 1.1s opacity cycle.
-            Label(warning, systemImage: "exclamationmark.triangle.fill")
-                .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(DreamTheme.danger)
-                .multilineTextAlignment(.center)
-                .frame(width: 92)
-                .opacity(0.65 + 0.35 * sin(time * (2 * .pi / 1.1)))
-                .transition(.opacity.combined(with: .scale(scale: 0.9)))
+        ZStack {
+            if let warning = warningText {
+                // Pulsing danger warning — a 1.1s opacity cycle.
+                Label(warning, systemImage: "exclamationmark.triangle.fill")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(DreamTheme.danger)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 92)
+                    .opacity(0.65 + 0.35 * sin(time * (2 * .pi / 1.1)))
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
+            }
         }
+        .frame(width: 92, height: 24)
     }
 
     private var warningText: String? {

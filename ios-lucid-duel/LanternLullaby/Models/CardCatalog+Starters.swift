@@ -121,7 +121,7 @@ nonisolated extension CardCatalog {
 
     static let owlWisdom = Card(
         id: starterCardID("A0200000-0000-4000-8000-000000000004"),
-        name: "Wise Counsel",
+        name: "Owl's Advice",
         text: "Heal 6 HP. Draw 1 card.",
         lucidityCost: 4,
         cardType: .utility,
@@ -175,7 +175,7 @@ nonisolated extension CardCatalog {
         title: "Merlyn's Owl",
         maxHealth: 40,
         passive: PassiveAbility(
-            name: "Wise Counsel",
+            name: "Night Eyes",
             text: "Draw 1 extra card at the start of each turn.",
             kind: .bonusCardDraw(amount: 1)
         ),

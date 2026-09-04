@@ -44,7 +44,7 @@ nonisolated enum HeroAbilities {
             ]
         ),
         CardCatalog.HeroIDs.archimedes: HeroAbility(
-            name: "Wise Counsel",
+            name: "Owl's Counsel",
             text: "Draw 3 cards and settle the lantern 10 toward Balanced.",
             chargeRequired: 4,
             effects: [
@@ -78,7 +78,7 @@ nonisolated enum HeroAbilities {
             ]
         ),
         CardCatalog.HeroIDs.morgana: HeroAbility(
-            name: "Fey Bargain",
+            name: "Fey Pact",
             text: "Deal 22 damage and heal 10.",
             chargeRequired: 5,
             effects: [
@@ -87,7 +87,7 @@ nonisolated enum HeroAbilities {
             ]
         ),
         CardCatalog.HeroIDs.escanor: HeroAbility(
-            name: "The One",
+            name: "Noon's Peak",
             text: "Deal 40 damage to the targeted enemy.",
             chargeRequired: 6,
             effects: [Effect(type: .damage, value: 40)]
@@ -102,7 +102,7 @@ nonisolated enum HeroAbilities {
             ]
         ),
         CardCatalog.HeroIDs.merlin: HeroAbility(
-            name: "Living Backwards",
+            name: "Backwards Hour",
             text: "Settle the lantern all the way to Balanced and draw 3 cards.",
             chargeRequired: 5,
             effects: [

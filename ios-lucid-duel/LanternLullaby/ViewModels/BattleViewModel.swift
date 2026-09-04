@@ -8,6 +8,10 @@ nonisolated enum EnemyIntent: Hashable, Sendable {
     case brace(Int)
     /// A self-buff; the label is what the intent chip reads.
     case buff(String)
+    /// A push on the player's lantern (positive brightens it).
+    case push(Int)
+    /// Hushed: the enemy loses this action, its plan still queued.
+    case stunned
 }
 
 /// Tracks narrative flow state during battle.
@@ -16,7 +20,6 @@ enum NarrativePhase: Equatable {
     case showingPreScene         // Pre-battle cutscene
     case showingDialogue         // In-battle dialogue overlay
     case showingPostScene        // Post-battle cutscene
-    case waitingForDialogueDismiss  // Paused, waiting for tap
 }
 
 /// A resolved hit against a combatant, used for floating combat numbers.
@@ -109,6 +112,10 @@ nonisolated struct EnemyCombatant: Identifiable, Hashable, Sendable {
     var shield: Int
     var brain: EnemyBrain
     let isPrimary: Bool
+    /// Actions this enemy will skip (Hush). The plan stays queued.
+    var stunTurns: Int = 0
+    /// Taken off this enemy's next attack (Wooden Feint).
+    var weaken: Int = 0
 
     var isDown: Bool { health <= 0 }
     var healthFraction: Double {
@@ -294,20 +301,29 @@ final class BattleViewModel {
     /// Opens the stage: the pre-battle scene if there is one, otherwise the
     /// battle-start dialogue straight away.
     func startStage() {
+        guard !hasStarted else { return }
+        hasStarted = true
         tutorialPending = configuration.tutorial != nil
         if preStageScene != nil {
             narrativePhase = .showingPreScene
         } else {
-            dialogueManager.checkTrigger(.battleStart)
+            openBattleDialogue()
             if activeDialogue == nil { beginTutorialIfNeeded() }
         }
+    }
+
+    /// The opening beats: the stage's battle-start lines, then any party
+    /// combo the player has not seen yet.
+    private func openBattleDialogue() {
+        dialogueManager.checkTrigger(.battleStart)
+        dialogueManager.checkFirstTimeDialogues()
     }
 
     /// Called when pre-stage scene completes.
     func dismissPreScene() {
         preStageScene = nil
         narrativePhase = .none
-        dialogueManager.checkTrigger(.battleStart)
+        openBattleDialogue()
         if activeDialogue == nil { beginTutorialIfNeeded() }
     }
 
@@ -320,6 +336,13 @@ final class BattleViewModel {
 
     /// Called when user taps to dismiss current dialogue.
     func dismissDialogue() {
+        dialogueManager.dismissCurrentDialogue()
+    }
+
+    /// The same, but only if `id` is still the line on screen. A dismiss
+    /// scheduled a beat ago must not close a line the player has not read.
+    func dismissDialogue(_ id: UUID) {
+        guard activeDialogue?.id == id else { return }
         dialogueManager.dismissCurrentDialogue()
     }
 
@@ -447,10 +470,9 @@ final class BattleViewModel {
     var hasMoreWaves: Bool { waveIndex + 1 < configuration.waves.count }
 
     /// True when the player's current zone boosts this card by +20%.
+    /// Only Vivid scales anything; Drifting pays out in cost and draw.
     func isBonusActive(for card: Card) -> Bool {
-        let zone = state.player.zone
-        return (card.cardType == .offensive && zone == .vivid)
-            || (card.cardType == .defensive && zone == .drifting)
+        card.cardType == .offensive && state.player.zone == .vivid
     }
 
     /// Lucidity cost after hero passive discounts are applied.
@@ -614,7 +636,7 @@ final class BattleViewModel {
                 maxHealth: combatant.enemy.maxHealth,
                 health: combatant.health,
                 shield: combatant.shield,
-                intent: combatant.brain.intent,
+                intent: Self.displayedIntent(for: combatant),
                 nextIntent: foresight && !combatant.isDown
                     ? combatant.brain.previewNextIntent(
                         turn: state.turnNumber,
@@ -624,6 +646,16 @@ final class BattleViewModel {
                 isPrimary: combatant.isPrimary
             )
         }
+    }
+
+    /// The chip the player sees: a hushed enemy shows "Hushed", and a
+    /// weakened attack shows the number that will actually land.
+    private static func displayedIntent(for combatant: EnemyCombatant) -> EnemyIntent {
+        if combatant.stunTurns > 0 { return .stunned }
+        if combatant.weaken > 0, case .attack(let amount) = combatant.brain.intent {
+            return .attack(max(0, amount - combatant.weaken))
+        }
+        return combatant.brain.intent
     }
 
     // MARK: - Hero switching
@@ -648,7 +680,7 @@ final class BattleViewModel {
     /// True while an offensive card is selected — enemies light up as targets.
     var isTargetingActive: Bool {
         guard state.phase == .playerMain, let card = selectedCard else { return false }
-        return cardDealsDamage(card)
+        return cardTargetsEnemy(card)
     }
 
     var targetedEnemyName: String {
@@ -662,6 +694,16 @@ final class BattleViewModel {
         } ?? false
     }
 
+    /// True for any card aimed at an enemy: damage, or one of the answers
+    /// (Hush, Wooden Feint, Cut the Straps, Snuffed Wick).
+    func cardTargetsEnemy(_ card: Card) -> Bool {
+        if cardDealsDamage(card) { return true }
+        let effects = card.effects + (card.choices?.flatMap(\.effects) ?? [])
+        return effects.contains { Self.enemyDebuffs.contains($0.type) }
+    }
+
+    private static let enemyDebuffs: Set<EffectType> = [.stun, .weaken, .shieldBreak, .calm]
+
     /// Total damage a card would deal right now (drives the target preview).
     func projectedDamage(of card: Card, choice: CardChoiceOption? = nil) -> Int {
         (card.effects + (choice?.effects ?? []))
@@ -674,7 +716,7 @@ final class BattleViewModel {
     /// enemy while a single-branch offensive card is selected confirms and
     /// plays the card on it. Dual-direction cards still need a branch pick.
     func tapEnemy(_ id: UUID) {
-        guard state.phase == .playerMain else { return }
+        guard state.phase == .playerMain, !isBattlePausedForDialogue else { return }
         guard let member = enemyLine.first(where: { $0.id == id }), !member.isDown else { return }
 
         if isTargetingActive, targetedEnemyID == id, let card = selectedCard, card.choices == nil {
@@ -716,7 +758,7 @@ final class BattleViewModel {
     /// support cards always, dual-direction cards too.
     var isAllyTargetingActive: Bool {
         guard isDraggingCard, let card = selectedCard, card.needsTarget else { return false }
-        return card.choices != nil || !cardDealsDamage(card)
+        return card.choices != nil || !cardTargetsEnemy(card)
     }
 
     /// How far a global card must be pulled above the hand to play.
@@ -745,8 +787,8 @@ final class BattleViewModel {
             return
         }
 
-        let enemyUnderFinger = cardDealsDamage(card) ? enemyID(at: point) : nil
-        let allyUnderFinger = (card.choices != nil || !cardDealsDamage(card)) ? allyID(at: point) : nil
+        let enemyUnderFinger = cardTargetsEnemy(card) ? enemyID(at: point) : nil
+        let allyUnderFinger = (card.choices != nil || !cardTargetsEnemy(card)) ? allyID(at: point) : nil
 
         if let enemyUnderFinger {
             hoverEnemy(enemyUnderFinger)
@@ -767,8 +809,8 @@ final class BattleViewModel {
         guard isDraggingCard, let card = selectedCard, let point = dragPoint else { return false }
         if isOverLantern(point) { return true }
         guard card.needsTarget else { return isLiftedForGlobalPlay }
-        if cardDealsDamage(card), enemyID(at: point) != nil { return true }
-        if card.choices != nil || !cardDealsDamage(card), allyID(at: point) != nil { return true }
+        if cardTargetsEnemy(card), enemyID(at: point) != nil { return true }
+        if card.choices != nil || !cardTargetsEnemy(card), allyID(at: point) != nil { return true }
         return false
     }
 
@@ -785,17 +827,28 @@ final class BattleViewModel {
         lanternFrame = frame
     }
 
-    /// True while the dragged card is held over the lantern.
+    /// True while the dragged card is held over the lantern. A figure the
+    /// finger is actually on wins over the lantern's generous slop zone.
     func isOverLantern(_ point: CGPoint) -> Bool {
-        lanternFrame.insetBy(dx: -Self.dropSlop, dy: -Self.dropSlop).contains(point)
+        guard lanternFrame.insetBy(dx: -Self.dropSlop, dy: -Self.dropSlop).contains(point) else { return false }
+        let onFigure = enemyFrames.values.contains { $0.contains(point) }
+            || allyFrames.values.contains { $0.contains(point) }
+        return !onFigure || lanternFrame.contains(point)
     }
 
-    /// Feeds the selected card to the flame: it goes to the discard pile
-    /// and the lantern dims. No card effect resolves and no Focus Strain
+    /// Cards fed to the flame this battle. They are gone for good: a
+    /// burned card never returns through the discard pile, so every
+    /// release thins the deck a little. That is what keeps the lantern a
+    /// resource — releasing is always available, never free.
+    private(set) var burnedCards: [CardInstance] = []
+
+    /// Feeds the selected card to the flame: the card burns and the
+    /// lantern dims. No card effect resolves and no Focus Strain
     /// accrues — you are spending the card itself, not playing it.
     ///
     /// This is the release valve for a hand with no Relax card in it, which
-    /// is otherwise a dead end once the meter is near Awakening.
+    /// is otherwise a dead end once the meter is near Awakening. The relief
+    /// never carries the flame into Deep Sleep — the safe out stays safe.
     func releaseSelectedCard() {
         guard !isBattlePausedForDialogue, !isTutorialBlocking else { return }
         guard state.phase == .playerMain,
@@ -803,13 +856,22 @@ final class BattleViewModel {
               let instance = selectedInstance else { return }
 
         state.player.hand.removeAll { $0.id == instance.id }
-        state.player.discardPile.append(instance)
+        burnedCards.append(instance)
         selectedInstanceID = nil
         pendingAllyTarget = nil
 
-        applyPlayerLucidityDelta(-GameRules.releaseRelief)
+        applyPlayerLucidityDelta(-safeReleaseRelief)
         emitSound("let it go")
         refreshOutcome()
+    }
+
+    /// How far a release may dim the flame right now without losing.
+    var safeReleaseRelief: Int {
+        var relief = GameRules.releaseRelief
+        while relief > 0, LucidityZone.zone(for: state.player.lucidity - relief) == .deepSleep {
+            relief -= 1
+        }
+        return relief
     }
 
     /// Battlefield frames reported by enemy figures (global space), used
@@ -901,7 +963,7 @@ final class BattleViewModel {
     // MARK: - Player actions
 
     func toggleSelection(of instance: CardInstance) {
-        guard state.phase == .playerMain, !isTutorialBlocking else { return }
+        guard state.phase == .playerMain, !isTutorialBlocking, !isBattlePausedForDialogue else { return }
         selectedInstanceID = selectedInstanceID == instance.id ? nil : instance.id
     }
 
@@ -962,6 +1024,10 @@ final class BattleViewModel {
         refreshOutcome()
     }
 
+    /// When true the enemy turn resolves synchronously with no pacing
+    /// beats. Used by headless simulations and tests; never by the UI.
+    @ObservationIgnored var instantEnemyTurns = false
+
     func endTurn() {
         guard !isBattlePausedForDialogue, !isTutorialBlocking else { return }
         guard state.phase == .playerMain, state.outcome == .ongoing else { return }
@@ -969,11 +1035,35 @@ final class BattleViewModel {
         pendingAllyTarget = nil
         state.phase = .enemyTurn
         tutorialEvent(.turnEnded)
-        Task { await resolveEnemyTurn() }
+        if instantEnemyTurns {
+            resolveEnemyTurnInstantly()
+        } else {
+            enemyTurnTask?.cancel()
+            turnGeneration += 1
+            let generation = turnGeneration
+            enemyTurnTask = Task { [weak self] in
+                await self?.resolveEnemyTurn(generation: generation)
+            }
+        }
     }
+
+    /// The enemy turn in flight. Tests await it instead of sleeping; a
+    /// restart cancels it so two turns can never run at once.
+    private(set) var enemyTurnTask: Task<Void, Never>?
+
+    /// Bumped by every `endTurn` and every restart. A paced turn that wakes
+    /// up holding a stale generation has been superseded and stops.
+    private var turnGeneration = 0
+
+    /// Has the stage been opened? Guards against a second `startStage()`
+    /// queueing the opening lines twice.
+    private var hasStarted = false
 
     /// Restarts the same fight from the first wave with everyone healed.
     func startNewDuel() {
+        enemyTurnTask?.cancel()
+        enemyTurnTask = nil
+        turnGeneration += 1
         state = Self.freshDuel(for: configuration)
         party = configuration.party.map { PartyMember(hero: $0, health: $0.maxHealth) }
         activeAllyID = configuration.party[0].id
@@ -989,13 +1079,15 @@ final class BattleViewModel {
         isFirstCardThisTurn = true
         cardsPlayedThisTurn = [:]
         resonance = [:]
+        burnedCards = []
         enemyHitTargetID = nil
         playerHitTargetID = nil
         pendingAllyTarget = nil
         hoveredAllyID = nil
+        // A retry is still a first battle: the lesson comes back with it.
         tutorialSteps = []
         tutorialIndex = 0
-        tutorialPending = false
+        tutorialPending = configuration.tutorial != nil
         spawnWave(0, seedingPrimaryFrom: nil)
         drawPlayerCards(GameRules.startingHandSize)
         state.phase = .playerMain
@@ -1007,7 +1099,8 @@ final class BattleViewModel {
         activeDialogue = nil
         dialogueManager.registerDialogues(registeredDialogues)
         dialogueManager.loadShownKeys()
-        dialogueManager.checkTrigger(.battleStart)
+        openBattleDialogue()
+        if activeDialogue == nil { beginTutorialIfNeeded() }
     }
 
     // MARK: - Waves
@@ -1032,7 +1125,7 @@ final class BattleViewModel {
                 shield = seed.shield
             }
             let fraction = enemy.maxHealth > 0 ? Double(health) / Double(enemy.maxHealth) : 0
-            let brain = EnemyBrain(pattern: enemy.pattern, turn: state.turnNumber, healthFraction: fraction)
+            let brain = EnemyBrain(pattern: enemy.pattern, turn: state.turnNumber, healthFraction: fraction, slot: slot)
             line.append(
                 EnemyCombatant(
                     id: id,
@@ -1054,13 +1147,43 @@ final class BattleViewModel {
         lastEnemyHealthPercent = 100
         syncPrimaryMirror()
 
-        // A hero the story promised rides in with this wave.
-        if let guest = wave.allyReinforcement, !party.contains(where: { $0.id == guest.id }) {
+        // A hero the story promised rides in with this wave. The field has
+        // four places, so a fifth would stand unseen and still take hits.
+        if let guest = wave.allyReinforcement,
+           !party.contains(where: { $0.id == guest.id }),
+           party.count < Self.maxFieldedHeroes {
             party.append(PartyMember(hero: guest, health: guest.maxHealth))
+            welcomeGuestCards(for: guest)
             if index > 0 {
                 showNotice("\(guest.name) joins the fight")
                 emitSound("ally arrives")
             }
+        }
+    }
+
+    /// Lead plus three back slots on the battlefield.
+    static let maxFieldedHeroes = 4
+
+    /// A guest arrives with a few of their own cards: two straight into the
+    /// hand, the rest shuffled into the deck, and their ability already
+    /// most of the way charged — the cavalry arrives ready to act.
+    private func welcomeGuestCards(for guest: Hero) {
+        let pool = CardCatalog.pool(for: guest).sorted { $0.lucidityCost < $1.lucidityCost }
+        let attacks = Array(pool.filter { $0.cardType == .offensive }.prefix(4))
+        let defence = Array(pool.filter { $0.cardType == .defensive }.prefix(1))
+        guard !attacks.isEmpty || !defence.isEmpty else { return }
+
+        var incoming = (attacks + defence).map { CardInstance(cardID: $0.id) }
+        var toHand: [CardInstance] = []
+        while toHand.count < 2, !incoming.isEmpty, state.player.hand.count + toHand.count < GameRules.maxHandSize {
+            toHand.append(incoming.removeFirst())
+        }
+        state.player.hand.append(contentsOf: toHand)
+        state.player.deck.append(contentsOf: incoming)
+        state.player.deck.shuffle()
+
+        if let ability = HeroAbilities.ability(for: guest) {
+            resonance[guest.id] = max(resonance[guest.id] ?? 0, ability.chargeRequired - 2)
         }
     }
 
@@ -1095,6 +1218,46 @@ final class BattleViewModel {
         case .swapLead:
             if let target = resolvingAllyTarget {
                 switchActiveHero(to: target)
+            }
+        case .stun:
+            if let index = targetedEnemyIndex {
+                enemyLine[index].stunTurns += value
+                showNotice("\(enemyLine[index].enemy.name) is hushed")
+                emitSound("hush")
+                applyDebuffPassives()
+            }
+        case .weaken:
+            if let index = targetedEnemyIndex {
+                enemyLine[index].weaken += value
+                applyDebuffPassives()
+            }
+        case .shieldBreak:
+            if let index = targetedEnemyIndex, enemyLine[index].shield > 0 {
+                enemyLine[index].shield = 0
+                emitSound("shield shatters")
+                applyDebuffPassives()
+            }
+        case .calm:
+            if let index = targetedEnemyIndex {
+                enemyLine[index].brain.calm()
+                emitSound("wind-up snuffed")
+                applyDebuffPassives()
+            }
+        }
+    }
+
+    /// The living enemy a card is aimed at: the targeted one, else the
+    /// first still standing.
+    private var targetedEnemyIndex: Int? {
+        enemyLine.firstIndex(where: { $0.id == targetedEnemyID && !$0.isDown })
+            ?? enemyLine.firstIndex(where: { !$0.isDown })
+    }
+
+    /// `debuffHealing`: the lead mends a little whenever a debuff lands.
+    private func applyDebuffPassives() {
+        for hero in activeHeroes {
+            if case .debuffHealing(let amount) = hero.passive.kind {
+                healLead(amount)
             }
         }
     }
@@ -1361,47 +1524,89 @@ final class BattleViewModel {
 
     // MARK: - Enemy turn
 
-    private func resolveEnemyTurn() async {
+    private func resolveEnemyTurn(generation: Int) async {
         // "Enemy thinking…" beat before it acts.
         isEnemyThinking = true
         try? await Task.sleep(for: .seconds(1))
         isEnemyThinking = false
-        guard state.phase == .enemyTurn else { return }
+        guard isCurrentEnemyTurn(generation) else { return }
 
+        // Held by id, not index: a restart between beats can replace the
+        // whole line, and an index into the old one would trap.
         var hasActed = false
-        for index in enemyLine.indices where !enemyLine[index].isDown {
+        for id in enemyLine.map(\.id) {
             if hasActed {
                 try? await Task.sleep(for: .milliseconds(500))
-                guard state.phase == .enemyTurn else { return }
+                guard isCurrentEnemyTurn(generation) else { return }
             }
+            guard let index = enemyLine.firstIndex(where: { $0.id == id }), !enemyLine[index].isDown else { continue }
             hasActed = true
-
-            // A combatant's shield lasts until the start of its own next turn.
-            enemyLine[index].shield = 0
-            actingEnemyID = enemyLine[index].id
-            enemyActionTrigger += 1
-
-            let move = enemyLine[index].brain.execute()
-            switch move {
-            case .attack(let amount):
-                dealDamageToPlayer(amount)
-                emitSound("enemy strike")
-            case .brace(let shield):
-                enemyLine[index].shield += shield
-                emitSound("enemy braces")
-            case .buff(let buff):
-                emitSound(EnemyBrain.label(for: buff).lowercased())
-            }
-
-            syncPrimaryMirror()
-            refreshOutcome()
+            enemyAct(at: index)
             guard state.outcome == .ongoing else { return }
         }
 
         actingEnemyID = nil
         try? await Task.sleep(for: .milliseconds(600))
+        guard isCurrentEnemyTurn(generation) else { return }
+        beginPlayerTurn()
+    }
+
+    /// True while this paced turn is still the one the game is waiting on.
+    private func isCurrentEnemyTurn(_ generation: Int) -> Bool {
+        generation == turnGeneration && !Task.isCancelled && state.phase == .enemyTurn
+    }
+
+    /// The same turn with every pause removed, for simulations.
+    private func resolveEnemyTurnInstantly() {
+        isEnemyThinking = false
+        for index in enemyLine.indices where !enemyLine[index].isDown {
+            enemyAct(at: index)
+            guard state.outcome == .ongoing else { return }
+        }
+        actingEnemyID = nil
         guard state.phase == .enemyTurn else { return }
         beginPlayerTurn()
+    }
+
+    /// One enemy takes its planned action.
+    private func enemyAct(at index: Int) {
+        // A combatant's shield lasts until the start of its own next turn.
+        enemyLine[index].shield = 0
+        actingEnemyID = enemyLine[index].id
+        enemyActionTrigger += 1
+
+        // Hushed: the action is lost, the plan is not.
+        if enemyLine[index].stunTurns > 0 {
+            enemyLine[index].stunTurns -= 1
+            showNotice("\(enemyLine[index].enemy.name) is hushed and does nothing")
+            emitSound("hushed")
+            syncPrimaryMirror()
+            refreshOutcome()
+            return
+        }
+
+        let move = enemyLine[index].brain.execute()
+        switch move {
+        case .attack(let amount):
+            let landed = max(0, amount - enemyLine[index].weaken)
+            enemyLine[index].weaken = 0
+            dealDamageToPlayer(landed)
+            emitSound("enemy strike")
+        case .brace(let shield):
+            enemyLine[index].shield += shield
+            emitSound("enemy braces")
+        case .buff(let buff):
+            emitSound(EnemyBrain.label(for: buff).lowercased())
+        case .lucidityPush(let amount):
+            applyPlayerLucidityDelta(amount)
+            showNotice(amount > 0
+                ? "\(enemyLine[index].enemy.name) sharpens the dream — Lucidity +\(amount)"
+                : "\(enemyLine[index].enemy.name) dims the flame — Lucidity \(amount)")
+            emitSound(amount > 0 ? "lantern flares" : "lantern dims")
+        }
+
+        syncPrimaryMirror()
+        refreshOutcome()
     }
 
     private func beginPlayerTurn() {

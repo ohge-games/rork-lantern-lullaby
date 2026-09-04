@@ -5,7 +5,7 @@ import Foundation
 /// IDs are fixed (not random per launch) so content references — hero to
 /// cards, saved games to definitions — stay stable across sessions.
 nonisolated enum CardCatalog {
-    private static func stableID(_ uuidString: String) -> UUID {
+    static func stableID(_ uuidString: String) -> UUID {
         UUID(uuidString: uuidString) ?? UUID()
     }
 
@@ -143,7 +143,8 @@ nonisolated enum CardCatalog {
         neutralCards +
         starterHeroCards +
         lancelotCards + bedivereCards + escanorCards + merlinCards +
-        kayCards + morganaCards + galahadCards
+        kayCards + morganaCards + galahadCards +
+        answerCards
 
     static func card(withID id: Card.ID) -> Card? {
         allCards.first { $0.id == id }

@@ -15,6 +15,8 @@ nonisolated extension CardCatalog {
         (focusedMind, 1),
         (dreamWalk, 1),
         (stepForward, 1),
+        (hush, 1),
+        (snuffedWick, 1),
     ]
 
     /// The one card that changes the party's order mid-battle: drag it onto

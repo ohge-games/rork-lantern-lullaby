@@ -20,8 +20,8 @@ nonisolated enum CampaignCatalog {
         maxHealth: 60,
         pattern: .skirmish(range: 8...15, heavyEvery: 3, heavyDamage: 20),
         iconName: "moon.zzz.fill",
-        artName: "dozing_wisp",
-        fullBodyArtName: "dozing_wisp_full",
+        artName: "shadow_wisp_full",
+        fullBodyArtName: "shadow_wisp_full",
         passive: nil
     )
 
@@ -38,8 +38,8 @@ nonisolated enum CampaignCatalog {
             .buff(.enrage(amount: 3)),
         ]),
         iconName: "shield.righthalf.filled",
-        artName: "hollow_knight",
-        fullBodyArtName: "hollow_knight_full",
+        artName: "wayward_knight_full",
+        fullBodyArtName: "wayward_knight_full",
         passive: nil
     )
 
@@ -58,8 +58,8 @@ nonisolated enum CampaignCatalog {
             ]),
         ]),
         iconName: "eye.fill",
-        artName: "the_insomniac",
-        fullBodyArtName: "the_insomniac_full",
+        artName: "nightmare_shadow_mask",
+        fullBodyArtName: "nightmare_shadow_mask",
         passive: PassiveAbility(
             name: "Sleepless Dread",
             text: "Grows more aggressive below half health.",

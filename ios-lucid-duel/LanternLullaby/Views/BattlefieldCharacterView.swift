@@ -61,6 +61,16 @@ struct BattlefieldCharacterView: View {
             }
         }
         .buttonStyle(PressableButtonStyle())
+        // The ability badge is its own tap target, laid over the plate
+        // rather than nested inside the figure's button — a Button inside
+        // a Button hands every tap to the outer one.
+        .overlay(alignment: .top) {
+            if let ability, isAbilityReady, !isDown {
+                readyBadge(ability)
+                    .offset(y: -18)
+                    .transition(.scale(scale: 0.7).combined(with: .opacity))
+            }
+        }
         .disabled(isDown)
         // A disabled button still eats touches, and a fallen figure overlaps
         // the one behind it — which left the survivor untappable once the
@@ -106,7 +116,7 @@ struct BattlefieldCharacterView: View {
         VStack(spacing: 3) {
             if showsActiveTag {
                 Text("LEAD")
-                    .font(.system(size: 8, weight: .heavy))
+                    .font(.system(size: 9, weight: .heavy))
                     .tracking(1.5)
                     .foregroundStyle(.black)
                     .padding(.horizontal, 6)
@@ -118,7 +128,7 @@ struct BattlefieldCharacterView: View {
                     if let nextIntent {
                         IntentChip(intent: nextIntent, isPreview: true)
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 7, weight: .bold))
+                            .font(.system(size: 8, weight: .bold))
                             .foregroundStyle(.white.opacity(0.35))
                     }
                     IntentChip(intent: intent, targetName: intentTargetName)
@@ -142,12 +152,12 @@ struct BattlefieldCharacterView: View {
                 HealthBarView(current: health, maximum: maxHealth, tint: healthTint)
                     .frame(width: barWidth, height: 6)
                 Text(isDown ? "Down" : "\(health)/\(maxHealth)")
-                    .font(.system(size: 8, weight: .semibold))
+                    .font(.system(size: 9, weight: .semibold))
                     .monospacedDigit()
                     .foregroundStyle(.white.opacity(0.8))
             }
 
-            if let ability, !isDown {
+            if let ability, !isDown, !isAbilityReady {
                 abilityRow(ability)
             }
         }
@@ -157,57 +167,57 @@ struct BattlefieldCharacterView: View {
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: shield)
     }
 
-    /// Charge pips while the ability builds, and a tappable gold capsule
-    /// the moment it is ready. One pip per card of this hero's you play.
-    @ViewBuilder
+    /// Charge pips while the ability builds. One pip per card of this
+    /// hero's you play; when they are all lit the badge takes over.
     private func abilityRow(_ ability: HeroAbility) -> some View {
-        if isAbilityReady {
-            Button {
-                onFireAbility?()
-            } label: {
-                HStack(spacing: 3) {
-                    Image(systemName: "sparkle")
-                        .font(.system(size: 8, weight: .bold))
-                    Text(ability.name.uppercased())
-                        .font(.system(size: 8, weight: .heavy))
-                        .tracking(0.8)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                }
-                .foregroundStyle(.black)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 3)
-                .background(
-                    Capsule().fill(
-                        LinearGradient(
-                            colors: [DreamTheme.gold, DreamTheme.goldDeep],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
+        HStack(spacing: 2) {
+            ForEach(0..<ability.chargeRequired, id: \.self) { index in
+                Capsule()
+                    .fill(index < abilityCharge ? DreamTheme.gold.opacity(0.85) : .white.opacity(0.16))
+                    .frame(height: 3)
+            }
+        }
+        .frame(width: barWidth)
+        .animation(.easeOut(duration: 0.25), value: abilityCharge)
+    }
+
+    /// The tappable gold capsule that fires a charged ability.
+    private func readyBadge(_ ability: HeroAbility) -> some View {
+        Button {
+            onFireAbility?()
+        } label: {
+            HStack(spacing: 3) {
+                Image(systemName: "sparkle")
+                    .font(.system(size: 9, weight: .bold))
+                Text(ability.name.uppercased())
+                    .font(.system(size: 9, weight: .heavy))
+                    .tracking(0.8)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .foregroundStyle(.black)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .background(
+                Capsule().fill(
+                    LinearGradient(
+                        colors: [DreamTheme.gold, DreamTheme.goldDeep],
+                        startPoint: .top,
+                        endPoint: .bottom
                     )
                 )
-                .shadow(color: DreamTheme.gold.opacity(readyPulse ? 0.9 : 0.35), radius: readyPulse ? 10 : 4)
-                .scaleEffect(readyPulse ? 1.05 : 1)
-            }
-            .buttonStyle(PressableButtonStyle())
-            .frame(maxWidth: barWidth + 40)
-            .onAppear {
-                withAnimation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true)) {
-                    readyPulse = true
-                }
-            }
-            .onDisappear { readyPulse = false }
-        } else {
-            HStack(spacing: 2) {
-                ForEach(0..<ability.chargeRequired, id: \.self) { index in
-                    Capsule()
-                        .fill(index < abilityCharge ? DreamTheme.gold.opacity(0.85) : .white.opacity(0.16))
-                        .frame(height: 3)
-                }
-            }
-            .frame(width: barWidth)
-            .animation(.easeOut(duration: 0.25), value: abilityCharge)
+            )
+            .shadow(color: DreamTheme.gold.opacity(readyPulse ? 0.9 : 0.35), radius: readyPulse ? 10 : 4)
+            .scaleEffect(readyPulse ? 1.05 : 1)
         }
+        .buttonStyle(PressableButtonStyle())
+        .frame(maxWidth: barWidth + 60)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true)) {
+                readyPulse = true
+            }
+        }
+        .onDisappear { readyPulse = false }
     }
 
     // MARK: - Figure

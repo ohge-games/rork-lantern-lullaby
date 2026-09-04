@@ -17,6 +17,10 @@ nonisolated enum EnemyMove: Codable, Hashable, Sendable {
     case brace(shield: Int)
     /// Apply a self-buff instead of acting on the player.
     case buff(EnemyBuff)
+    /// Push the player's lantern: positive brightens it toward Awakening,
+    /// negative dims it toward Deep Sleep. The enemy's way of contesting
+    /// the meter, so neither end of it is ever safe ground.
+    case lucidityPush(Int)
 }
 
 /// Persistent enemy self-buffs a move can apply. Machine-readable with

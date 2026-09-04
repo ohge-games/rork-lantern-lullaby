@@ -21,19 +21,22 @@ struct BattlefieldView: View {
 
     /// Where the enemy row stands, front slot first. The hero side is this
     /// mirrored across the screen.
+    /// The front slots sit outside the card fan's footprint (the fan spans
+    /// roughly the middle third), and the far enemy slot stays clear of
+    /// the lantern's drop zone in the bottom-right corner.
     private static let enemyPositions: [(x: CGFloat, ground: CGFloat, isFront: Bool)] = [
-        (0.655, 0.94, true),
-        (0.81, 0.79, false),
-        (0.925, 0.72, false),
+        (0.70, 0.94, true),
+        (0.815, 0.78, false),
+        (0.90, 0.66, false),
     ]
 
     private static let heroBackPositions: [(x: CGFloat, ground: CGFloat)] = [
-        (0.075, 0.72),
-        (0.19, 0.79),
-        (0.305, 0.86),
+        (0.075, 0.70),
+        (0.175, 0.78),
+        (0.27, 0.84),
     ]
 
-    private static let heroLeadPosition: (x: CGFloat, ground: CGFloat) = (0.345, 0.94)
+    private static let heroLeadPosition: (x: CGFloat, ground: CGFloat) = (0.30, 0.94)
 
     var body: some View {
         GeometryReader { geo in
@@ -47,7 +50,7 @@ struct BattlefieldView: View {
 
                 if let ally = viewModel.allies.first(where: { $0.id == tooltipAllyID }) {
                     passiveTooltip(for: ally)
-                        .position(x: size.width * 0.27, y: size.height * 0.12)
+                        .position(x: size.width * 0.26, y: size.height * 0.30)
                         .transition(.scale(scale: 0.85).combined(with: .opacity))
                         .zIndex(10)
                 }
@@ -161,7 +164,7 @@ struct BattlefieldView: View {
                         bodyHeight: slot.isFront ? frontHeight : backHeight,
                         intent: enemy.intent,
                         nextIntent: enemy.nextIntent,
-                        intentTargetName: viewModel.leadHeroName,
+                        intentTargetName: slot.isFront ? viewModel.leadHeroName : nil,
                         isMirrored: definition.map { ArtCatalog.isEnemyMirrored($0) } ?? true,
                         isTargeted: viewModel.targetedEnemyID == enemy.id,
                         isTargetable: viewModel.isTargetingActive && enemy.health > 0,
@@ -220,7 +223,7 @@ struct BattlefieldView: View {
                 }
                 if !ally.isActive {
                     Text("Passive is active only while leading.")
-                        .font(.system(size: 9))
+                        .font(.system(size: 9.5))
                         .foregroundStyle(.white.opacity(0.45))
                 }
             }

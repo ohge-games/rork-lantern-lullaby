@@ -27,7 +27,7 @@ struct HandView: View {
     /// Enlargement while a card is held.
     private let dragScale: CGFloat = 1.28
     /// How far a held card lifts out of the fan.
-    private let dragLift: CGFloat = -34
+    private let dragLift: CGFloat = -46
 
     /// Cards sit slightly lifted while they can be played.
     private var tappableLift: CGFloat {
@@ -36,7 +36,7 @@ struct HandView: View {
 
     var body: some View {
         fanLayout
-        .frame(height: 168)
+        .frame(height: 150)
         .overlay(alignment: .top) { dragHintLabel }
         .animation(.spring(response: 0.42, dampingFraction: 0.75), value: viewModel.state.player.hand)
         .animation(.spring(response: 0.35, dampingFraction: 0.7), value: viewModel.selectedInstanceID)
@@ -134,8 +134,9 @@ struct HandView: View {
         guard viewModel.state.phase == .playerMain else { return }
 
         if draggingID != instance.id {
-            draggingID = instance.id
             viewModel.beginCardDrag(of: instance)
+            guard viewModel.isDraggingCard, viewModel.selectedInstanceID == instance.id else { return }
+            draggingID = instance.id
         }
         guard viewModel.isDraggingCard else { return }
 
@@ -170,7 +171,7 @@ struct HandView: View {
                 } else {
                     viewModel.clearSelection()
                 }
-            } else if viewModel.cardDealsDamage(card) {
+            } else if viewModel.cardTargetsEnemy(card) {
                 if let enemyUnderFinger {
                     viewModel.hoverEnemy(enemyUnderFinger)
                     viewModel.playSelectedCard()
@@ -214,7 +215,7 @@ struct HandView: View {
               let card = viewModel.card(for: instance) else { return nil }
 
         if viewModel.isReleaseTargeted {
-            return "Let it go — the lantern dims \(GameRules.releaseRelief)"
+            return "Let it go — burn it, the lantern dims \(GameRules.releaseRelief)"
         }
         if viewModel.hasDropTarget {
             return card.choices != nil ? "Release to choose a path" : "Release to play"
@@ -225,7 +226,7 @@ struct HandView: View {
         if card.choices != nil {
             return "Draw the thread to an enemy or a hero"
         }
-        if viewModel.cardDealsDamage(card) {
+        if viewModel.cardTargetsEnemy(card) {
             return "Draw the thread to an enemy"
         }
         return "Draw the thread to one of your heroes"

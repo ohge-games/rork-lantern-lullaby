@@ -67,7 +67,7 @@ nonisolated struct Card: Codable, Identifiable, Hashable, Sendable {
     var needsTarget: Bool {
         allEffects.contains { effect in
             switch effect.type {
-            case .damage, .heal, .shield, .swapLead:
+            case .damage, .heal, .shield, .swapLead, .stun, .weaken, .shieldBreak, .calm:
                 return true
             case .lucidityModify, .lucidityCenter, .drawCards:
                 return false

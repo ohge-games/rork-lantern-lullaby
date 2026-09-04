@@ -80,6 +80,10 @@ extension EffectType {
         case .lucidityCenter: return "scope"
         case .drawCards: return "square.stack.fill"
         case .swapLead: return "arrow.left.arrow.right"
+        case .stun: return "zzz"
+        case .weaken: return "arrow.down.circle.fill"
+        case .shieldBreak: return "shield.slash.fill"
+        case .calm: return "wind"
         }
     }
 }

@@ -111,6 +111,32 @@ nonisolated struct CampaignProgress: Codable, Sendable {
     var clearedStageIDs: Set<Stage.ID>
     var unlockedHeroIDs: Set<Hero.ID>  // Heroes unlocked through progression
 
+    init(
+        selectedHeroIDs: [Hero.ID],
+        currentChapterID: Chapter.ID,
+        currentStageID: Stage.ID,
+        clearedStageIDs: Set<Stage.ID>,
+        unlockedHeroIDs: Set<Hero.ID>
+    ) {
+        self.selectedHeroIDs = selectedHeroIDs
+        self.currentChapterID = currentChapterID
+        self.currentStageID = currentStageID
+        self.clearedStageIDs = clearedStageIDs
+        self.unlockedHeroIDs = unlockedHeroIDs
+    }
+
+    /// Decoded field by field with defaults, so adding a field to this
+    /// struct never throws away a player's book: a save written by an
+    /// older build simply lacks the fields it never had.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        selectedHeroIDs = try container.decodeIfPresent([Hero.ID].self, forKey: .selectedHeroIDs) ?? []
+        currentChapterID = try container.decodeIfPresent(Chapter.ID.self, forKey: .currentChapterID) ?? UUID()
+        currentStageID = try container.decodeIfPresent(Stage.ID.self, forKey: .currentStageID) ?? UUID()
+        clearedStageIDs = try container.decodeIfPresent(Set<Stage.ID>.self, forKey: .clearedStageIDs) ?? []
+        unlockedHeroIDs = try container.decodeIfPresent(Set<Hero.ID>.self, forKey: .unlockedHeroIDs) ?? []
+    }
+
     /// A stage is playable if it's the first in its chapter or the previous
     /// stage in that chapter has been cleared.
     func isUnlocked(_ stage: Stage, in chapter: Chapter) -> Bool {

@@ -135,7 +135,7 @@ nonisolated extension CardCatalog {
 
     static let forbiddenLove = Card(
         id: classID("A2000000-0000-4000-8000-000000000011"),
-        name: "Forbidden Love",
+        name: "Devotion",
         text: "Heal 15 HP.",
         lucidityCost: 4,
         cardType: .defensive,
@@ -416,7 +416,7 @@ nonisolated extension CardCatalog {
 
     static let cruelSun = Card(
         id: classID("A4000000-0000-4000-8000-000000000001"),
-        name: "Cruel Sun",
+        name: "Merciless Sun",
         text: "Deal 16 damage.",
         lucidityCost: 5,
         cardType: .offensive,
@@ -446,7 +446,7 @@ nonisolated extension CardCatalog {
 
     static let sunshine = Card(
         id: classID("A4000000-0000-4000-8000-000000000004"),
-        name: "Sunshine",
+        name: "Sunlight",
         text: "Heal 10 health. Gain 8 shield.",
         lucidityCost: 4,
         cardType: .defensive,
@@ -466,7 +466,7 @@ nonisolated extension CardCatalog {
 
     static let divineAxeRhitta = Card(
         id: classID("A4000000-0000-4000-8000-000000000006"),
-        name: "Divine Axe Rhitta",
+        name: "Sunforged Axe",
         text: "Deal 28 damage.",
         lucidityCost: 8,
         cardType: .offensive,
@@ -558,7 +558,7 @@ nonisolated extension CardCatalog {
 
     static let theOneUltimate = Card(
         id: classID("A4000000-0000-4000-8000-000000000015"),
-        name: "The One: Ultimate",
+        name: "High Noon",
         text: "Deal 30 damage.",
         lucidityCost: 8,
         cardType: .offensive,
@@ -608,7 +608,7 @@ nonisolated extension CardCatalog {
 
     static let infinity = Card(
         id: classID("A5000000-0000-4000-8000-000000000001"),
-        name: "Infinity",
+        name: "Endless Study",
         text: "Draw 3 cards.",
         lucidityCost: 5,
         cardType: .utility,
@@ -618,7 +618,7 @@ nonisolated extension CardCatalog {
 
     static let aldansInsight = Card(
         id: classID("A5000000-0000-4000-8000-000000000002"),
-        name: "Aldan's Insight",
+        name: "Crystal Ball",
         text: "Move Lucidity 8 toward Balanced. Draw 1 card.",
         lucidityCost: 3,
         cardType: .utility,
@@ -638,7 +638,7 @@ nonisolated extension CardCatalog {
 
     static let absoluteCancel = Card(
         id: classID("A5000000-0000-4000-8000-000000000004"),
-        name: "Absolute Cancel",
+        name: "Unweaving",
         text: "Gain 12 shield. Move Lucidity 5 toward Balanced.",
         lucidityCost: 4,
         cardType: .defensive,
@@ -742,7 +742,7 @@ nonisolated extension CardCatalog {
 
     static let livingBackwards = Card(
         id: classID("A5000000-0000-4000-8000-000000000012"),
-        name: "Living Backwards",
+        name: "Turn Back the Hour",
         text: "Reduce Lucidity by 12.",
         lucidityCost: 0,
         cardType: .utility,
@@ -1044,7 +1044,7 @@ nonisolated extension CardCatalog {
 
     static let queenOfAir = Card(
         id: classID("A7000000-0000-4000-8000-000000000007"),
-        name: "Queen of Air",
+        name: "Fey Wind",
         text: "Deal 18 damage.",
         lucidityCost: 6,
         cardType: .offensive,
@@ -1084,7 +1084,7 @@ nonisolated extension CardCatalog {
 
     static let feyBargain = Card(
         id: classID("A7000000-0000-4000-8000-000000000011"),
-        name: "Fey Bargain",
+        name: "Moonlit Pact",
         text: "Draw 3 cards.",
         lucidityCost: 5,
         cardType: .utility,
@@ -1114,7 +1114,7 @@ nonisolated extension CardCatalog {
 
     static let queenOfDarkness = Card(
         id: classID("A7000000-0000-4000-8000-000000000014"),
-        name: "Queen of Darkness",
+        name: "Fey Darkness",
         text: "Deal 22 damage.",
         lucidityCost: 7,
         cardType: .offensive,
@@ -1134,7 +1134,7 @@ nonisolated extension CardCatalog {
 
     static let feyBargainChoice = Card(
         id: classID("A7000000-0000-4000-8000-000000000016"),
-        name: "Fey Bargain",
+        name: "Witch's Choice",
         text: "Choose: Drain or Deceive.",
         lucidityCost: 4,
         cardType: .utility,
@@ -1396,7 +1396,7 @@ nonisolated extension CardCatalog {
     static let escanor = Hero(
         id: HeroIDs.escanor,
         name: "Escanor",
-        title: "Pride of the Noonday Sun",
+        title: "Noonday Pride",
         maxHealth: 65,
         passive: PassiveAbility(
             name: "Rising Sun",
@@ -1409,12 +1409,12 @@ nonisolated extension CardCatalog {
 
     static let merlin = Hero(
         id: HeroIDs.merlin,
-        name: "Merlin",
+        name: "Merlyn",
         title: "The Wizard Who Lives Backwards",
         maxHealth: 60,
         passive: PassiveAbility(
             name: "Backwards Living",
-            text: "While Drifting, card costs reduced by 2 Lucidity.",
+            text: "While Drifting, cards cost 2 less on top of the usual discount.",
             kind: .cheaperLucidityCosts(amount: 2)
         ),
         storyText: "He remembers the future and forgets the past. Time flows strangely around him, even in dreams.",
@@ -1438,12 +1438,12 @@ nonisolated extension CardCatalog {
     static let morgana = Hero(
         id: HeroIDs.morgana,
         name: "Morgana",
-        title: "Queen of Air and Darkness",
+        title: "The Fey Sister",
         maxHealth: 55,
         passive: PassiveAbility(
-            name: "Fey Bargain",
-            text: "Whenever Morgana applies a debuff, heal 4 HP.",
-            kind: .debuffHealing(amount: 4)
+            name: "Shadow Veil",
+            text: "Defensive cards give 3 extra shield while Drifting.",
+            kind: .driftingBulwark(amount: 3)
         ),
         storyText: "Half-sister to Arthur, touched by the fey. Is she villain or victim? In dreams, even she doesn't know.",
         cardIDs: morganaCards.map(\.id)
@@ -1456,7 +1456,7 @@ nonisolated extension CardCatalog {
         maxHealth: 60,
         passive: PassiveAbility(
             name: "Unblemished",
-            text: "While Galahad has no debuffs, heal 3 HP at turn start.",
+            text: "Heals 3 HP at the start of every turn.",
             kind: .purityHealing(amount: 3)
         ),
         storyText: "Pure of heart, worthy of the Grail. He alone achieved what others only sought. His light does not falter.",

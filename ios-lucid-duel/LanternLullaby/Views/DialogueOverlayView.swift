@@ -263,7 +263,10 @@ struct DialogueOverlayView: View {
         withAnimation(.easeOut(duration: 0.2)) {
             isVisible = false
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+        // Structured, so the fade-out beat cannot outlive this overlay and
+        // close a line the player has not read yet.
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(250))
             onDismiss()
         }
     }

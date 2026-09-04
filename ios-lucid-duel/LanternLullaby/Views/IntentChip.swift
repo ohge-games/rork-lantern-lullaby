@@ -32,6 +32,17 @@ struct IntentChip: View {
                     .font(.system(size: 9, weight: .bold))
                     .lineLimit(1)
                     .foregroundStyle(DreamTheme.gold)
+            case .push(let amount):
+                Label(amount > 0 ? "Lantern +\(amount)" : "Lantern \(amount)", systemImage: "flame.fill")
+                    .font(.system(size: 9, weight: .bold))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .foregroundStyle(amount > 0 ? DreamTheme.goldDeep : DreamTheme.shieldBlue)
+            case .stunned:
+                Label("Hushed", systemImage: "zzz")
+                    .font(.system(size: 9, weight: .bold))
+                    .lineLimit(1)
+                    .foregroundStyle(.white.opacity(0.7))
             }
         }
         .padding(.horizontal, 7)
