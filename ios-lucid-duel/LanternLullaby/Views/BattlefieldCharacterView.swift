@@ -43,6 +43,8 @@ struct BattlefieldCharacterView: View {
     var breathDelay: Double = 0
     /// Reports this figure's frame (global space) for card-drop hit-testing.
     var onFrameChange: ((CGRect) -> Void)? = nil
+    /// Hold the figure to open the full record on them.
+    var onInspect: (() -> Void)? = nil
     let onTap: () -> Void
 
     @State private var breathe = false
@@ -76,6 +78,15 @@ struct BattlefieldCharacterView: View {
         // the one behind it — which left the survivor untappable once the
         // front enemy dropped. Take the corpse out of hit testing entirely.
         .allowsHitTesting(!isDown)
+        // A press-and-hold opens the full record. Simultaneous, so it does
+        // not steal the tap that targets or the drag that aims a card.
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.45)
+                .onEnded { _ in
+                    guard !isDown else { return }
+                    onInspect?()
+                }
+        )
         .opacity(isDown ? 0.38 : 1)
         .saturation(isDown ? 0.15 : 1)
         .overlay(alignment: .top) {

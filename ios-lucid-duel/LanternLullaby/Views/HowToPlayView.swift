@@ -67,6 +67,12 @@ struct HowToPlayView: View {
             body: "Some cards answer what the enemy plans. Hush makes them skip a turn. Snuffed Wick blows out a wind-up. Cut the Straps breaks a shield. Read the intent, then pick your answer."
         ),
         RuleSection(
+            id: "looking",
+            icon: "magnifyingglass",
+            title: "Look before you leap",
+            body: "Tap Deck, Discard or Burned in the top-left to look through that pile. Press and hold any hero or enemy to open their full record — what an enemy will do next, what a hero's passive and ability do, and how charged it is."
+        ),
+        RuleSection(
             id: "book",
             icon: "book.fill",
             title: "The book",

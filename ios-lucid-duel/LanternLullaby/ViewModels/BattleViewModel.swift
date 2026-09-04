@@ -865,6 +865,68 @@ final class BattleViewModel {
         refreshOutcome()
     }
 
+    /// The three places a card can be: waiting to be drawn, waiting to be
+    /// reshuffled, or gone to the flame.
+    nonisolated enum CardPile: String, CaseIterable, Sendable {
+        case deck, discard, burned
+
+        var title: String {
+            switch self {
+            case .deck: return "Draw pile"
+            case .discard: return "Discard"
+            case .burned: return "Given to the flame"
+            }
+        }
+
+        var iconName: String {
+            switch self {
+            case .deck: return "square.stack.fill"
+            case .discard: return "tray.full.fill"
+            case .burned: return "flame.fill"
+            }
+        }
+    }
+
+    func count(of pile: CardPile) -> Int {
+        switch pile {
+        case .deck: return state.player.deck.count
+        case .discard: return state.player.discardPile.count
+        case .burned: return burnedCards.count
+        }
+    }
+
+    /// What is in a pile, grouped by card and counted.
+    ///
+    /// The deck comes back sorted by cost rather than in draw order: it is
+    /// shuffled, and listing the order would hand the player the future.
+    /// The discard keeps its order, newest first, because that order is
+    /// exactly what a reshuffle will draw from.
+    func contents(of pile: CardPile) -> [(card: Card, count: Int)] {
+        let instances: [CardInstance]
+        switch pile {
+        case .deck: instances = state.player.deck
+        case .discard: instances = state.player.discardPile.reversed()
+        case .burned: instances = burnedCards.reversed()
+        }
+
+        var counts: [Card.ID: Int] = [:]
+        var order: [Card.ID] = []
+        for instance in instances {
+            if counts[instance.cardID] == nil { order.append(instance.cardID) }
+            counts[instance.cardID, default: 0] += 1
+        }
+        let grouped = order.compactMap { id -> (card: Card, count: Int)? in
+            guard let card = cardsByID[id], let count = counts[id] else { return nil }
+            return (card, count)
+        }
+        guard pile == .deck else { return grouped }
+        return grouped.sorted {
+            $0.card.lucidityCost == $1.card.lucidityCost
+                ? $0.card.name < $1.card.name
+                : $0.card.lucidityCost < $1.card.lucidityCost
+        }
+    }
+
     /// How far a release may dim the flame right now without losing.
     var safeReleaseRelief: Int {
         var relief = GameRules.releaseRelief

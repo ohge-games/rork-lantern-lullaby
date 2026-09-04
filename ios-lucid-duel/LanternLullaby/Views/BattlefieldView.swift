@@ -18,6 +18,7 @@ struct BattlefieldView: View {
     let viewModel: BattleViewModel
 
     @State private var tooltipAllyID: UUID?
+    @State private var inspecting: CombatantInspectorView.Subject?
 
     /// Where the enemy row stands, front slot first. The hero side is this
     /// mirrored across the screen.
@@ -54,11 +55,17 @@ struct BattlefieldView: View {
                         .transition(.scale(scale: 0.85).combined(with: .opacity))
                         .zIndex(10)
                 }
+
+                if let subject = inspecting {
+                    CombatantInspectorView(subject: subject) { inspecting = nil }
+                        .zIndex(80)
+                }
             }
             .animation(.spring(response: 0.3, dampingFraction: 0.8), value: tooltipAllyID)
             .animation(.spring(response: 0.38, dampingFraction: 0.72), value: viewModel.activeAllyID)
             .animation(.easeInOut(duration: 0.35), value: viewModel.waveIndex)
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: viewModel.abilityTrigger)
+            .animation(.spring(response: 0.32, dampingFraction: 0.82), value: inspecting == nil)
         }
     }
 
@@ -120,7 +127,48 @@ struct BattlefieldView: View {
             hit: viewModel.playerHitTargetID == ally.id ? viewModel.playerHit : nil,
             breathDelay: breathDelay,
             onFrameChange: { viewModel.reportAllyFrame(ally.id, frame: $0) },
+            onInspect: { inspect(ally) },
             onTap: { toggleTooltip(for: ally.id) }
+        )
+    }
+
+    /// The full record on a hero: their passive, whether it is doing
+    /// anything from where they stand, and how charged their ability is.
+    private func inspect(_ ally: AllyMember) {
+        tooltipAllyID = nil
+        inspecting = CombatantInspectorView.Subject(
+            name: ally.name,
+            artName: ally.fullBodyArtName,
+            isMirrored: viewModel.party.first { $0.id == ally.id }
+                .map { ArtCatalog.isHeroMirrored($0.hero) } ?? true,
+            health: ally.health,
+            maxHealth: ally.maxHealth,
+            shield: ally.isActive ? ally.shield : 0,
+            isLead: ally.isActive,
+            passiveName: ally.passiveName,
+            passiveText: ally.passiveText,
+            passiveAppliesNow: ally.isActive,
+            ability: viewModel.ability(for: ally.id),
+            abilityCharge: viewModel.charge(for: ally.id)
+        )
+    }
+
+    /// The full record on an enemy: both of its telegraphed moves, and what
+    /// weight of thing it is.
+    private func inspect(_ enemy: EnemyMember, definition: Enemy?) {
+        inspecting = CombatantInspectorView.Subject(
+            name: enemy.name,
+            artName: enemy.fullBodyArtName,
+            isMirrored: definition.map { ArtCatalog.isEnemyMirrored($0) } ?? true,
+            health: enemy.health,
+            maxHealth: enemy.maxHealth,
+            shield: enemy.shield,
+            tier: definition?.tier ?? .minion,
+            passiveName: definition?.passive?.name,
+            passiveText: definition?.passive?.text,
+            intent: enemy.intent,
+            nextIntent: enemy.nextIntent,
+            intentTargetName: viewModel.leadHeroName
         )
     }
 
@@ -172,6 +220,7 @@ struct BattlefieldView: View {
                         hit: viewModel.enemyHitTargetID == enemy.id ? viewModel.enemyHit : nil,
                         breathDelay: Double(pair.offset) * 0.55,
                         onFrameChange: { viewModel.reportEnemyFrame(enemy.id, frame: $0) },
+                        onInspect: { inspect(enemy, definition: definition) },
                         onTap: { viewModel.tapEnemy(enemy.id) }
                     )
                     .scaleEffect(viewModel.actingEnemyID == enemy.id ? 1.05 : 1, anchor: .bottom)

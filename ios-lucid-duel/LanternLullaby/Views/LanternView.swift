@@ -18,6 +18,11 @@ struct LanternView: View {
     let lucidity: Int
     let zone: LucidityZone
     var pulse: LucidityPulse?
+    /// Where the meter would land if the held card were played — drawn as
+    /// a ghost mark on the ladder so the flame can be aimed, not guessed.
+    var projected: Int? = nil
+    /// True while a card is held over the lantern, about to be let go.
+    var isReleaseTarget: Bool = false
 
     private let glassWidth: CGFloat = 62
     private let glassHeight: CGFloat = 108
@@ -34,12 +39,16 @@ struct LanternView: View {
             VStack(spacing: 4) {
                 hangingRing
                 cap
-                glass(time: time)
+                HStack(alignment: .bottom, spacing: 5) {
+                    glass(time: time)
+                    zoneLadder
+                }
                 basePlate
                 zoneChip
                 warningLabel(time: time)
             }
             .background(ambientGlow(time: time))
+            .overlay(releaseHalo(time: time))
         }
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: lucidity)
         .accessibilityElement(children: .ignore)
@@ -65,17 +74,105 @@ struct LanternView: View {
         }
     }
 
+    /// The five bands of the meter drawn as a strip beside the glass, with
+    /// a gold mark where the flame stands now and a hollow mark where the
+    /// held card would leave it. The two lose-bands are drawn in danger red
+    /// so "how close am I" is a glance, not arithmetic.
+    private var zoneLadder: some View {
+        GeometryReader { geo in
+            let height = geo.size.height
+            ZStack(alignment: .top) {
+                VStack(spacing: 1) {
+                    ForEach(Self.ladderBands) { band in
+                        RoundedRectangle(cornerRadius: 1.5)
+                            .fill(band.zone.color.opacity(band.zone == zone ? 0.95 : 0.35))
+                            .frame(height: max(2, height * band.share - 1))
+                    }
+                }
+                .frame(width: 5)
+
+                if let projected, projected != lucidity {
+                    ladderMark(at: projected, in: height)
+                        .foregroundStyle(.white.opacity(0.75))
+                        .opacity(0.9)
+                }
+
+                ladderMark(at: lucidity, in: height)
+                    .foregroundStyle(DreamTheme.gold)
+                    .shadow(color: DreamTheme.gold.opacity(0.7), radius: 3)
+            }
+            .frame(width: 12, alignment: .leading)
+        }
+        .frame(width: 12, height: glassHeight)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: lucidity)
+        .animation(.easeOut(duration: 0.2), value: projected)
+        .accessibilityHidden(true)
+    }
+
+    /// The meter runs bottom-to-top: 0 at the base of the glass, 100 at the cap.
+    private func ladderMark(at value: Int, in height: CGFloat) -> some View {
+        let clamped = CGFloat(min(max(value, 0), 100)) / 100
+        return Capsule()
+            .frame(width: 11, height: 2)
+            .offset(x: -3, y: height * (1 - clamped) - 1)
+    }
+
+    /// One band of the ladder: a zone and how much of the meter it owns.
+    private struct LadderBand: Identifiable {
+        let zone: LucidityZone
+        let share: CGFloat
+        var id: LucidityZone { zone }
+    }
+
+    /// Each band's share of the ladder, top of the meter first.
+    private static let ladderBands: [LadderBand] = [
+        LadderBand(zone: .awakening, share: 0.15),
+        LadderBand(zone: .vivid, share: 0.20),
+        LadderBand(zone: .balanced, share: 0.30),
+        LadderBand(zone: .drifting, share: 0.20),
+        LadderBand(zone: .deepSleep, share: 0.15),
+    ]
+
+    /// A card is held over the lantern: the glass takes a gold ring and the
+    /// flame breathes, so the drop target is the lantern itself rather than
+    /// a dashed rectangle drawn over it.
+    @ViewBuilder
+    private func releaseHalo(time: TimeInterval) -> some View {
+        if isReleaseTarget {
+            let breath = 0.5 + 0.5 * sin(time * (2 * .pi / 0.9))
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(DreamTheme.gold.opacity(0.55 + 0.35 * breath), lineWidth: 2)
+                .shadow(color: DreamTheme.gold.opacity(0.5 + 0.3 * breath), radius: 14)
+                .padding(-6)
+                .allowsHitTesting(false)
+                .transition(.opacity)
+        }
+    }
+
     private var basePlate: some View {
         RoundedRectangle(cornerRadius: 8)
             .fill(metalGradient)
             .frame(width: 56, height: 30)
             .overlay(
-                Text("\(lucidity)")
-                    .font(.system(size: 16, weight: .heavy, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(DreamTheme.gold)
-                    .contentTransition(.numericText(value: Double(lucidity)))
-                    .shadow(color: DreamTheme.gold.opacity(0.5), radius: 4)
+                VStack(spacing: -1) {
+                    Text("\(lucidity)")
+                        .font(.system(size: 16, weight: .heavy, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(DreamTheme.gold)
+                        .contentTransition(.numericText(value: Double(lucidity)))
+                        .shadow(color: DreamTheme.gold.opacity(0.5), radius: 4)
+
+                    if let projected, projected != lucidity {
+                        Text("→ \(projected)")
+                            .font(.system(size: 9, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(
+                                LucidityZone.zone(for: projected).isLoseCondition
+                                    ? DreamTheme.danger
+                                    : .white.opacity(0.75)
+                            )
+                    }
+                }
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 8)

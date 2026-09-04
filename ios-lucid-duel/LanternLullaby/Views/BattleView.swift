@@ -18,6 +18,7 @@ struct BattleView: View {
     let onExit: (BattleExit) -> Void
 
     @State private var confirmLeave = false
+    @State private var openPile: BattleViewModel.CardPile?
 
     var body: some View {
         ZStack {
@@ -29,6 +30,19 @@ struct BattleView: View {
             topChrome
 
             bottomChrome
+
+            // A pile the player asked to look through.
+            if let pile = openPile {
+                CardPileView(
+                    pile: pile,
+                    entries: viewModel.contents(of: pile).map {
+                        CardPileView.PileEntry(card: $0.card, count: $0.count)
+                    }
+                ) {
+                    openPile = nil
+                }
+                .zIndex(75)
+            }
 
             // The targeting thread from the held card to the finger.
             if let from = viewModel.dragAnchor, let to = viewModel.dragPoint, viewModel.isDraggingCard {
@@ -301,29 +315,49 @@ struct BattleView: View {
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: viewModel.selectedInstanceID)
     }
 
+    /// Deck, discard and (once anything has burned) the flame's own pile.
+    /// Every one of them opens: a player who cannot see what is left in the
+    /// deck cannot plan, and burning a card should be something you can go
+    /// back and look at.
     private var pileCounters: some View {
         HStack(spacing: 6) {
-            pileChip(count: viewModel.state.player.deck.count, icon: "square.stack.fill", label: "Deck")
-            pileChip(count: viewModel.state.player.discardPile.count, icon: "tray.full.fill", label: "Discard")
+            pileChip(.deck, label: "Deck")
+            pileChip(.discard, label: "Discard")
+            if viewModel.count(of: .burned) > 0 {
+                pileChip(.burned, label: "Burned")
+            }
         }
     }
 
-    private func pileChip(count: Int, icon: String, label: String) -> some View {
-        HStack(spacing: 5) {
-            Image(systemName: icon)
-                .font(.system(size: 10))
-            Text("\(count)")
-                .font(.system(size: 12, weight: .bold))
-                .monospacedDigit()
-            Text(label)
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.45))
+    private func pileChip(_ pile: BattleViewModel.CardPile, label: String) -> some View {
+        let count = viewModel.count(of: pile)
+        let isBurned = pile == .burned
+        return Button {
+            openPile = pile
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: pile.iconName)
+                    .font(.system(size: 10))
+                Text("\(count)")
+                    .font(.system(size: 12, weight: .bold))
+                    .monospacedDigit()
+                Text(label)
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.45))
+            }
+            .foregroundStyle(isBurned ? DreamTheme.goldDeep.opacity(0.9) : .white.opacity(0.75))
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(.black.opacity(0.35)))
+            .overlay(
+                Capsule().stroke(
+                    isBurned ? DreamTheme.goldDeep.opacity(0.35) : .white.opacity(0.12),
+                    lineWidth: 1
+                )
+            )
         }
-        .foregroundStyle(.white.opacity(0.75))
-        .padding(.horizontal, 9)
-        .padding(.vertical, 5)
-        .background(Capsule().fill(.black.opacity(0.35)))
-        .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 1))
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityLabel("\(pile.title), \(count) cards. Opens the list.")
     }
 
     /// The living lantern, compact in the corner, with End Turn beneath it.
@@ -332,33 +366,28 @@ struct BattleView: View {
             LanternView(
                 lucidity: viewModel.state.player.lucidity,
                 zone: viewModel.state.player.zone,
-                pulse: viewModel.lucidityPulse
+                pulse: viewModel.lucidityPulse,
+                projected: projectedLucidity,
+                isReleaseTarget: viewModel.isReleaseTargeted
             )
             .scaleEffect(0.68, anchor: .bottom)
-            .frame(width: 96, height: 158, alignment: .bottom)
+            .frame(width: 104, height: 158, alignment: .bottom)
             // Dropping a card here lets it go and calms the flame.
-            .overlay {
+            .overlay(alignment: .top) {
                 if viewModel.isDraggingCard {
-                    RoundedRectangle(cornerRadius: 18)
-                        .stroke(
-                            viewModel.isReleaseTargeted ? DreamTheme.gold : .white.opacity(0.35),
-                            style: StrokeStyle(lineWidth: viewModel.isReleaseTargeted ? 2.5 : 1.5, dash: [6, 5])
-                        )
-                        .background(
-                            RoundedRectangle(cornerRadius: 18)
-                                .fill(DreamTheme.gold.opacity(viewModel.isReleaseTargeted ? 0.18 : 0))
-                        )
-                        .overlay(alignment: .top) {
-                            Text(viewModel.isReleaseTargeted ? "LET IT GO" : "RELEASE")
-                                .font(.system(size: 8, weight: .heavy))
-                                .tracking(1)
-                                .foregroundStyle(viewModel.isReleaseTargeted ? DreamTheme.gold : .white.opacity(0.5))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Capsule().fill(.black.opacity(0.5)))
-                                .offset(y: -10)
-                        }
+                    Text(viewModel.isReleaseTargeted
+                         ? "LET IT GO · BURNS THE CARD"
+                         : "DROP HERE TO LET IT GO")
+                        .font(.system(size: 8, weight: .heavy))
+                        .tracking(1)
+                        .foregroundStyle(viewModel.isReleaseTargeted ? DreamTheme.gold : .white.opacity(0.5))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(.black.opacity(0.55)))
+                        .fixedSize()
+                        .offset(y: -8)
                         .transition(.opacity)
+                        .allowsHitTesting(false)
                 }
             }
             .onGeometryChange(for: CGRect.self) { proxy in
@@ -369,6 +398,14 @@ struct BattleView: View {
 
             endTurnButton
         }
+    }
+
+    /// Where the meter lands if the held or selected card is played, so the
+    /// lantern can be aimed rather than guessed at.
+    private var projectedLucidity: Int? {
+        guard let card = viewModel.selectedCard, card.choices == nil else { return nil }
+        let projected = viewModel.projectedLucidity(after: card)
+        return projected == viewModel.state.player.lucidity ? nil : projected
     }
 
     private var endTurnButton: some View {

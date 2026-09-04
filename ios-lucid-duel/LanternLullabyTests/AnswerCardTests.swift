@@ -250,6 +250,47 @@ struct AnswerCardTests {
         #expect(viewModel.party.count == BattleViewModel.maxFieldedHeroes)
     }
 
+    // MARK: - Looking through the piles
+
+    @Test func theDeckListsGroupedCopiesSortedByCost() {
+        let foe = enemy("Knight", health: 400, pattern: .scripted(cycle: [.brace(shield: 1)]))
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [foe])],
+            party: [CardCatalog.wart],
+            deck: Array(repeating: CardCatalog.focusStrike.id, count: 6)
+                + Array(repeating: CardCatalog.deepBreath.id, count: 6)
+        ))
+        let deck = viewModel.contents(of: .deck)
+        #expect(deck.count <= 2)
+        #expect(deck.reduce(0) { $0 + $1.count } == viewModel.count(of: .deck))
+        // Cheapest first, so the list reads as a plan rather than a shuffle.
+        let costs = deck.map(\.card.lucidityCost)
+        #expect(costs == costs.sorted())
+    }
+
+    @Test func theDiscardReadsNewestFirstAndBurnedCardsAreTheirOwnPile() {
+        let foe = enemy("Knight", health: 400, pattern: .scripted(cycle: [.brace(shield: 1)]))
+        let viewModel = BattleViewModel(configuration: configuration(
+            waves: [WaveSpec(enemies: [foe])],
+            party: [CardCatalog.wart],
+            deck: Array(repeating: CardCatalog.strike.id, count: 10)
+                + Array(repeating: CardCatalog.mentalShift.id, count: 10)
+        ))
+        play(CardCatalog.strike, on: viewModel)
+        play(CardCatalog.mentalShift, on: viewModel)
+        #expect(viewModel.contents(of: .discard).first?.card.id == CardCatalog.mentalShift.id)
+
+        #expect(viewModel.count(of: .burned) == 0)
+        guard let instance = viewModel.state.player.hand.first else {
+            Issue.record("Empty hand")
+            return
+        }
+        viewModel.toggleSelection(of: instance)
+        viewModel.releaseSelectedCard()
+        #expect(viewModel.count(of: .burned) == 1)
+        #expect(viewModel.contents(of: .burned).count == 1)
+    }
+
     // MARK: - Restart and persistence
 
     @Test func restartingDuringTheEnemyTurnRunsOnlyOneTurn() async {
