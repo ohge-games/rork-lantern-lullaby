@@ -164,7 +164,7 @@ final class DialogueManager {
 
     // MARK: - Persistence (for first-time keys)
 
-    private static let shownKeysKey = "DialogueManager.ShownFirstTimeKeys"
+    private static let shownKeysKey = SaveStore.shownDialogueKeysKey
 
     func loadShownKeys() {
         if let saved = UserDefaults.standard.stringArray(forKey: Self.shownKeysKey) {

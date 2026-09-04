@@ -31,10 +31,14 @@ final class CampaignCoordinator {
     /// Maximum party size.
     static let partySize = 3
 
-    private static let progressKey = "LanternLullaby.CampaignProgress.v1"
-    private static let prologueKey = "LanternLullaby.HasSeenPrologue.v1"
+    private static let progressKey = SaveStore.campaignProgressKey
+    private static let prologueKey = SaveStore.prologueKey
 
     init() {
+        // A build carrying a new fresh-start token clears the saved book
+        // before anything reads it.
+        SaveStore.applyPendingFreshStart()
+
         let loaded = Self.loadProgress()
         progress = loaded ?? Self.freshProgress()
         hasSeenPrologue = UserDefaults.standard.bool(forKey: Self.prologueKey)
@@ -71,7 +75,7 @@ final class CampaignCoordinator {
         } catch {
             // Keep the unreadable save rather than starting a fresh book
             // over the top of it — it is the only copy the player has.
-            UserDefaults.standard.set(data, forKey: progressKey + ".corrupt")
+            UserDefaults.standard.set(data, forKey: SaveStore.corruptProgressKey)
             return nil
         }
     }
@@ -84,10 +88,9 @@ final class CampaignCoordinator {
 
     /// Wipes progress back to a fresh book.
     func resetProgress() {
+        SaveStore.wipe()
         progress = Self.freshProgress()
         hasSeenPrologue = false
-        UserDefaults.standard.removeObject(forKey: Self.prologueKey)
-        DialogueManager.clearPersistedKeys()
         selectedChapterIndex = 0
         selectedStageID = progress.currentStageID
         recentlyUnlockedHeroes = []
